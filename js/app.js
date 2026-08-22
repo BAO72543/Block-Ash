@@ -27,11 +27,12 @@ export class BlockBlastApp {
         this.celebratedNewRecord = false;
         this.gamesSinceLastInterstitial = 0;
 
-        // Cache DOM Elements
+        // Cache DOM Elements with robust fallbacks
         this.dom = {
-            scoreCurrent: document.getElementById('score-current'),
-            scoreHighest: document.getElementById('score-highest'),
-            comboCurrent: document.getElementById('combo-current'),
+            scoreCurrent: document.getElementById('current-score') || document.getElementById('score-current'),
+            scoreHighest: document.getElementById('high-score') || document.getElementById('score-highest'),
+            comboCurrent: document.getElementById('combo-count') || document.getElementById('combo-current'),
+            comboFlame: document.getElementById('combo-flame'),
             comboFeed: document.getElementById('combo-feed'),
             btnHint: document.getElementById('btn-hint'),
             btnAutoplay: document.getElementById('btn-autoplay'),
@@ -551,9 +552,12 @@ export class BlockBlastApp {
     }
 
     updateScoreDisplays() {
-        this.dom.scoreCurrent.textContent = this.gameState.score.toLocaleString();
-        this.dom.scoreHighest.textContent = this.gameState.highestScore.toLocaleString();
-        this.dom.comboCurrent.textContent = this.gameState.comboCount;
+        if (this.dom.scoreCurrent) this.dom.scoreCurrent.textContent = this.gameState.score.toLocaleString();
+        if (this.dom.scoreHighest) this.dom.scoreHighest.textContent = this.gameState.highestScore.toLocaleString();
+        if (this.dom.comboCurrent) this.dom.comboCurrent.textContent = this.gameState.comboCount;
+        if (this.dom.comboFlame) {
+            this.dom.comboFlame.style.display = this.gameState.comboCount >= 2 ? 'inline' : 'none';
+        }
     }
 
     updateComboFeed() {
