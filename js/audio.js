@@ -319,3 +319,6 @@ export class AudioManager {
         } catch (e) {}
     }
 }
+
+export { AudioManager as SoundFX };
+
