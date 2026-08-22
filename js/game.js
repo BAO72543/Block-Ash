@@ -76,6 +76,13 @@ export class BlockGameState {
         this.stageId = stageId;
         this.stageData = ModeManager.getStage(stageId);
         this.grid = Array.from({ length: 8 }, () => Array(8).fill(0));
+        this.score = 0;
+        this.displayedScore = 0;
+        this.gameOver = false;
+        this.comboCount = 0;
+        this.comboHistory = ['COMBO 0'];
+        this.placementsWithoutClear = 0;
+        this.hasUsedRevive = false;
         this.movesRemaining = this.stageData.movesLimit;
 
         const goalKey = Object.keys(this.stageData.goals)[0] || 'gems';
@@ -104,6 +111,13 @@ export class BlockGameState {
     initDropMode() {
         this.mode = GAME_MODES.DROP;
         this.grid = Array.from({ length: 8 }, () => Array(8).fill(0));
+        this.score = 0;
+        this.displayedScore = 0;
+        this.gameOver = false;
+        this.comboCount = 0;
+        this.comboHistory = ['COMBO 0'];
+        this.placementsWithoutClear = 0;
+        this.hasUsedRevive = false;
         this.dropInterval = 3;
         this.movesUntilDrop = 3;
 
