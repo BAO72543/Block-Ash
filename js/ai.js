@@ -1,7 +1,7 @@
 /**
  * Block Blast - Heuristic AI Solver & Assistant
  * Optimized for the exponential scoring model: S_turn = N_cells + (10 * L * 2^(L-1)) * (1 + 0.5 * C)
- * and DDA board fill maintenance.
+ * Implements S_3 Sequence Lookahead Search to guarantee all 3 dock shapes fit without blocking.
  */
 
 import { canPlaceShapeOnGrid, simulatePlacementOnGrid, Shape } from './shapes.js';
@@ -24,7 +24,7 @@ export class BlockBlastAI {
     /**
      * Evaluate board state value under the exponential scoring formula
      */
-    evaluateBoard(grid, linesCleared, comboCount, shapeCellCount) {
+    evaluateBoard(grid, linesCleared, comboCount, shapeCellCount = 0) {
         let score = 0;
 
         // 1. Exponential Line Clear & Combo Value
@@ -33,7 +33,7 @@ export class BlockBlastAI {
             const comboMultiplier = 1 + (0.5 * comboCount);
             const turnClearScore = baseClear * comboMultiplier;
 
-            score += turnClearScore * 1.5;
+            score += turnClearScore * 2.5;
         }
 
         // 2. Board Occupancy & Fill Rate
@@ -45,9 +45,9 @@ export class BlockBlastAI {
         }
         const fillRatio = filledCount / 64.0;
 
-        // Penalize higher board density (especially above 0.75)
-        if (fillRatio > 0.75) {
-            score -= (fillRatio - 0.75) * 800;
+        // Penalize higher board density (especially above 0.65)
+        if (fillRatio > 0.65) {
+            score -= (fillRatio - 0.65) * 1500;
         } else {
             score -= filledCount * 2.0;
         }
@@ -63,12 +63,12 @@ export class BlockBlastAI {
                     if (c === 0 || grid[r][c - 1] !== 0) walls++;
                     if (c === 7 || grid[r][c + 1] !== 0) walls++;
 
-                    if (walls === 4) trappedHoles += 3;
-                    else if (walls === 3) trappedHoles += 1;
+                    if (walls === 4) trappedHoles += 4;
+                    else if (walls === 3) trappedHoles += 1.5;
                 }
             }
         }
-        score -= trappedHoles * 18;
+        score -= trappedHoles * 20;
 
         // 4. Test Board Openness / Flexibility
         let fitCount = 0;
@@ -85,101 +85,125 @@ export class BlockBlastAI {
                 if (canFit) break;
             }
         }
-        score += fitCount * 25;
+        score += fitCount * 18;
 
         // 5. High-density Line Readiness (lines with 6-7 blocks are primed for combos)
         for (let r = 0; r < 8; r++) {
             const count = grid[r].filter(c => c !== 0).length;
-            if (count === 6) score += 10;
-            else if (count === 7) score += 25;
+            if (count === 7) score += 30;
+            else if (count === 6) score += 12;
         }
         for (let c = 0; c < 8; c++) {
             let count = 0;
             for (let r = 0; r < 8; r++) {
                 if (grid[r][c] !== 0) count++;
             }
-            if (count === 6) score += 10;
-            else if (count === 7) score += 25;
+            if (count === 7) score += 30;
+            else if (count === 6) score += 12;
         }
 
         return score;
     }
 
     /**
-     * Find optimal move evaluating all available pieces and 2-ply lookahead
+     * Find optimal move evaluating full permutation sequence lookahead
      */
     findBestMove(gameState) {
-        const availableIndices = [];
+        const available = [];
         for (let i = 0; i < gameState.currentShapes.length; i++) {
             if (gameState.currentShapes[i] && gameState.currentShapes[i].form) {
-                availableIndices.push(i);
+                available.push(i);
             }
         }
 
-        if (availableIndices.length === 0) return null;
+        if (available.length === 0) return null;
 
-        let bestMove = null;
-        let highestScore = -Infinity;
+        let bestFirstMove = null;
+        let maxChainScore = -Infinity;
 
-        for (const shapeIdx of availableIndices) {
-            const shape = gameState.currentShapes[shapeIdx];
-            for (let r = 0; r <= 8 - shape.rows; r++) {
-                for (let c = 0; c <= 8 - shape.cols; c++) {
-                    if (!gameState.canPlaceShape(shape, r, c)) continue;
+        for (const s1 of available) {
+            const shape1 = gameState.currentShapes[s1];
+            const rem1 = available.filter(i => i !== s1);
 
-                    // 1st Ply Simulation
-                    const sim1 = simulatePlacementOnGrid(gameState.grid, shape, r, c);
-                    const nextCombo = sim1.linesCleared > 0 ? (gameState.comboCount + 1) : gameState.comboCount;
+            for (let r1 = 0; r1 <= 8 - shape1.rows; r1++) {
+                for (let c1 = 0; c1 <= 8 - shape1.cols; c1++) {
+                    if (!canPlaceShapeOnGrid(gameState.grid, shape1, r1, c1)) continue;
 
-                    let moveScore = this.evaluateBoard(
-                        sim1.grid,
-                        sim1.linesCleared,
-                        nextCombo,
-                        shape.cellCount
-                    );
+                    const sim1 = simulatePlacementOnGrid(gameState.grid, shape1, r1, c1);
+                    const combo1 = sim1.linesCleared > 0 ? gameState.comboCount + 1 : gameState.comboCount;
+                    const eval1 = this.evaluateBoard(sim1.grid, sim1.linesCleared, combo1, shape1.cellCount);
 
-                    // 2nd Ply Lookahead: Test feasibility of other remaining shapes
-                    const remainingShapes = availableIndices.filter(idx => idx !== shapeIdx);
-                    let canFitRemaining = remainingShapes.length === 0;
-                    let fitBonus = 0;
+                    if (rem1.length === 0) {
+                        if (eval1 > maxChainScore) {
+                            maxChainScore = eval1;
+                            bestFirstMove = { shapeIdx: s1, row: r1, col: c1, shape: shape1, linesCleared: sim1.linesCleared, score: eval1 };
+                        }
+                        continue;
+                    }
 
-                    for (const nextIdx of remainingShapes) {
-                        const nextShape = gameState.currentShapes[nextIdx];
-                        let canFit = false;
-                        for (let nr = 0; nr <= 8 - nextShape.rows; nr++) {
-                            for (let nc = 0; nc <= 8 - nextShape.cols; nc++) {
-                                if (canPlaceShapeOnGrid(sim1.grid, nextShape, nr, nc)) {
-                                    canFit = true;
-                                    fitBonus += 20;
+                    // Check if remaining pieces can be placed in sequence without jamming
+                    let sequencePossible = false;
+                    let bestRemainingBonus = -Infinity;
+
+                    for (const s2 of rem1) {
+                        const shape2 = gameState.currentShapes[s2];
+                        const rem2 = rem1.filter(i => i !== s2);
+
+                        for (let r2 = 0; r2 <= 8 - shape2.rows; r2++) {
+                            for (let c2 = 0; c2 <= 8 - shape2.cols; c2++) {
+                                if (!canPlaceShapeOnGrid(sim1.grid, shape2, r2, c2)) continue;
+
+                                const sim2 = simulatePlacementOnGrid(sim1.grid, shape2, r2, c2);
+                                const combo2 = sim2.linesCleared > 0 ? combo1 + 1 : combo1;
+                                const eval2 = this.evaluateBoard(sim2.grid, sim2.linesCleared, combo2, shape2.cellCount);
+
+                                if (rem2.length === 0) {
+                                    sequencePossible = true;
+                                    if (eval2 > bestRemainingBonus) bestRemainingBonus = eval2;
+                                    break;
+                                }
+
+                                // For piece 3, verify feasibility
+                                const s3 = rem2[0];
+                                const shape3 = gameState.currentShapes[s3];
+                                let canFit3 = false;
+                                for (let r3 = 0; r3 <= 8 - shape3.rows; r3++) {
+                                    for (let c3 = 0; c3 <= 8 - shape3.cols; c3++) {
+                                        if (canPlaceShapeOnGrid(sim2.grid, shape3, r3, c3)) {
+                                            canFit3 = true;
+                                            break;
+                                        }
+                                    }
+                                    if (canFit3) break;
+                                }
+
+                                if (canFit3) {
+                                    sequencePossible = true;
+                                    if (eval2 + 25 > bestRemainingBonus) bestRemainingBonus = eval2 + 25;
                                     break;
                                 }
                             }
-                            if (canFit) break;
+                            if (sequencePossible) break;
                         }
-                        if (canFit) canFitRemaining = true;
+                        if (sequencePossible) break;
                     }
 
-                    if (!canFitRemaining && remainingShapes.length > 0) {
-                        moveScore -= 800; // Heavy penalty if move locks out remaining pieces
-                    } else {
-                        moveScore += fitBonus;
-                    }
-
-                    if (moveScore > highestScore) {
-                        highestScore = moveScore;
-                        bestMove = {
-                            shapeIdx,
-                            row: r,
-                            col: c,
-                            shape,
+                    const totalChainScore = sequencePossible ? (eval1 + bestRemainingBonus) : (eval1 - 1500);
+                    if (totalChainScore > maxChainScore) {
+                        maxChainScore = totalChainScore;
+                        bestFirstMove = {
+                            shapeIdx: s1,
+                            row: r1,
+                            col: c1,
+                            shape: shape1,
                             linesCleared: sim1.linesCleared,
-                            score: moveScore
+                            score: totalChainScore
                         };
                     }
                 }
             }
         }
 
-        return bestMove;
+        return bestFirstMove;
     }
 }
