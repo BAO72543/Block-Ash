@@ -393,6 +393,13 @@ export class BlockBlastApp {
 
         // Adventure Mode Victory
         if (result.isAdventureWin) {
+            if (this.isAutoplayActive) {
+                this.stopAutoplay();
+            }
+            this.gameState.gameOver = true;
+            this.updateScoreDisplays();
+            this.updateComboFeed();
+            this.updateModeStatusBar();
             this.audio.playAllClear();
             this.triggerHaptic('all-clear');
             this.particles.addConfettiBurst(this.renderer.width, this.renderer.height, 100);

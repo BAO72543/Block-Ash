@@ -331,6 +331,8 @@ export class BlockGameState {
             // Check Adventure Win condition: stage target reached
             if (this.stageGoals && this.stageGoals.collected >= this.stageGoals.target) {
                 isAdventureWin = true;
+                this.gameOver = true;
+                this.stageCompleted = true;
                 starsEarned = (this.movesRemaining >= 4) ? 3 : (this.movesRemaining >= 1 ? 2 : 1);
                 ModeManager.saveStageVictory(this.stageId, starsEarned, this.score);
             } else if (this.movesRemaining <= 0) {
