@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Block Blast - HTML5 Puzzle Game & AI Solver</title>
+    <meta name="description" content="Play the addictive 8x8 block placement puzzle game with combo multipliers, rich visual effects, sound synthesis, and built-in AI solver.">
+    <meta name="theme-color" content="#0F172A">
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-theme="neon-dark">
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="brand-section">
+                <div class="logo-badge">⚡</div>
+                <div>
+                    <h1 class="brand-title">BLOCK BLAST</h1>
+                    <div class="brand-subtitle">HTML5 Edition &bull; AI Powered</div>
+                </div>
+            </div>
+
+            <div class="score-board">
+                <div class="combo-pill" id="combo-badge">
+                    <span id="combo-flame" style="display: none;">🔥</span>
+                    <span>COMBO <span id="combo-count">0</span></span>
+                </div>
+
+                <div class="score-card primary">
+                    <span class="label">Score</span>
+                    <span class="value" id="current-score">0</span>
+                </div>
+
+                <div class="score-card">
+                    <span class="label">Best</span>
+                    <span class="value" id="high-score">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Game Canvas Stage -->
+            <section class="game-stage-container" id="stage-container">
+                <canvas id="game-canvas"></canvas>
+            </section>
+
+            <!-- Sidebar Dashboard -->
+            <aside class="sidebar-panel">
+                <!-- Action Controls -->
+                <div class="panel-card">
+                    <h2 class="panel-title">⚡ Quick Actions</h2>
+                    <div class="controls-grid">
+                        <button class="btn btn-accent" id="btn-hint" title="Get AI recommended move (H)">
+                            <span class="icon">💡</span>
+                            <span class="btn-text">Hint</span>
+                        </button>
+                        <button class="btn btn-primary" id="btn-autoplay" title="Let AI play automatically (A)">
+                            <span class="icon">🤖</span>
+                            <span class="btn-text">AI Autoplay</span>
+                        </button>
+                        <button class="btn" id="btn-sound" title="Toggle audio (M)">
+                            <span class="icon">🔊</span>
+                            <span class="btn-text">Sound</span>
+                        </button>
+                        <button class="btn" id="btn-restart" title="Start new game (R)">
+                            <span class="icon">🔄</span>
+                            <span class="btn-text">Restart</span>
+                        </button>
+                        <button class="btn" id="btn-stats" title="View gameplay statistics">
+                            <span class="icon">📊</span>
+                            <span class="btn-text">Stats</span>
+                        </button>
+                    </div>
+
+                    <!-- AI Speed Option -->
+                    <div style="margin-top: 12px;">
+                        <label for="autoplay-speed-select" class="panel-title" style="margin-bottom: 2px; font-size: 11px;">🤖 AI Speed</label>
+                        <select id="autoplay-speed-select" class="select-input">
+                            <option value="slow">Slow (Relaxed)</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="fast">Fast</option>
+                            <option value="turbo">Turbo ⚡</option>
+                        </select>
+                    </div>
+
+                    <!-- Theme Option -->
+                    <div style="margin-top: 10px;">
+                        <label for="theme-selector" class="panel-title" style="margin-bottom: 2px; font-size: 11px;">🎨 Visual Theme</label>
+                        <select id="theme-selector" class="select-input">
+                            <option value="neon-dark" selected>Neon Dark</option>
+                            <option value="cyber-midnight">Cyber Midnight</option>
+                            <option value="sunset-blast">Sunset Blast</option>
+                            <option value="classic-pastel">Classic Pastel</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Combo History Feed -->
+                <div class="panel-card">
+                    <h2 class="panel-title">🔥 Combo Feed</h2>
+                    <div class="combo-feed-box" id="combo-feed">
+                        <div class="feed-item">Ready to blast!</div>
+                    </div>
+                </div>
+
+                <!-- Controls Guide -->
+                <div class="panel-card">
+                    <h2 class="panel-title">🎮 Controls</h2>
+                    <div class="keys-list">
+                        <div class="key-row">
+                            <span>Drag & Drop</span>
+                            <kbd>Mouse / Touch</kbd>
+                        </div>
+                        <div class="key-row">
+                            <span>Select Shapes</span>
+                            <div><kbd>E</kbd> <kbd>R</kbd> <kbd>T</kbd></div>
+                        </div>
+                        <div class="key-row">
+                            <span>Move Cursor</span>
+                            <div><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd></div>
+                        </div>
+                        <div class="key-row">
+                            <span>Place Shape</span>
+                            <kbd>Space / Enter</kbd>
+                        </div>
+                        <div class="key-row">
+                            <span>AI Hint / Bot</span>
+                            <div><kbd>H</kbd> / <kbd>A</kbd></div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <span>Block Blast &copy; 2026 &bull; High-Performance HTML5 Canvas Game</span>
+            <div class="footer-links">
+                <span>Solvable Engine &bull; Zero Lag Web Audio</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div class="modal-backdrop" id="game-over-modal">
+        <div class="modal-card">
+            <h2 class="modal-title">GAME OVER</h2>
+            <div class="record-badge" id="modal-record-badge" style="display: none;">🏆 NEW RECORD!</div>
+
+            <div class="modal-score-box">
+                <div class="label">Final Score</div>
+                <div class="score-value" id="modal-final-score">0</div>
+                <div class="best-score">High Score: <span id="modal-high-score">0</span></div>
+            </div>
+
+            <button class="btn btn-primary" id="btn-modal-restart" style="width: 100%; padding: 14px; font-size: 16px; border-radius: var(--radius-md);">
+                <span>🔄 Play Again (Space)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div class="modal-backdrop" id="stats-modal">
+        <div class="modal-card">
+            <h2 class="modal-title" style="font-size: 24px;">📊 Game Statistics</h2>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Games Played</div>
+                    <div class="stat-val" id="stat-games">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">High Score</div>
+                    <div class="stat-val" id="stat-high-score">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Max Combo Streak</div>
+                    <div class="stat-val" id="stat-max-combo">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Lines Cleared</div>
+                    <div class="stat-val" id="stat-lines">0</div>
+                </div>
+                <div class="stat-item" style="grid-column: span 2;">
+                    <div class="stat-label">All-Clears (Board Wipes)</div>
+                    <div class="stat-val" id="stat-all-clears">0</div>
+                </div>
+            </div>
+
+            <button class="btn" id="btn-close-stats" style="width: 100%; padding: 12px; font-size: 14px; border-radius: var(--radius-sm);">
+                <span>Close</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main JavaScript Entrypoint -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

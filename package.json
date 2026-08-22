@@ -1,0 +1,21 @@
+{
+  "name": "blockblast-html5",
+  "version": "1.0.0",
+  "description": "Block Blast - Modern HTML5 Puzzle Game & AI Solver",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "serve": "npx serve ."
+  },
+  "keywords": [
+    "blockblast",
+    "html5",
+    "game",
+    "canvas",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT"
+}
