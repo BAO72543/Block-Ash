@@ -88,15 +88,17 @@ export class InputHandler {
                 const col = Math.round((originX - bx - gap) / (cellSize + gap));
                 const row = Math.round((originY - by - gap) / (cellSize + gap));
 
-                const targetRow = Math.max(0, Math.min(8 - shape.rows, row));
-                const targetCol = Math.max(0, Math.min(8 - shape.cols, col));
+                // Strict boundary check: If dragged back to dock or outside grid, CANCEL placement
+                let placed = false;
+                if (row >= 0 && row <= 8 - shape.rows && col >= 0 && col <= 8 - shape.cols) {
+                    placed = this.tryPlace(shapeIdx, row, col);
+                }
 
-                const placed = this.tryPlace(shapeIdx, targetRow, targetCol);
                 if (placed) {
                     this.renderer.selectedShapeIdx = -1;
                     this.renderer.cancelSnapBack();
                 } else {
-                    // Elastic Snap-Back return animation on invalid drop
+                    // User canceled or dropped outside -> smoothly snap back to tray slot
                     this.renderer.startSnapBack(shapeIdx, this.renderer.dragPointer, this.renderer.dragOffset);
                 }
             } else {
@@ -163,15 +165,17 @@ export class InputHandler {
                 const col = Math.round((originX - bx - gap) / (cellSize + gap));
                 const row = Math.round((originY - by - gap) / (cellSize + gap));
 
-                const targetRow = Math.max(0, Math.min(8 - shape.rows, row));
-                const targetCol = Math.max(0, Math.min(8 - shape.cols, col));
+                // Strict boundary check: If dragged back to dock or outside grid, CANCEL placement
+                let placed = false;
+                if (row >= 0 && row <= 8 - shape.rows && col >= 0 && col <= 8 - shape.cols) {
+                    placed = this.tryPlace(shapeIdx, row, col);
+                }
 
-                const placed = this.tryPlace(shapeIdx, targetRow, targetCol);
                 if (placed) {
                     this.renderer.selectedShapeIdx = -1;
                     this.renderer.cancelSnapBack();
                 } else {
-                    // Elastic Snap-Back return animation on invalid drop
+                    // User canceled or dropped outside -> smoothly snap back to tray slot
                     this.renderer.startSnapBack(shapeIdx, this.renderer.dragPointer, this.renderer.dragOffset);
                 }
             } else {
