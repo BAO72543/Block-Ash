@@ -5,36 +5,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-    /* Theme: Neon Dark (Default) */
-    --bg-gradient: radial-gradient(circle at 50% 20%, #1e293b 0%, #0f172a 60%, #020617 100%);
-    --card-bg: rgba(30, 41, 59, 0.7);
+    /* Theme: Deep Slate Navy (Default) */
+    --bg-gradient: radial-gradient(circle at 50% 20%, #1e293b 0%, #121826 60%, #0a0e17 100%);
+    --card-bg: rgba(30, 41, 59, 0.85);
     --card-border: rgba(255, 255, 255, 0.08);
-    --card-border-glow: rgba(59, 130, 246, 0.3);
+    --card-border-glow: rgba(0, 122, 255, 0.35);
     --text-main: #F8FAFC;
     --text-muted: #94A3B8;
     --text-dim: #64748B;
-    --accent-blue: #3B82F6;
-    --accent-cyan: #06B6D4;
-    --accent-orange: #F97316;
-    --accent-yellow: #FBBF24;
-    --accent-green: #10B981;
-    --accent-purple: #8B5CF6;
-    --accent-pink: #EC4899;
-    --accent-red: #EF4444;
+    
+    /* Saturated Palette */
+    --accent-red: #FF3B30;
+    --accent-blue: #007AFF;
+    --accent-green: #34C759;
+    --accent-yellow: #FFCC00;
+    --accent-magenta: #AF52DE;
+    --accent-gold: #FFD700;
+    --accent-cyan: #00C7BE;
+    --accent-orange: #FF9500;
 
-    --btn-bg: rgba(51, 65, 85, 0.8);
-    --btn-hover: rgba(71, 85, 105, 0.9);
+    --btn-bg: rgba(51, 65, 85, 0.85);
+    --btn-hover: rgba(71, 85, 105, 0.95);
     --btn-border: rgba(255, 255, 255, 0.12);
-    --modal-overlay: rgba(2, 6, 23, 0.75);
+    --modal-overlay: rgba(10, 14, 23, 0.82);
 
     --radius-sm: 8px;
     --radius-md: 14px;
     --radius-lg: 20px;
     --radius-xl: 28px;
 
-    --shadow-subtle: 0 4px 12px rgba(0, 0, 0, 0.25);
-    --shadow-glow: 0 0 25px rgba(59, 130, 246, 0.25);
-    --shadow-flame: 0 0 20px rgba(249, 115, 22, 0.4);
+    --shadow-subtle: 0 4px 14px rgba(0, 0, 0, 0.35);
+    --shadow-glow: 0 0 25px rgba(0, 122, 255, 0.3);
+    --shadow-flame: 0 0 20px rgba(255, 149, 0, 0.45);
 }
 
 /* Theme: Cyber Midnight */
