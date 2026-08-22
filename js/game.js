@@ -45,6 +45,7 @@ export class BlockGameState {
         this.lastActionScore = 0;
         this.totalLinesClearedThisGame = 0;
         this.placementsCount = 0;
+        this.hasUsedRevive = false; // Limited to 1 rewarded revive per session
 
         // Generate 3 initial solvable pieces with DDA
         this.currentShapes = generateValidShapes(this.grid, this.comboCount);
@@ -324,6 +325,59 @@ export class BlockGameState {
         return true;
     }
 
+    /**
+     * Rewarded Video Revive Action:
+     * Triggers a grid sweep clearing the 4x4 center section (rows 2..5, cols 2..5)
+     * and restores active gameplay without losing the current score or streak.
+     * Strictly limited to 1 use per session.
+     */
+    reviveWithCenterSweep() {
+        if (this.hasUsedRevive) {
+            return { success: false, message: 'Revive already used this session.' };
+        }
+
+        this.hasUsedRevive = true;
+        const clearedCells = [];
+
+        // Clear 4x4 center section (rows 2-5, cols 2-5)
+        for (let r = 2; r <= 5; r++) {
+            for (let c = 2; c <= 5; c++) {
+                if (this.grid[r][c] !== 0) {
+                    clearedCells.push({ row: r, col: c, color: this.grid[r][c].color });
+                    this.grid[r][c] = 0;
+                }
+            }
+        }
+
+        this.gameOver = false;
+
+        // Ensure shapes can fit after the 4x4 sweep; if none fit, generate fresh solvable set
+        let canFitAny = false;
+        for (const shape of this.currentShapes) {
+            if (!shape || !shape.form) continue;
+            for (let r = 0; r <= 8 - shape.rows; r++) {
+                for (let c = 0; c <= 8 - shape.cols; c++) {
+                    if (this.canPlaceShape(shape, r, c)) {
+                        canFitAny = true;
+                        break;
+                    }
+                }
+                if (canFitAny) break;
+            }
+            if (canFitAny) break;
+        }
+
+        if (!canFitAny) {
+            this.currentShapes = generateValidShapes(this.grid, this.comboCount);
+        }
+
+        return {
+            success: true,
+            clearedCellsCount: clearedCells.length,
+            clearedCells
+        };
+    }
+
     getStateSnapshot() {
         return {
             grid: this.grid.map(row => [...row]),
@@ -333,7 +387,8 @@ export class BlockGameState {
             gameOver: this.gameOver,
             comboCount: this.comboCount,
             comboHistory: [...this.comboHistory],
-            placementsWithoutClear: this.placementsWithoutClear
+            placementsWithoutClear: this.placementsWithoutClear,
+            hasUsedRevive: this.hasUsedRevive
         };
     }
 }

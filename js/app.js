@@ -1,54 +1,55 @@
 /**
- * Block Blast - Main Application Coordinator
- * Connects Game Engine, Renderer, Audio, AI Solver, Input, and DOM UI.
+ * Block Blast - Main Application Controller
+ * Coordinates Engine, High-DPI Renderer, Particles, Sound Synthesizer,
+ * Autoplay AI, Minimalist UI and Monetization Loops (Bottom Banner, Interstitial Break, Rewarded Revive).
  */
 
 import { BlockGameState } from './game.js';
-import { ParticleSystem } from './particles.js';
-import { AudioManager } from './audio.js';
 import { GameRenderer } from './renderer.js';
-import { BlockBlastAI } from './ai.js';
+import { ParticleSystem } from './particles.js';
+import { SoundFX } from './audio.js';
 import { InputHandler } from './input.js';
+import { BlockBlastAI } from './ai.js';
 
-class BlockBlastApp {
+export class BlockBlastApp {
     constructor() {
         this.canvas = document.getElementById('game-canvas');
         this.gameState = new BlockGameState();
         this.particles = new ParticleSystem();
-        this.audio = new AudioManager();
+        this.audio = new SoundFX();
         this.renderer = new GameRenderer(this.canvas, this.gameState, this.particles);
         this.ai = new BlockBlastAI();
 
-        // AI Autoplay state
+        // Autoplay controller
         this.isAutoplayActive = false;
         this.autoplayTimer = null;
-        this.autoplaySpeeds = {
-            'slow': 800,
-            'normal': 450,
-            'fast': 220,
-            'turbo': 80
-        };
-        this.currentAutoplaySpeed = 'normal';
+        this.autoplaySpeed = 'normal'; // slow: 600ms, normal: 300ms, fast: 120ms, turbo: 30ms
+        this.celebratedNewRecord = false;
+        this.gamesSinceLastInterstitial = 0;
 
-        // DOM Elements
+        // Cache DOM Elements
         this.dom = {
-            score: document.getElementById('current-score'),
-            highScore: document.getElementById('high-score'),
-            comboBadge: document.getElementById('combo-badge'),
-            comboCount: document.getElementById('combo-count'),
-            comboFlame: document.getElementById('combo-flame'),
+            scoreCurrent: document.getElementById('score-current'),
+            scoreHighest: document.getElementById('score-highest'),
+            comboCurrent: document.getElementById('combo-current'),
             comboFeed: document.getElementById('combo-feed'),
             btnHint: document.getElementById('btn-hint'),
             btnAutoplay: document.getElementById('btn-autoplay'),
             btnSound: document.getElementById('btn-sound'),
-            btnStats: document.getElementById('btn-stats'),
-            btnTheme: document.getElementById('btn-theme'),
             btnRestart: document.getElementById('btn-restart'),
+            btnStats: document.getElementById('btn-stats'),
             gameOverModal: document.getElementById('game-over-modal'),
             modalFinalScore: document.getElementById('modal-final-score'),
             modalHighScore: document.getElementById('modal-high-score'),
             modalRecordBadge: document.getElementById('modal-record-badge'),
             btnModalRestart: document.getElementById('btn-modal-restart'),
+            btnModalRevive: document.getElementById('btn-modal-revive'),
+            rewardedAdModal: document.getElementById('rewarded-ad-modal'),
+            rewardedProgress: document.getElementById('rewarded-progress'),
+            rewardedTimerText: document.getElementById('rewarded-timer-text'),
+            btnClaimReward: document.getElementById('btn-claim-reward'),
+            interstitialAdModal: document.getElementById('interstitial-ad-modal'),
+            btnSkipInterstitial: document.getElementById('btn-skip-interstitial'),
             statsModal: document.getElementById('stats-modal'),
             btnCloseStats: document.getElementById('btn-close-stats'),
             statGames: document.getElementById('stat-games'),
@@ -119,6 +120,29 @@ class BlockBlastApp {
             this.restartGame();
         });
 
+        // Rewarded Video Revive Button (10% Ad Revenue, 1 use per run)
+        if (this.dom.btnModalRevive) {
+            this.dom.btnModalRevive.addEventListener('click', () => {
+                this.audio.playButton();
+                this.startRewardedReviveFlow();
+            });
+        }
+
+        // Claim Rewarded Revive Button
+        if (this.dom.btnClaimReward) {
+            this.dom.btnClaimReward.addEventListener('click', () => {
+                this.audio.playButton();
+                this.completeRewardedRevive();
+            });
+        }
+
+        // Skip / Close Interstitial Ad Button
+        if (this.dom.btnSkipInterstitial) {
+            this.dom.btnSkipInterstitial.addEventListener('click', () => {
+                this.closeInterstitialAd();
+            });
+        }
+
         // Stats Modal
         this.dom.btnStats.addEventListener('click', () => {
             this.audio.playButton();
@@ -141,10 +165,7 @@ class BlockBlastApp {
         // Autoplay Speed Selection
         if (this.dom.autoplaySpeedSelect) {
             this.dom.autoplaySpeedSelect.addEventListener('change', (e) => {
-                this.currentAutoplaySpeed = e.target.value;
-                if (this.isAutoplayActive) {
-                    this.scheduleNextAutoplayStep();
-                }
+                this.autoplaySpeed = e.target.value;
             });
         }
 
@@ -217,8 +238,7 @@ class BlockBlastApp {
         const centerPlaced = result.placedCells[Math.floor(result.placedCells.length / 2)];
         if (centerPlaced) {
             const rect = this.renderer.getCellRect(centerPlaced.row, centerPlaced.col);
-            const text = result.linesCleared > 0 ? `+${result.scoreGained}` : `+${result.scoreGained}`;
-            this.particles.addFloatingText(text, rect.x + cellSize / 2, rect.y + cellSize / 2, {
+            this.particles.addFloatingText(`+${result.scoreGained}`, rect.x + cellSize / 2, rect.y + cellSize / 2, {
                 color: result.linesCleared > 0 ? '#FDE047' : '#FFFFFF',
                 fontSize: result.linesCleared > 0 ? 28 : 22
             });
@@ -259,17 +279,140 @@ class BlockBlastApp {
             this.stopAutoplay();
         }
 
+        this.gamesSinceLastInterstitial++;
+
+        // Trigger Interstitial Break Ad (35% Ad Revenue) periodically (e.g. every 2 game overs)
+        if (this.gamesSinceLastInterstitial >= 2 && this.dom.interstitialAdModal) {
+            this.gamesSinceLastInterstitial = 0;
+            this.showInterstitialAd(() => {
+                this.showGameOverModal();
+            });
+        } else {
+            this.showGameOverModal();
+        }
+    }
+
+    showGameOverModal() {
         this.dom.modalFinalScore.textContent = this.gameState.score.toLocaleString();
         this.dom.modalHighScore.textContent = this.gameState.highestScore.toLocaleString();
 
         const isNewRecord = this.gameState.score >= this.gameState.highestScore && this.gameState.score > 0;
         this.dom.modalRecordBadge.style.display = isNewRecord ? 'inline-block' : 'none';
 
+        // Update Rewarded Revive button state (limited to 1 per run)
+        if (this.dom.btnModalRevive) {
+            if (this.gameState.hasUsedRevive) {
+                this.dom.btnModalRevive.disabled = true;
+                this.dom.btnModalRevive.innerHTML = '<span>🚫 Revive Used (1/session limit)</span>';
+            } else {
+                this.dom.btnModalRevive.disabled = false;
+                this.dom.btnModalRevive.innerHTML = '<span>📺 Watch Ad to Revive (Clear 4×4 Center)</span>';
+            }
+        }
+
         if (isNewRecord) {
             this.particles.addConfettiBurst(this.renderer.width, this.renderer.height, 80);
         }
 
         this.dom.gameOverModal.classList.add('active');
+    }
+
+    /* ==========================================================================
+       Monetization: Rewarded Video Revive (4x4 Center Grid Sweep)
+       ========================================================================== */
+
+    startRewardedReviveFlow() {
+        if (this.gameState.hasUsedRevive) return;
+
+        // Open Rewarded Video Modal
+        this.dom.gameOverModal.classList.remove('active');
+        this.dom.rewardedAdModal.style.display = 'flex';
+        this.dom.rewardedProgress.style.width = '0%';
+        this.dom.btnClaimReward.style.display = 'none';
+
+        let secondsLeft = 5;
+        this.dom.rewardedTimerText.textContent = `Reward unlocking in ${secondsLeft}s...`;
+
+        const startTime = Date.now();
+        const duration = 5000;
+
+        const adInterval = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(100, (elapsed / duration) * 100);
+            this.dom.rewardedProgress.style.width = `${progress}%`;
+
+            const currentSec = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+            if (currentSec > 0) {
+                this.dom.rewardedTimerText.textContent = `Reward unlocking in ${currentSec}s...`;
+            } else {
+                clearInterval(adInterval);
+                this.dom.rewardedTimerText.textContent = '✅ Video complete! Reward ready.';
+                this.dom.btnClaimReward.style.display = 'inline-block';
+            }
+        }, 100);
+    }
+
+    completeRewardedRevive() {
+        this.dom.rewardedAdModal.style.display = 'none';
+        const res = this.gameState.reviveWithCenterSweep();
+
+        if (res.success) {
+            const { cellSize, gap } = this.renderer.boardMetrics;
+            const bx = this.renderer.boardMetrics.x;
+            const by = this.renderer.boardMetrics.y;
+
+            // Trigger visual 4x4 center sweep shockwave and particle explosions
+            for (let r = 2; r <= 5; r++) {
+                this.particles.addLineClearWave('row', r, bx, by, cellSize, gap);
+                for (let c = 2; c <= 5; c++) {
+                    const rect = this.renderer.getCellRect(r, c);
+                    this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, { hex: '#10B981', light: '#6EE7B7', dark: '#059669' });
+                }
+            }
+
+            this.audio.playAllClear();
+            this.particles.triggerShake(8, 250);
+            this.particles.addFloatingText('✨ 4×4 CENTER GRID SWEEP!', bx + this.renderer.boardMetrics.size / 2, by + this.renderer.boardMetrics.size / 2, {
+                color: '#10B981',
+                fontSize: 28,
+                font: '900 28px Outfit, sans-serif'
+            });
+
+            this.updateScoreDisplays();
+            this.updateComboFeed();
+        }
+    }
+
+    /* ==========================================================================
+       Monetization: Interstitial Break Ad (35% Ad Revenue)
+       ========================================================================== */
+
+    showInterstitialAd(onCompleteCallback) {
+        this.interstitialCallback = onCompleteCallback;
+        this.dom.interstitialAdModal.style.display = 'flex';
+        this.dom.btnSkipInterstitial.disabled = true;
+
+        let countdown = 3;
+        this.dom.btnSkipInterstitial.textContent = `Close in ${countdown}s`;
+
+        const timer = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+                this.dom.btnSkipInterstitial.textContent = `Close in ${countdown}s`;
+            } else {
+                clearInterval(timer);
+                this.dom.btnSkipInterstitial.disabled = false;
+                this.dom.btnSkipInterstitial.textContent = '✕ Close Ad';
+            }
+        }, 1000);
+    }
+
+    closeInterstitialAd() {
+        this.dom.interstitialAdModal.style.display = 'none';
+        if (this.interstitialCallback) {
+            this.interstitialCallback();
+            this.interstitialCallback = null;
+        }
     }
 
     restartGame() {
@@ -356,36 +499,50 @@ class BlockBlastApp {
     scheduleNextAutoplayStep() {
         if (!this.isAutoplayActive || this.gameState.gameOver) return;
 
-        if (this.autoplayTimer) clearTimeout(this.autoplayTimer);
+        const speedMap = {
+            slow: 650,
+            normal: 320,
+            fast: 130,
+            turbo: 30
+        };
+        const delay = speedMap[this.autoplaySpeed] || 320;
 
-        const delay = this.autoplaySpeeds[this.currentAutoplaySpeed] || 450;
         this.autoplayTimer = setTimeout(() => {
-            if (!this.isAutoplayActive || this.gameState.gameOver) return;
-
-            const bestMove = this.ai.findBestMove(this.gameState);
-            if (bestMove) {
-                this.handlePlaceAction(bestMove.shapeIdx, bestMove.row, bestMove.col);
-                if (this.isAutoplayActive && !this.gameState.gameOver) {
-                    this.scheduleNextAutoplayStep();
-                }
-            } else {
-                this.stopAutoplay();
-            }
+            this.executeAutoplayStep();
         }, delay);
+    }
+
+    executeAutoplayStep() {
+        if (!this.isAutoplayActive || this.gameState.gameOver) return;
+
+        const bestMove = this.ai.findBestMove(this.gameState);
+        if (!bestMove) {
+            this.stopAutoplay();
+            return;
+        }
+
+        this.handlePlaceAction(bestMove.shapeIdx, bestMove.row, bestMove.col);
+
+        if (!this.gameState.gameOver && this.isAutoplayActive) {
+            this.scheduleNextAutoplayStep();
+        } else {
+            this.stopAutoplay();
+        }
     }
 
     changeTheme(themeKey) {
         this.renderer.setTheme(themeKey);
-        document.body.setAttribute('data-theme', themeKey);
+        document.documentElement.setAttribute('data-theme', themeKey);
     }
 
     openStatsModal() {
         const stats = this.gameState.stats;
-        this.dom.statGames.textContent = (stats.gamesPlayed || 0).toLocaleString();
-        this.dom.statHighScore.textContent = (stats.highScore || 0).toLocaleString();
-        this.dom.statMaxCombo.textContent = (stats.maxComboStreak || 0).toString();
-        this.dom.statLines.textContent = (stats.totalLinesCleared || 0).toLocaleString();
-        this.dom.statAllClears.textContent = (stats.allClearsCount || 0).toLocaleString();
+        this.dom.statGames.textContent = stats.gamesPlayed || 0;
+        this.dom.statHighScore.textContent = (this.gameState.highestScore || 0).toLocaleString();
+        this.dom.statMaxCombo.textContent = stats.maxComboStreak || 0;
+        this.dom.statLines.textContent = stats.totalLinesCleared || 0;
+        this.dom.statAllClears.textContent = stats.allClearsCount || 0;
+
         this.dom.statsModal.classList.add('active');
     }
 
@@ -394,39 +551,32 @@ class BlockBlastApp {
     }
 
     updateScoreDisplays() {
-        this.dom.score.textContent = this.gameState.score.toLocaleString();
-        this.dom.highScore.textContent = this.gameState.highestScore.toLocaleString();
-
-        const combo = this.gameState.combos[1];
-        this.dom.comboCount.textContent = combo.toString();
-
-        if (combo > 0) {
-            this.dom.comboBadge.classList.add('active');
-            this.dom.comboFlame.style.display = 'inline-block';
-        } else {
-            this.dom.comboBadge.classList.remove('active');
-            this.dom.comboFlame.style.display = 'none';
-        }
+        this.dom.scoreCurrent.textContent = this.gameState.score.toLocaleString();
+        this.dom.scoreHighest.textContent = this.gameState.highestScore.toLocaleString();
+        this.dom.comboCurrent.textContent = this.gameState.comboCount;
     }
 
     updateComboFeed() {
-        if (!this.dom.comboFeed) return;
-        const messages = this.gameState.combos[0];
-        this.dom.comboFeed.innerHTML = messages.map(msg => {
-            const isHighlight = msg.includes('CLEAR') || msg.includes('ALL');
-            return `<div class="feed-item ${isHighlight ? 'highlight' : ''}">${msg}</div>`;
-        }).join('');
-        this.dom.comboFeed.scrollTop = this.dom.comboFeed.scrollHeight;
+        const history = this.gameState.comboHistory;
+        this.dom.comboFeed.innerHTML = '';
+
+        for (let i = history.length - 1; i >= 0; i--) {
+            const item = document.createElement('div');
+            item.className = 'feed-item';
+            item.textContent = history[i];
+            if (i === history.length - 1) {
+                item.style.fontWeight = '700';
+                item.style.color = '#F97316';
+            }
+            this.dom.comboFeed.appendChild(item);
+        }
     }
 
-    gameLoop(now) {
-        const dt = Math.min(now - this.lastTime, 50);
-        this.lastTime = now;
+    gameLoop(timestamp) {
+        const dt = Math.min(timestamp - this.lastTime, 100);
+        this.lastTime = timestamp;
 
-        // Update particle physics & animations
         this.particles.update(dt);
-
-        // Render Canvas
         this.renderer.render(dt);
 
         requestAnimationFrame((t) => this.gameLoop(t));
@@ -435,5 +585,5 @@ class BlockBlastApp {
 
 // Instantiate on DOM load
 window.addEventListener('DOMContentLoaded', () => {
-    window.blockBlastApp = new BlockBlastApp();
+    window.app = new BlockBlastApp();
 });

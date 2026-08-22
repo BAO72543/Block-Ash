@@ -155,9 +155,65 @@
                 <div class="best-score">High Score: <span id="modal-high-score">0</span></div>
             </div>
 
+            <!-- Rewarded Video Revive (10% Ad Revenue, 1 use per run) -->
+            <button class="btn btn-revive" id="btn-modal-revive">
+                <span>📺 Watch Ad to Revive (Clear 4×4 Center)</span>
+            </button>
+
             <button class="btn btn-primary" id="btn-modal-restart" style="width: 100%; padding: 14px; font-size: 16px; border-radius: var(--radius-md);">
                 <span>🔄 Play Again (Space)</span>
             </button>
+        </div>
+    </div>
+
+    <!-- Rewarded Video Ad Modal -->
+    <div class="modal-backdrop" id="rewarded-ad-modal" style="display: none;">
+        <div class="modal-card ad-card">
+            <div class="ad-badge">📺 Rewarded Video Ad</div>
+            <div class="ad-video-container">
+                <div class="ad-video-mock">
+                    <div class="ad-video-icon">🎬</div>
+                    <div class="ad-video-title">Epic Arcade Adventure</div>
+                    <div class="ad-video-sub">Reward grants 4×4 Center Grid Wipe</div>
+                    <div class="ad-progress-bar"><div class="ad-progress-fill" id="rewarded-progress"></div></div>
+                </div>
+            </div>
+            <div class="ad-footer-bar">
+                <span id="rewarded-timer-text">Reward unlocking in 5s...</span>
+                <button class="btn btn-primary btn-sm" id="btn-claim-reward" style="display: none;">✨ Revive Board Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interstitial Break Ad Modal (35% Ad Revenue) -->
+    <div class="modal-backdrop" id="interstitial-ad-modal" style="display: none;">
+        <div class="modal-card ad-card">
+            <div class="ad-top-row">
+                <div class="ad-badge">Sponsor Ad</div>
+                <button class="btn-skip-ad" id="btn-skip-interstitial" disabled>Close in 3s</button>
+            </div>
+            <div class="ad-interstitial-content">
+                <div class="ad-banner-mock">
+                    <div class="ad-promo-tag">FEATURED SPONSOR</div>
+                    <h3 style="margin: 8px 0 4px; font-size: 18px; color: #fff;">Ultra Speed Gaming VPN</h3>
+                    <p style="margin: 0 0 12px; font-size: 13px; color: #94a3b8;">Zero ping &bull; 100% Encrypted &bull; 1-Click Connect</p>
+                    <a href="javascript:void(0)" class="btn btn-primary btn-sm" style="display: inline-block; text-decoration: none;">Learn More &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Persistent Bottom Banner Ad (55% Ad Revenue) -->
+    <div class="ad-bottom-wrapper" id="ad-bottom-banner">
+        <div class="ad-banner-slot">
+            <span class="ad-tag">ADVERTISEMENT</span>
+            <div class="ad-banner-content">
+                <span class="ad-sponsor-icon">⚡</span>
+                <div class="ad-sponsor-text">
+                    <strong>Premium HTML5 Web Arcade</strong> — Fast, Responsive, Zero Install
+                </div>
+                <button class="btn-ad-action">Play Free</button>
+            </div>
         </div>
     </div>
 
