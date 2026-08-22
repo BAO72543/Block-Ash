@@ -433,20 +433,26 @@ export class GameRenderer {
         if (rowsToClear.length > 0 || colsToClear.length > 0) {
             const ctx = this.ctx;
             const { x: bx, y: by, size, cellSize, gap } = this.boardMetrics;
-            const glowAlpha = 0.35 + Math.sin(this.pulsePhase * 3) * 0.15;
+            const glowAlpha = 0.38 + Math.sin(this.pulsePhase * 4) * 0.18;
 
             ctx.save();
             ctx.fillStyle = `rgba(255, 255, 255, ${glowAlpha})`;
+            ctx.strokeStyle = `rgba(251, 191, 36, ${Math.min(1, glowAlpha + 0.3)})`;
+            ctx.lineWidth = 2;
+            ctx.shadowColor = 'rgba(251, 191, 36, 0.6)';
+            ctx.shadowBlur = 12;
 
             for (const r of rowsToClear) {
                 const y = by + gap + r * (cellSize + gap);
                 this.roundRect(bx + gap, y, size - gap * 2, cellSize, Math.round(cellSize * 0.14));
                 ctx.fill();
+                ctx.stroke();
             }
             for (const c of colsToClear) {
                 const x = bx + gap + c * (cellSize + gap);
                 this.roundRect(x, by + gap, cellSize, size - gap * 2, Math.round(cellSize * 0.14));
                 ctx.fill();
+                ctx.stroke();
             }
             ctx.restore();
         }
@@ -528,7 +534,7 @@ export class GameRenderer {
                 }
 
                 const maxDim = Math.max(shape.rows, shape.cols, 3);
-                const miniBlockSize = Math.round(Math.min((slot.width - 24) / maxDim, (slot.height - 24) / maxDim, 30));
+                const miniBlockSize = Math.round(Math.min((slot.width - 24) / maxDim, (slot.height - 24) / maxDim, this.boardMetrics.cellSize * 0.60));
                 const shapePixelW = shape.cols * (miniBlockSize + 2) - 2;
                 const shapePixelH = shape.rows * (miniBlockSize + 2) - 2;
 
