@@ -301,7 +301,7 @@ export class BlockBlastApp {
             });
         }
 
-        if (result.comboCount >= 2) {
+        if (result.linesCleared > 0 && result.comboCount >= 2) {
             const offsetY = (result.linesCleared >= 2 || result.allClear) ? 28 : -10;
             this.particles.addFloatingText(`COMBO x${result.comboCount}!`, centerX, centerY + offsetY, {
                 isGold: true,

@@ -158,23 +158,23 @@ export class BlockGameState {
         const clearResult = this.updateGrid(N_cells);
         const linesCleared = clearResult.linesCleared;
 
-        // 4. Update Combo Streak C and non-clear placements
+        // 4. Update Combo Streak C: increases on line clears, resets to 0 on normal moves
         let comboReset = false;
         if (linesCleared > 0) {
             this.placementsWithoutClear = 0;
-            this.comboCount += 1; // Increases by +1 per clearing turn
+            this.comboCount += 1; // Increases by +1 per consecutive clearing turn
             this.comboHistory[this.comboHistory.length - 1] = `COMBO ${this.comboCount}`;
             this.totalLinesClearedThisGame += linesCleared;
             this.stats.totalLinesCleared = (this.stats.totalLinesCleared || 0) + linesCleared;
             this.stats.maxComboStreak = Math.max(this.stats.maxComboStreak || 0, this.comboCount);
         } else {
-            this.placementsWithoutClear++;
-            if (this.placementsWithoutClear > this.MAX_NON_CLEAR_TURNS) {
-                if (this.comboCount > 0) comboReset = true;
-                this.comboCount = 0;
-                this.comboHistory[this.comboHistory.length - 1] = 'COMBO 0';
-                this.placementsWithoutClear = 0;
+            // Normal placement with 0 lines cleared -> Combo breaks immediately
+            if (this.comboCount > 0) {
+                comboReset = true;
             }
+            this.comboCount = 0;
+            this.comboHistory[this.comboHistory.length - 1] = 'COMBO 0';
+            this.placementsWithoutClear = 0;
         }
 
         // 5. Generate new shapes via DDA if all 3 slots empty
