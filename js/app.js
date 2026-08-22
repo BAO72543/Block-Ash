@@ -427,36 +427,39 @@ export class BlockBlastApp {
     startRewardedReviveFlow() {
         if (this.gameState.hasUsedRevive) return;
 
-        // Open Rewarded Video Modal
+        // Close Game Over Modal and Open Rewarded Video Modal with active state
         this.dom.gameOverModal.classList.remove('active');
         this.dom.rewardedAdModal.style.display = 'flex';
+        this.dom.rewardedAdModal.classList.add('active');
         this.dom.rewardedProgress.style.width = '0%';
         this.dom.btnClaimReward.style.display = 'none';
 
-        let secondsLeft = 5;
+        let secondsLeft = 3;
         this.dom.rewardedTimerText.textContent = `Reward unlocking in ${secondsLeft}s...`;
 
         let progress = 0;
-        const interval = 100;
-        const step = 100 / (5000 / interval);
+        const totalDuration = 3000;
+        const interval = 60;
+        const step = 100 / (totalDuration / interval);
 
         const timer = setInterval(() => {
             progress += step;
             this.dom.rewardedProgress.style.width = `${Math.min(100, progress)}%`;
 
-            const currentSec = Math.max(0, Math.ceil((100 - progress) / (100 / 5)));
+            const currentSec = Math.max(0, Math.ceil((100 - progress) / (100 / 3)));
             if (currentSec > 0) {
                 this.dom.rewardedTimerText.textContent = `Reward unlocking in ${currentSec}s...`;
             } else {
                 clearInterval(timer);
-                this.dom.rewardedTimerText.textContent = '🎉 Reward Ready!';
+                this.dom.rewardedTimerText.textContent = '🎉 Video Complete! Reward Ready.';
                 this.dom.btnClaimReward.style.display = 'inline-block';
             }
         }, interval);
     }
 
     completeRewardedRevive() {
-        // Close rewarded modal
+        // Dismiss rewarded modal
+        this.dom.rewardedAdModal.classList.remove('active');
         this.dom.rewardedAdModal.style.display = 'none';
 
         // Perform 4x4 center sweep on matrix B[2..5][2..5]
@@ -488,6 +491,7 @@ export class BlockBlastApp {
         });
 
         this.audio.playAllClear();
+        this.triggerHaptic('all-clear');
         this.updateScoreDisplays();
         this.updateComboFeed();
     }
@@ -499,6 +503,7 @@ export class BlockBlastApp {
     showInterstitialAd(onCompleteCallback) {
         this.interstitialCallback = onCompleteCallback;
         this.dom.interstitialAdModal.style.display = 'flex';
+        this.dom.interstitialAdModal.classList.add('active');
         this.dom.btnSkipInterstitial.disabled = true;
 
         let countdown = 3;
@@ -517,6 +522,7 @@ export class BlockBlastApp {
     }
 
     closeInterstitialAd() {
+        this.dom.interstitialAdModal.classList.remove('active');
         this.dom.interstitialAdModal.style.display = 'none';
         if (this.interstitialCallback) {
             this.interstitialCallback();
