@@ -1,7 +1,7 @@
 /**
- * Block Blast - Canvas Renderer
- * Implements Saturated Color System, Pseudo-3D Bevel Highlights & Shadows,
- * Deep Slate Navy Background (#121826) and 6px-8px tactile rounded corners.
+ * Block Blast - Classic Canvas Renderer
+ * Restores classic Block Blast block aesthetic: smooth glossy gradients,
+ * top-left highlight, clean grid cells, and crisp visual feedback.
  */
 
 export class GameRenderer {
@@ -20,64 +20,56 @@ export class GameRenderer {
         this.aiHint = null; // { shapeIdx, row, col }
         this.aiThinking = false;
 
-        // Visual Design System & Palettes
+        // Theme configuration
         this.currentTheme = 'neon-dark';
         this.themes = {
             'neon-dark': {
-                name: 'Deep Slate Navy (Default)',
-                bg: '#121826',
+                name: 'Dark Classic (Default)',
+                bg: '#0F172A',
                 boardBg: '#1E293B',
-                cellEmpty: '#1E293B',
-                cellEmptyBorder: '#0F172A',
-                cellEmptyInner: '#182232',
+                cellEmpty: '#334155',
                 dockBg: '#1E293B',
                 dockBorder: '#334155',
                 gridLines: '#0F172A',
-                hintGlow: '#FFCC00',
+                hintGlow: '#F59E0B',
                 validGhost: 'rgba(255, 255, 255, 0.45)',
-                invalidGhost: 'rgba(255, 59, 48, 0.45)'
+                invalidGhost: 'rgba(239, 68, 68, 0.45)'
             },
             'cyber-midnight': {
                 name: 'Cyber Midnight',
-                bg: '#0A0E17',
+                bg: '#090D16',
                 boardBg: '#111827',
-                cellEmpty: '#1A2333',
-                cellEmptyBorder: '#0B0F19',
-                cellEmptyInner: '#141C2B',
+                cellEmpty: '#1F2937',
                 dockBg: '#111827',
                 dockBorder: '#374151',
                 gridLines: '#0B0F19',
-                hintGlow: '#34C759',
-                validGhost: 'rgba(0, 122, 255, 0.45)',
-                invalidGhost: 'rgba(255, 59, 48, 0.45)'
-            },
-            'sunset-blast': {
-                name: 'Sunset Blast',
-                bg: '#1A1028',
-                boardBg: '#2D1B4E',
-                cellEmpty: '#3D2564',
-                cellEmptyBorder: '#1A1028',
-                cellEmptyInner: '#321D53',
-                dockBg: '#2D1B4E',
-                dockBorder: '#5B3B92',
-                gridLines: '#181028',
-                hintGlow: '#FFD700',
-                validGhost: 'rgba(175, 82, 222, 0.45)',
-                invalidGhost: 'rgba(255, 59, 48, 0.45)'
+                hintGlow: '#10B981',
+                validGhost: 'rgba(59, 130, 246, 0.45)',
+                invalidGhost: 'rgba(244, 63, 94, 0.45)'
             },
             'classic-pastel': {
-                name: 'Light Studio',
+                name: 'Classic Light',
                 bg: '#F1F5F9',
                 boardBg: '#FFFFFF',
                 cellEmpty: '#E2E8F0',
-                cellEmptyBorder: '#CBD5E1',
-                cellEmptyInner: '#E9EEF4',
                 dockBg: '#FFFFFF',
                 dockBorder: '#E2E8F0',
                 gridLines: '#CBD5E1',
-                hintGlow: '#FF9500',
-                validGhost: 'rgba(0, 122, 255, 0.4)',
-                invalidGhost: 'rgba(255, 59, 48, 0.4)'
+                hintGlow: '#D97706',
+                validGhost: 'rgba(59, 130, 246, 0.4)',
+                invalidGhost: 'rgba(239, 68, 68, 0.4)'
+            },
+            'sunset-blast': {
+                name: 'Sunset Blast',
+                bg: '#181028',
+                boardBg: '#2D1B4E',
+                cellEmpty: '#442C6F',
+                dockBg: '#2D1B4E',
+                dockBorder: '#5B3B92',
+                gridLines: '#181028',
+                hintGlow: '#EC4899',
+                validGhost: 'rgba(236, 72, 153, 0.45)',
+                invalidGhost: 'rgba(239, 68, 68, 0.45)'
             }
         };
 
@@ -89,7 +81,7 @@ export class GameRenderer {
             y: 0,
             size: 0,
             cellSize: 0,
-            gap: 4
+            gap: 3
         };
         this.dockMetrics = {
             slots: []
@@ -133,7 +125,7 @@ export class GameRenderer {
         const boardX = (this.width - boardSize) / 2;
         const boardY = padding;
 
-        const gap = Math.max(2, Math.min(3, Math.round(boardSize / 180)));
+        const gap = Math.max(2, Math.min(3, Math.round(boardSize / 150)));
         const cellSize = (boardSize - (gap * 9)) / 8;
 
         this.boardMetrics = {
@@ -205,31 +197,31 @@ export class GameRenderer {
 
         const theme = this.getTheme();
 
-        // Clear canvas with background shade
+        // Clear canvas
         this.ctx.clearRect(-20, -20, this.width + 40, this.height + 40);
 
         // 1. Draw 8x8 Board Container & Empty Grid Cells
         this.drawBoard(theme);
 
-        // 2. Draw Filled Grid Blocks
+        // 2. Draw Filled Grid Cells
         this.drawGridBlocks(theme);
 
-        // 3. Draw AI Hint Golden Highlight if active
+        // 3. Draw AI Hint Highlight on Grid if active
         this.drawAiHintHighlight(theme);
 
         // 4. Draw Ghost Placement Preview
         this.drawGhostPreview(theme);
 
-        // 5. Draw Particle Bursts & Floating Texts
+        // 5. Draw Particles, Shockwaves, and Floating Texts
         this.particles.render(this.ctx);
 
-        // 6. Draw Shape Dock Slots & Available Pieces
+        // 6. Draw Shape Dock Slots and Available Shapes
         this.drawDock(theme);
 
-        // 7. Draw Currently Dragged Shape under cursor/touch
+        // 7. Draw Currently Dragged Shape following cursor/finger
         this.drawDraggingShape(theme);
 
-        // 8. Draw AI Thinking Banner if active
+        // 8. Draw AI Thinking Overlay if active
         if (this.aiThinking) {
             this.drawAiThinkingBanner(theme);
         }
@@ -240,20 +232,19 @@ export class GameRenderer {
     drawBoard(theme) {
         const { x, y, size, cellSize, gap } = this.boardMetrics;
         const ctx = this.ctx;
-        const cornerRadius = Math.max(4, Math.min(6, cellSize * 0.12));
 
-        // Outer board container
+        // Board outer rounded card
         ctx.save();
         ctx.fillStyle = theme.boardBg;
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
         ctx.shadowBlur = 18;
         ctx.shadowOffsetY = 6;
 
-        this.roundRect(x - gap, y - gap, size + gap * 2, size + gap * 2, 14);
+        this.roundRect(x - gap, y - gap, size + gap * 2, size + gap * 2, 16);
         ctx.fill();
         ctx.restore();
 
-        // Unoccupied Grid Cells (Close, sleek, snugly placed)
+        // Draw empty grid slot cells
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 const cellX = x + gap + c * (cellSize + gap);
@@ -261,14 +252,8 @@ export class GameRenderer {
 
                 ctx.save();
                 ctx.fillStyle = theme.cellEmpty;
-                this.roundRect(cellX, cellY, cellSize, cellSize, cornerRadius);
+                this.roundRect(cellX, cellY, cellSize, cellSize, Math.max(3, cellSize * 0.14));
                 ctx.fill();
-
-                // Subtle inner depth
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
-                this.roundRect(cellX + 1, cellY + 1, cellSize - 2, cellSize - 2, Math.max(2, cornerRadius - 1));
-                ctx.fill();
-
                 ctx.restore();
             }
         }
@@ -319,20 +304,19 @@ export class GameRenderer {
         if (targetRow === null || targetCol === null) return;
 
         const isValid = this.gameState.canPlaceShape(shape, targetRow, targetCol);
-        const { cellSize } = this.boardMetrics;
 
         for (let r = 0; r < shape.rows; r++) {
             for (let c = 0; c < shape.cols; c++) {
                 if (shape.form[r][c]) {
                     const rect = this.getCellRect(targetRow + r, targetCol + c);
                     this.ctx.save();
-                    this.ctx.globalAlpha = isValid ? 0.7 : 0.45;
+                    this.ctx.globalAlpha = isValid ? 0.65 : 0.45;
 
                     if (isValid) {
                         this.drawBeveledBlock(rect.x, rect.y, rect.size, shape.color, true);
                     } else {
-                        this.ctx.fillStyle = '#FF3B30';
-                        this.roundRect(rect.x, rect.y, rect.size, rect.size, 7);
+                        this.ctx.fillStyle = '#EF4444';
+                        this.roundRect(rect.x, rect.y, rect.size, rect.size, rect.size * 0.15);
                         this.ctx.fill();
                     }
                     this.ctx.restore();
@@ -369,19 +353,19 @@ export class GameRenderer {
         if (rowsToClear.length > 0 || colsToClear.length > 0) {
             const ctx = this.ctx;
             const { x: bx, y: by, size, cellSize, gap } = this.boardMetrics;
-            const glowAlpha = 0.35 + Math.sin(this.pulsePhase * 3.5) * 0.15;
+            const glowAlpha = 0.35 + Math.sin(this.pulsePhase * 3) * 0.15;
 
             ctx.save();
             ctx.fillStyle = `rgba(255, 255, 255, ${glowAlpha})`;
 
             for (const r of rowsToClear) {
                 const y = by + gap + r * (cellSize + gap);
-                this.roundRect(bx + gap, y, size - gap * 2, cellSize, 7);
+                this.roundRect(bx + gap, y, size - gap * 2, cellSize, cellSize * 0.15);
                 ctx.fill();
             }
             for (const c of colsToClear) {
                 const x = bx + gap + c * (cellSize + gap);
-                this.roundRect(x, by + gap, cellSize, size - gap * 2, 7);
+                this.roundRect(x, by + gap, cellSize, size - gap * 2, cellSize * 0.15);
                 ctx.fill();
             }
             ctx.restore();
@@ -395,8 +379,8 @@ export class GameRenderer {
         if (!shape || !shape.form) return;
 
         const ctx = this.ctx;
-        const pulse = 0.6 + Math.sin(this.pulsePhase * 4.5) * 0.35;
-        const goldColor = `rgba(255, 204, 0, ${pulse})`;
+        const pulse = 0.5 + Math.sin(this.pulsePhase * 4) * 0.4;
+        const goldColor = `rgba(245, 158, 11, ${pulse})`;
 
         for (let r = 0; r < shape.rows; r++) {
             for (let c = 0; c < shape.cols; c++) {
@@ -404,10 +388,10 @@ export class GameRenderer {
                     const rect = this.getCellRect(row + r, col + c);
                     ctx.save();
                     ctx.strokeStyle = goldColor;
-                    ctx.lineWidth = 3.5;
-                    ctx.shadowColor = '#FFCC00';
-                    ctx.shadowBlur = 12;
-                    this.roundRect(rect.x - 1, rect.y - 1, rect.size + 2, rect.size + 2, 7);
+                    ctx.lineWidth = 3;
+                    ctx.shadowColor = '#F59E0B';
+                    ctx.shadowBlur = 10;
+                    this.roundRect(rect.x - 1, rect.y - 1, rect.size + 2, rect.size + 2, rect.size * 0.15);
                     ctx.stroke();
                     ctx.restore();
                 }
@@ -431,12 +415,12 @@ export class GameRenderer {
             // Slot Background Card
             ctx.save();
             ctx.fillStyle = theme.dockBg;
-            ctx.strokeStyle = isSelected ? '#007AFF' : (isHinted ? '#FFCC00' : theme.dockBorder);
+            ctx.strokeStyle = isSelected ? '#3B82F6' : (isHinted ? '#F59E0B' : theme.dockBorder);
             ctx.lineWidth = (isSelected || isHinted) ? 3 : 1;
 
             if (isSelected || isHinted) {
-                ctx.shadowColor = isSelected ? 'rgba(0, 122, 255, 0.5)' : 'rgba(255, 204, 0, 0.6)';
-                ctx.shadowBlur = 14;
+                ctx.shadowColor = isSelected ? 'rgba(59, 130, 246, 0.5)' : 'rgba(245, 158, 11, 0.6)';
+                ctx.shadowBlur = 12;
             }
 
             this.roundRect(slot.x, slot.y, slot.width, slot.height, 14);
@@ -444,16 +428,16 @@ export class GameRenderer {
             ctx.stroke();
             ctx.restore();
 
-            // Shortcut key label (E, R, T)
+            // Key shortcut label
             ctx.save();
             ctx.font = '700 11px Outfit, Inter, sans-serif';
-            ctx.fillStyle = isSelected ? '#007AFF' : 'rgba(148, 163, 184, 0.7)';
+            ctx.fillStyle = isSelected ? '#3B82F6' : 'rgba(148, 163, 184, 0.7)';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
             ctx.fillText(keys[i], slot.x + 8, slot.y + 6);
             ctx.restore();
 
-            // Shape Render in Dock
+            // Shape inside dock
             if (shape && shape.form && !isDragging) {
                 const canFitAnywhere = this.checkShapeCanFit(shape);
 
@@ -508,9 +492,9 @@ export class GameRenderer {
         const startY = this.dragPointer.y - shapePixelH / 2 - this.dragOffset.y;
 
         this.ctx.save();
-        this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-        this.ctx.shadowBlur = 20;
-        this.ctx.shadowOffsetY = 12;
+        this.ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        this.ctx.shadowBlur = 18;
+        this.ctx.shadowOffsetY = 10;
 
         for (let r = 0; r < shape.rows; r++) {
             for (let c = 0; c < shape.cols; c++) {
@@ -525,11 +509,11 @@ export class GameRenderer {
     }
 
     /**
-     * Render a gorgeous 3D beveled glossy block tile
+     * Classic 3D Beveled Glossy Block Tile
      */
     drawBeveledBlock(x, y, size, color, isGhost = false) {
         const ctx = this.ctx;
-        const radius = Math.max(4, size * 0.16);
+        const radius = Math.max(3, size * 0.15);
         const hex = color.hex || '#3B82F6';
         const light = color.light || '#93C5FD';
         const dark = color.dark || '#1D4ED8';
@@ -539,7 +523,7 @@ export class GameRenderer {
         // 1. Base Gradient Fill
         const bgGrad = ctx.createLinearGradient(x, y, x, y + size);
         bgGrad.addColorStop(0, light);
-        bgGrad.addColorStop(0.65, hex);
+        bgGrad.addColorStop(0.7, hex);
         bgGrad.addColorStop(1, dark);
 
         ctx.fillStyle = bgGrad;
@@ -549,7 +533,7 @@ export class GameRenderer {
         // 2. Beveled top/left highlight
         const bevelSize = Math.max(2, size * 0.12);
         ctx.save();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
         ctx.beginPath();
         ctx.moveTo(x + radius, y);
         ctx.lineTo(x + size - radius, y);
@@ -566,7 +550,7 @@ export class GameRenderer {
         const innerRadius = Math.max(2, radius * 0.6);
         const innerMargin = bevelSize * 0.8;
         const innerGrad = ctx.createLinearGradient(x + innerMargin, y + innerMargin, x + size - innerMargin, y + size - innerMargin);
-        innerGrad.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
+        innerGrad.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
         innerGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
         innerGrad.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
 
@@ -585,18 +569,18 @@ export class GameRenderer {
         const y = 8;
 
         ctx.save();
-        ctx.fillStyle = 'rgba(18, 24, 38, 0.9)';
-        ctx.strokeStyle = '#007AFF';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.strokeStyle = '#3B82F6';
         ctx.lineWidth = 1.5;
-        ctx.shadowColor = 'rgba(0, 122, 255, 0.5)';
-        ctx.shadowBlur = 12;
+        ctx.shadowColor = 'rgba(59, 130, 246, 0.5)';
+        ctx.shadowBlur = 10;
 
         this.roundRect(x, y, bannerW, bannerH, 19);
         ctx.fill();
         ctx.stroke();
 
         ctx.font = '600 13px Outfit, Inter, sans-serif';
-        ctx.fillStyle = '#5AC8FA';
+        ctx.fillStyle = '#60A5FA';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
