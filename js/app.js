@@ -179,9 +179,12 @@ export class BlockBlastApp {
     }
 
     handleResize() {
+        if (!this.canvas) return;
         const container = this.canvas.parentElement;
-        const rect = container.getBoundingClientRect();
-        this.renderer.resize(rect.width, rect.height);
+        const rect = container ? container.getBoundingClientRect() : null;
+        const w = (rect && rect.width > 50) ? rect.width : (container && container.clientWidth > 50 ? container.clientWidth : 500);
+        const h = (rect && rect.height > 50) ? rect.height : (container && container.clientHeight > 50 ? container.clientHeight : 640);
+        this.renderer.resize(w, h);
     }
 
     handlePlaceAction(shapeIdx, row, col) {
@@ -579,6 +582,11 @@ export class BlockBlastApp {
     gameLoop(timestamp) {
         const dt = Math.min(timestamp - this.lastTime, 100);
         this.lastTime = timestamp;
+
+        // Auto-correct if canvas had uninitialized dimensions
+        if (this.renderer.width < 100 || this.renderer.height < 100) {
+            this.handleResize();
+        }
 
         this.particles.update(dt);
         this.renderer.render(dt);

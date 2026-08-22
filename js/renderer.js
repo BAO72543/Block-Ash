@@ -102,8 +102,16 @@ export class GameRenderer {
 
     resize(containerWidth, containerHeight) {
         this.dpr = window.devicePixelRatio || 1;
-        this.width = containerWidth;
-        this.height = containerHeight;
+        
+        // Fallback to parent element or default minimum dimensions
+        const fallbackW = this.canvas && this.canvas.parentElement ? this.canvas.parentElement.clientWidth : 500;
+        const fallbackH = this.canvas && this.canvas.parentElement ? this.canvas.parentElement.clientHeight : 640;
+
+        const w = (containerWidth && containerWidth > 50) ? containerWidth : (fallbackW > 50 ? fallbackW : 500);
+        const h = (containerHeight && containerHeight > 50) ? containerHeight : (fallbackH > 50 ? fallbackH : 640);
+
+        this.width = Math.max(320, w);
+        this.height = Math.max(520, h);
 
         this.canvas.width = Math.round(this.width * this.dpr);
         this.canvas.height = Math.round(this.height * this.dpr);
@@ -115,13 +123,14 @@ export class GameRenderer {
 
     computeLayout() {
         const isMobile = this.width < 640;
-        const padding = isMobile ? 12 : 24;
+        const padding = isMobile ? 12 : 20;
 
-        const dockHeight = Math.min(160, Math.max(100, this.height * 0.22));
+        const dockHeight = Math.min(160, Math.max(110, this.height * 0.22));
         const maxBoardWidth = this.width - padding * 2;
-        const maxBoardHeight = this.height - dockHeight - padding * 3;
+        const maxBoardHeight = this.height - dockHeight - padding * 2.5;
 
-        const boardSize = Math.min(maxBoardWidth, maxBoardHeight, 520);
+        // Ensure boardSize is always strictly positive
+        const boardSize = Math.max(260, Math.min(maxBoardWidth, maxBoardHeight, 480));
         const boardX = (this.width - boardSize) / 2;
         const boardY = padding;
 
@@ -136,11 +145,11 @@ export class GameRenderer {
             gap
         };
 
-        const dockY = boardY + boardSize + (padding * 0.8);
+        const dockY = boardY + boardSize + (padding * 0.7);
         const dockWidth = boardSize;
-        const slotGap = 12;
+        const slotGap = 10;
         const slotWidth = (dockWidth - slotGap * 2) / 3;
-        const slotHeight = Math.min(dockHeight, 140);
+        const slotHeight = Math.min(dockHeight, 130);
 
         this.dockMetrics.slots = [];
         for (let i = 0; i < 3; i++) {
