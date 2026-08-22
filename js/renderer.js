@@ -133,7 +133,7 @@ export class GameRenderer {
         const boardX = (this.width - boardSize) / 2;
         const boardY = padding;
 
-        const gap = Math.max(3, Math.round(boardSize / 90));
+        const gap = Math.max(2, Math.min(3, Math.round(boardSize / 180)));
         const cellSize = (boardSize - (gap * 9)) / 8;
 
         this.boardMetrics = {
@@ -240,43 +240,33 @@ export class GameRenderer {
     drawBoard(theme) {
         const { x, y, size, cellSize, gap } = this.boardMetrics;
         const ctx = this.ctx;
-        const cornerRadius = Math.max(6, Math.min(8, cellSize * 0.16));
+        const cornerRadius = Math.max(4, Math.min(6, cellSize * 0.12));
 
         // Outer board container
         ctx.save();
         ctx.fillStyle = theme.boardBg;
         ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-        ctx.shadowBlur = 20;
-        ctx.shadowOffsetY = 8;
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 6;
 
-        this.roundRect(x - gap, y - gap, size + gap * 2, size + gap * 2, 18);
+        this.roundRect(x - gap, y - gap, size + gap * 2, size + gap * 2, 14);
         ctx.fill();
         ctx.restore();
 
-        // Unoccupied Grid Cells (Muted #1E293B with dark border outlines)
+        // Unoccupied Grid Cells (Close, sleek, snugly placed)
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 const cellX = x + gap + c * (cellSize + gap);
                 const cellY = y + gap + r * (cellSize + gap);
 
                 ctx.save();
-                // Dark outer border
-                ctx.fillStyle = theme.cellEmptyBorder || '#0F172A';
-                this.roundRect(cellX - 1, cellY - 1, cellSize + 2, cellSize + 2, cornerRadius + 1);
-                ctx.fill();
-
-                // Inner slot base
                 ctx.fillStyle = theme.cellEmpty;
                 this.roundRect(cellX, cellY, cellSize, cellSize, cornerRadius);
                 ctx.fill();
 
-                // Subtle inner shadow depth
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-                this.roundRect(cellX + 1, cellY + 1, cellSize - 2, cellSize - 2, cornerRadius);
-                ctx.fill();
-
-                ctx.fillStyle = theme.cellEmptyInner || '#1A2333';
-                this.roundRect(cellX + 2, cellY + 2, cellSize - 4, cellSize - 4, Math.max(3, cornerRadius - 2));
+                // Subtle inner depth
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+                this.roundRect(cellX + 1, cellY + 1, cellSize - 2, cellSize - 2, Math.max(2, cornerRadius - 1));
                 ctx.fill();
 
                 ctx.restore();
