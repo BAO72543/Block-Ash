@@ -110,6 +110,150 @@ body {
     gap: 16px;
 }
 
+/* Home Menu Title Screen */
+.home-screen {
+    width: 100%;
+    max-width: 900px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    padding: 24px 16px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.home-hero {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.home-logo-badge {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--radius-xl);
+    background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.5);
+    margin-bottom: 4px;
+    animation: pulse-flame 2s infinite alternate;
+}
+
+.home-title {
+    font-size: 42px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #FFFFFF 20%, #93C5FD 70%, #60A5FA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+}
+
+.home-subtitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+}
+
+.mode-cards-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.mode-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: var(--radius-xl);
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: var(--shadow-subtle);
+    position: relative;
+    overflow: hidden;
+}
+
+.mode-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    border-color: var(--accent-blue);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+}
+
+.mode-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.mode-card-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin-bottom: 6px;
+}
+
+.mode-card-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.mode-card-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #FBBF24;
+}
+
+.mode-play-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 800;
+    border-radius: var(--radius-md);
+}
+
+.home-footer-options {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+/* Responsive Home Cards */
+@media (max-width: 800px) {
+    .mode-cards-grid {
+        grid-template-columns: 1fr;
+    }
+    .home-title {
+        font-size: 34px;
+    }
+}
+
 /* Header Section */
 .app-header {
     display: flex;

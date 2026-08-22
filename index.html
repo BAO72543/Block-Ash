@@ -14,50 +14,105 @@
 </head>
 <body data-theme="neon-dark">
     <div class="app-wrapper">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="brand-section">
-                <div class="logo-badge">⚡</div>
-                <div>
-                    <h1 class="brand-title">BLOCK BLAST</h1>
-                    <div class="brand-subtitle">HTML5 Edition &bull; AI Powered</div>
+        <!-- 1. Home Menu Title Screen (Mode Selection) -->
+        <div class="home-screen" id="home-screen">
+            <div class="home-hero">
+                <div class="home-logo-badge">⚡</div>
+                <h1 class="home-title">BLOCK BLAST</h1>
+                <p class="home-subtitle">Choose a Game Mode to Play</p>
+            </div>
+
+            <!-- Mode Selection Cards Grid -->
+            <div class="mode-cards-grid">
+                <!-- 1. Classic Mode -->
+                <div class="mode-card" id="btn-play-classic">
+                    <div>
+                        <div class="mode-card-icon" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">♾️</div>
+                        <h3 class="mode-card-title" style="margin-top: 12px;">Classic Mode</h3>
+                        <p class="mode-card-desc">Endless puzzle challenge. Keep the 8×8 grid clear and accumulate high scores.</p>
+                        <div class="mode-card-badge">Best Score: <span id="home-classic-score">0</span></div>
+                    </div>
+                    <button class="btn btn-primary mode-play-btn">Play Classic &rarr;</button>
+                </div>
+
+                <!-- 2. Adventure Mode -->
+                <div class="mode-card" id="btn-play-adventure">
+                    <div>
+                        <div class="mode-card-icon" style="background: linear-gradient(135deg, #10B981, #047857);">🗺️</div>
+                        <h3 class="mode-card-title" style="margin-top: 12px;">Adventure Mode</h3>
+                        <p class="mode-card-desc">Embark on level quests. Collect embedded Gems, Puzzle Pieces, and Stars.</p>
+                        <div class="mode-card-badge">Progress: <span id="home-adventure-stage">Stage 1</span></div>
+                    </div>
+                    <button class="btn btn-accent mode-play-btn">Play Adventure &rarr;</button>
+                </div>
+
+                <!-- 3. Drop Mode -->
+                <div class="mode-card" id="btn-play-drop">
+                    <div>
+                        <div class="mode-card-icon" style="background: linear-gradient(135deg, #F59E0B, #DC2626);">⚡</div>
+                        <h3 class="mode-card-title" style="margin-top: 12px;">Drop Mode</h3>
+                        <p class="mode-card-desc">Survival challenge! Inverted block stacks rise from the bottom every 3 moves.</p>
+                        <div class="mode-card-badge">Rising Stack Tension</div>
+                    </div>
+                    <button class="btn btn-primary mode-play-btn" style="background: #F97316;">Survive Drop &rarr;</button>
                 </div>
             </div>
 
-            <!-- Game Mode Selector -->
-            <div class="mode-tabs" id="mode-tabs">
-                <button class="mode-tab active" data-mode="classic" id="tab-mode-classic">Classic</button>
-                <button class="mode-tab" data-mode="adventure" id="tab-mode-adventure">Adventure</button>
-                <button class="mode-tab" data-mode="drop" id="tab-mode-drop">Drop Mode</button>
+            <!-- Home Footer Quick Options -->
+            <div class="home-footer-options">
+                <button class="btn" id="home-btn-stats"><span class="icon">📊</span> Statistics</button>
+                <button class="btn" id="home-btn-sound"><span class="icon">🔊</span> Sound</button>
             </div>
-
-            <div class="score-board">
-                <div class="combo-pill" id="combo-badge">
-                    <span id="combo-flame" style="display: none;">🔥</span>
-                    <span>COMBO <span id="combo-count">0</span></span>
-                </div>
-
-                <div class="score-card primary">
-                    <span class="label">Score</span>
-                    <span class="value" id="current-score">0</span>
-                </div>
-
-                <div class="score-card">
-                    <span class="label">Best</span>
-                    <span class="value" id="high-score">0</span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Mode Objectives / Status HUD Bar -->
-        <div class="mode-status-bar" id="mode-status-bar" style="display: none;">
-            <div class="status-content" id="mode-status-content">
-                <span class="status-badge" id="mode-stage-badge">Stage 1</span>
-                <span class="status-goal" id="mode-goal-text">Goals: Collect 4 Gems</span>
-                <span class="status-moves" id="mode-moves-text">Moves Left: 16</span>
-            </div>
-            <button class="btn btn-sm" id="btn-open-stage-map" style="padding: 6px 12px; font-size: 12px;">Stage Map</button>
         </div>
+
+        <!-- 2. Active Gameplay View (Initially Hidden until mode is selected) -->
+        <div class="gameplay-view" id="gameplay-view" style="display: none; width: 100%;">
+            <!-- In-Game Header -->
+            <header class="app-header">
+                <div class="brand-section">
+                    <button class="btn btn-sm" id="btn-return-home" style="padding: 6px 12px; font-size: 13px; font-weight: 700; border-color: rgba(255,255,255,0.2);">
+                        <span>🏠 Menu</span>
+                    </button>
+                    <div class="logo-badge" style="width: 36px; height: 36px; font-size: 18px;">⚡</div>
+                    <div>
+                        <h1 class="brand-title" style="font-size: 20px;">BLOCK BLAST</h1>
+                    </div>
+                </div>
+
+                <!-- In-Game Mode Switcher Tabs -->
+                <div class="mode-tabs" id="mode-tabs">
+                    <button class="mode-tab active" data-mode="classic" id="tab-mode-classic">Classic</button>
+                    <button class="mode-tab" data-mode="adventure" id="tab-mode-adventure">Adventure</button>
+                    <button class="mode-tab" data-mode="drop" id="tab-mode-drop">Drop Mode</button>
+                </div>
+
+                <div class="score-board">
+                    <div class="combo-pill" id="combo-badge">
+                        <span id="combo-flame" style="display: none;">🔥</span>
+                        <span>COMBO <span id="combo-count">0</span></span>
+                    </div>
+
+                    <div class="score-card primary">
+                        <span class="label">Score</span>
+                        <span class="value" id="current-score">0</span>
+                    </div>
+
+                    <div class="score-card">
+                        <span class="label">Best</span>
+                        <span class="value" id="high-score">0</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Mode Objectives / Status HUD Bar -->
+            <div class="mode-status-bar" id="mode-status-bar" style="display: none; margin-top: 12px;">
+                <div class="status-content" id="mode-status-content">
+                    <span class="status-badge" id="mode-stage-badge">Stage 1</span>
+                    <span class="status-goal" id="mode-goal-text">Goals: Collect 4 Gems</span>
+                    <span class="status-moves" id="mode-moves-text">Moves Left: 16</span>
+                </div>
+                <button class="btn btn-sm" id="btn-open-stage-map" style="padding: 6px 12px; font-size: 12px;">Stage Map</button>
+            </div>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -169,6 +224,7 @@
                 <span>Solvable Engine &bull; Zero Lag Web Audio</span>
             </div>
         </footer>
+        </div> <!-- End of gameplay-view -->
     </div>
 
     <!-- Game Over Modal -->

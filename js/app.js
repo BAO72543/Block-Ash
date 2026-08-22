@@ -30,6 +30,16 @@ export class BlockBlastApp {
 
         // Cache DOM Elements with robust fallbacks
         this.dom = {
+            homeScreen: document.getElementById('home-screen'),
+            gameplayView: document.getElementById('gameplay-view'),
+            btnPlayClassic: document.getElementById('btn-play-classic'),
+            btnPlayAdventure: document.getElementById('btn-play-adventure'),
+            btnPlayDrop: document.getElementById('btn-play-drop'),
+            btnReturnHome: document.getElementById('btn-return-home'),
+            homeClassicScore: document.getElementById('home-classic-score'),
+            homeAdventureStage: document.getElementById('home-adventure-stage'),
+            homeBtnStats: document.getElementById('home-btn-stats'),
+            homeBtnSound: document.getElementById('home-btn-sound'),
             scoreCurrent: document.getElementById('current-score') || document.getElementById('score-current'),
             scoreHighest: document.getElementById('high-score') || document.getElementById('score-highest'),
             comboCurrent: document.getElementById('combo-count') || document.getElementById('combo-current'),
@@ -101,9 +111,7 @@ export class BlockBlastApp {
     init() {
         this.setupEventListeners();
         this.updateAudioButtonState();
-        this.updateScoreDisplays();
-        this.updateComboFeed();
-        this.updateModeStatusBar();
+        this.showHomeScreen();
 
         // Handle resize
         this.handleResize();
@@ -113,7 +121,62 @@ export class BlockBlastApp {
         requestAnimationFrame((t) => this.gameLoop(t));
     }
 
+    showHomeScreen() {
+        if (this.isAutoplayActive) {
+            this.stopAutoplay();
+        }
+
+        if (this.dom.homeScreen) this.dom.homeScreen.style.display = 'flex';
+        if (this.dom.gameplayView) this.dom.gameplayView.style.display = 'none';
+
+        // Update home screen metadata
+        if (this.dom.homeClassicScore) {
+            this.dom.homeClassicScore.textContent = (this.gameState.highestScore || 0).toLocaleString();
+        }
+        if (this.dom.homeAdventureStage) {
+            const progress = ModeManager.loadAdventureProgress();
+            this.dom.homeAdventureStage.textContent = `Stage ${progress.unlockedStage || 1}`;
+        }
+    }
+
+    enterGameWithMode(mode) {
+        this.audio.playButton();
+        if (this.dom.homeScreen) this.dom.homeScreen.style.display = 'none';
+        if (this.dom.gameplayView) this.dom.gameplayView.style.display = 'block';
+
+        this.handleResize();
+        this.switchMode(mode);
+    }
+
     setupEventListeners() {
+        // Home Screen Buttons
+        if (this.dom.btnPlayClassic) {
+            this.dom.btnPlayClassic.addEventListener('click', () => this.enterGameWithMode(GAME_MODES.CLASSIC));
+        }
+        if (this.dom.btnPlayAdventure) {
+            this.dom.btnPlayAdventure.addEventListener('click', () => this.enterGameWithMode(GAME_MODES.ADVENTURE));
+        }
+        if (this.dom.btnPlayDrop) {
+            this.dom.btnPlayDrop.addEventListener('click', () => this.enterGameWithMode(GAME_MODES.DROP));
+        }
+        if (this.dom.btnReturnHome) {
+            this.dom.btnReturnHome.addEventListener('click', () => {
+                this.audio.playButton();
+                this.showHomeScreen();
+            });
+        }
+        if (this.dom.homeBtnStats) {
+            this.dom.homeBtnStats.addEventListener('click', () => {
+                this.audio.playButton();
+                this.openStatsModal();
+            });
+        }
+        if (this.dom.homeBtnSound) {
+            this.dom.homeBtnSound.addEventListener('click', () => {
+                this.toggleAudio();
+            });
+        }
+
         // Mode Tabs
         if (this.dom.tabModeClassic) {
             this.dom.tabModeClassic.addEventListener('click', () => this.switchMode(GAME_MODES.CLASSIC));
