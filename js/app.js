@@ -341,6 +341,36 @@ export class BlockBlastApp {
         if (this.isAutoplayActive) {
             this.stopAutoplay();
         }
+
+        // If board is empty during debug testing, fill sample pattern so 4x4 center sweep is clearly visible
+        let filledCount = 0;
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                if (this.gameState.grid[r][c] !== 0) filledCount++;
+            }
+        }
+
+        if (filledCount < 12) {
+            // Fill an interesting pattern across the board including the 4x4 center
+            const testColors = [
+                { hex: '#EF4444', light: '#FCA5A5' },
+                { hex: '#3B82F6', light: '#93C5FD' },
+                { hex: '#10B981', light: '#6EE7B7' },
+                { hex: '#F59E0B', light: '#FDE68A' },
+                { hex: '#8B5CF6', light: '#C4B5FD' }
+            ];
+            for (let r = 1; r <= 6; r++) {
+                for (let c = 1; c <= 6; c++) {
+                    if ((r + c) % 2 === 0 || (r >= 2 && r <= 5 && c >= 2 && c <= 5)) {
+                        this.gameState.grid[r][c] = {
+                            color: testColors[(r * 3 + c) % testColors.length],
+                            placedAt: Date.now()
+                        };
+                    }
+                }
+            }
+        }
+
         this.gameState.gameOver = true;
         this.audio.playGameOver();
         this.showGameOverModal();
@@ -434,24 +464,30 @@ export class BlockBlastApp {
 
         // Laser shockwave and particle burst on revived cells
         const { cellSize, gap } = this.renderer.boardMetrics;
-        this.particles.triggerShake(14, 380);
+        const bx = this.renderer.boardMetrics.x;
+        const by = this.renderer.boardMetrics.y;
+        this.particles.triggerShake(15, 400);
 
-        for (const cell of sweepResult.clearedCells) {
-            const rect = this.renderer.getCellRect(cell.row, cell.col);
-            this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, { hex: '#38BDF8', light: '#BAE6FD' });
+        // Animate all 16 center cells (rows 2-5, cols 2-5)
+        for (let r = 2; r <= 5; r++) {
+            this.particles.addLineClearWave('row', r, bx, by, cellSize, gap);
+            for (let c = 2; c <= 5; c++) {
+                const rect = this.renderer.getCellRect(r, c);
+                this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, { hex: '#38BDF8', light: '#BAE6FD' });
+            }
         }
 
         // Floating revive banner
         const cx = this.renderer.boardMetrics.x + this.renderer.boardMetrics.size / 2;
         const cy = this.renderer.boardMetrics.y + this.renderer.boardMetrics.size / 2;
-        this.particles.addFloatingText('REVIVED! 4×4 SWEEP', cx, cy, {
+        this.particles.addFloatingText('REVIVED! 4×4 CENTER SWEEP', cx, cy, {
             isGold: true,
-            fontSize: 32,
+            fontSize: 30,
             color: '#38BDF8',
-            shadow: 'rgba(14, 165, 233, 0.8)'
+            shadow: 'rgba(14, 165, 233, 0.85)'
         });
 
-        this.audio.playClear(4);
+        this.audio.playAllClear();
         this.updateScoreDisplays();
         this.updateComboFeed();
     }
