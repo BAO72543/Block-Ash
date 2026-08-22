@@ -39,6 +39,7 @@ export class BlockBlastApp {
             btnSound: document.getElementById('btn-sound'),
             btnRestart: document.getElementById('btn-restart'),
             btnStats: document.getElementById('btn-stats'),
+            btnForceLose: document.getElementById('btn-force-lose'),
             gameOverModal: document.getElementById('game-over-modal'),
             modalFinalScore: document.getElementById('modal-final-score'),
             modalHighScore: document.getElementById('modal-high-score'),
@@ -121,6 +122,13 @@ export class BlockBlastApp {
             this.audio.playButton();
             this.restartGame();
         });
+
+        // Debug Force Lose Button
+        if (this.dom.btnForceLose) {
+            this.dom.btnForceLose.addEventListener('click', () => {
+                this.forceGameOver();
+            });
+        }
 
         // Rewarded Video Revive Button (10% Ad Revenue, 1 use per run)
         if (this.dom.btnModalRevive) {
