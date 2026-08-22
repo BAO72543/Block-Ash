@@ -342,7 +342,8 @@ export class BlockBlastApp {
             this.stopAutoplay();
         }
         this.gameState.gameOver = true;
-        this.handleGameOver();
+        this.audio.playGameOver();
+        this.showGameOverModal();
     }
 
     handleGameOver() {
@@ -405,54 +406,54 @@ export class BlockBlastApp {
         let secondsLeft = 5;
         this.dom.rewardedTimerText.textContent = `Reward unlocking in ${secondsLeft}s...`;
 
-        const startTime = Date.now();
-        const duration = 5000;
+        let progress = 0;
+        const interval = 100;
+        const step = 100 / (5000 / interval);
 
-        const adInterval = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(100, (elapsed / duration) * 100);
-            this.dom.rewardedProgress.style.width = `${progress}%`;
+        const timer = setInterval(() => {
+            progress += step;
+            this.dom.rewardedProgress.style.width = `${Math.min(100, progress)}%`;
 
-            const currentSec = Math.max(0, Math.ceil((duration - elapsed) / 1000));
+            const currentSec = Math.max(0, Math.ceil((100 - progress) / (100 / 5)));
             if (currentSec > 0) {
                 this.dom.rewardedTimerText.textContent = `Reward unlocking in ${currentSec}s...`;
             } else {
-                clearInterval(adInterval);
-                this.dom.rewardedTimerText.textContent = '✅ Video complete! Reward ready.';
+                clearInterval(timer);
+                this.dom.rewardedTimerText.textContent = '🎉 Reward Ready!';
                 this.dom.btnClaimReward.style.display = 'inline-block';
             }
-        }, 100);
+        }, interval);
     }
 
     completeRewardedRevive() {
+        // Close rewarded modal
         this.dom.rewardedAdModal.style.display = 'none';
-        const res = this.gameState.reviveWithCenterSweep();
 
-        if (res.success) {
-            const { cellSize, gap } = this.renderer.boardMetrics;
-            const bx = this.renderer.boardMetrics.x;
-            const by = this.renderer.boardMetrics.y;
+        // Perform 4x4 center sweep on matrix B[2..5][2..5]
+        const sweepResult = this.gameState.reviveWithCenterSweep();
 
-            // Trigger visual 4x4 center sweep shockwave and particle explosions
-            for (let r = 2; r <= 5; r++) {
-                this.particles.addLineClearWave('row', r, bx, by, cellSize, gap);
-                for (let c = 2; c <= 5; c++) {
-                    const rect = this.renderer.getCellRect(r, c);
-                    this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, { hex: '#10B981', light: '#6EE7B7', dark: '#059669' });
-                }
-            }
+        // Laser shockwave and particle burst on revived cells
+        const { cellSize, gap } = this.renderer.boardMetrics;
+        this.particles.triggerShake(14, 380);
 
-            this.audio.playAllClear();
-            this.particles.triggerShake(8, 250);
-            this.particles.addFloatingText('✨ 4×4 CENTER GRID SWEEP!', bx + this.renderer.boardMetrics.size / 2, by + this.renderer.boardMetrics.size / 2, {
-                color: '#10B981',
-                fontSize: 28,
-                font: '900 28px Outfit, sans-serif'
-            });
-
-            this.updateScoreDisplays();
-            this.updateComboFeed();
+        for (const cell of sweepResult.clearedCells) {
+            const rect = this.renderer.getCellRect(cell.row, cell.col);
+            this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, { hex: '#38BDF8', light: '#BAE6FD' });
         }
+
+        // Floating revive banner
+        const cx = this.renderer.boardMetrics.x + this.renderer.boardMetrics.size / 2;
+        const cy = this.renderer.boardMetrics.y + this.renderer.boardMetrics.size / 2;
+        this.particles.addFloatingText('REVIVED! 4×4 SWEEP', cx, cy, {
+            isGold: true,
+            fontSize: 32,
+            color: '#38BDF8',
+            shadow: 'rgba(14, 165, 233, 0.8)'
+        });
+
+        this.audio.playClear(4);
+        this.updateScoreDisplays();
+        this.updateComboFeed();
     }
 
     /* ==========================================================================
@@ -488,13 +489,20 @@ export class BlockBlastApp {
     }
 
     restartGame() {
+        this.audio.playButton();
+        this.triggerHaptic('snap');
         this.celebratedNewRecord = false;
         this.gameState.reset();
         this.particles.reset();
         this.renderer.selectedShapeIdx = -1;
         this.renderer.draggingShapeIdx = -1;
         this.renderer.aiHint = null;
+        this.renderer.cancelSnapBack();
+
+        // Dismiss all modals immediately
         this.dom.gameOverModal.classList.remove('active');
+        if (this.dom.rewardedAdModal) this.dom.rewardedAdModal.style.display = 'none';
+        if (this.dom.interstitialAdModal) this.dom.interstitialAdModal.style.display = 'none';
 
         this.updateScoreDisplays();
         this.updateComboFeed();
