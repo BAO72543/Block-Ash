@@ -1,6 +1,11 @@
 /**
  * Block Blast - Particle and Visual FX System
  * High-performance canvas particle animations, shockwaves, floating text, and confetti.
+ * Features:
+ * - Color-Matched Block Destroy Particle Bursts
+ * - Scaled Dynamic Screen Shake
+ * - Bold Gold Typography Score & Combo Pop-Ups ("Great!", "Perfect!", "COMBO x4!")
+ * - High-FPS Confetti Fanfare
  */
 
 export class ParticleSystem {
@@ -28,30 +33,30 @@ export class ParticleSystem {
     }
 
     /**
-     * Burst of jewel / neon block particles from a cell
+     * Burst of jewel / neon block particles from a destroyed cell matching its exact color
      */
     addBlockClearBurst(x, y, size, color) {
         const count = 12 + Math.floor(Math.random() * 6);
-        const hex = color.hex || '#3B82F6';
-        const light = color.light || '#93C5FD';
+        const hex = (color && color.hex) ? color.hex : '#3B82F6';
+        const light = (color && color.light) ? color.light : '#93C5FD';
 
         for (let i = 0; i < count; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = 2 + Math.random() * 6;
-            const pSize = (size * 0.15) + Math.random() * (size * 0.25);
+            const speed = 2.5 + Math.random() * 6.5;
+            const pSize = (size * 0.16) + Math.random() * (size * 0.22);
 
             this.particles.push({
                 x: x + size / 2,
                 y: y + size / 2,
                 vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed - 1.5,
-                gravity: 0.18,
-                drag: 0.96,
+                vy: Math.sin(angle) * speed - 1.8,
+                gravity: 0.20,
+                drag: 0.95,
                 size: pSize,
                 baseSize: pSize,
                 color: Math.random() > 0.4 ? hex : light,
                 alpha: 1,
-                decay: 0.015 + Math.random() * 0.02,
+                decay: 0.016 + Math.random() * 0.02,
                 rotation: Math.random() * Math.PI * 2,
                 vRot: (Math.random() - 0.5) * 0.3,
                 shape: Math.random() > 0.3 ? 'square' : 'circle'
@@ -70,9 +75,9 @@ export class ParticleSystem {
                 x: gridX,
                 y,
                 width: 8 * (cellSize + gap) - gap,
-                height: cellSize * 1.4,
+                height: cellSize * 1.5,
                 alpha: 1,
-                decay: 0.04,
+                decay: 0.045,
                 color: 'rgba(255, 255, 255, 0.95)'
             });
         } else {
@@ -81,37 +86,39 @@ export class ParticleSystem {
                 type: 'col',
                 x,
                 y: gridY,
-                width: cellSize * 1.4,
+                width: cellSize * 1.5,
                 height: 8 * (cellSize + gap) - gap,
                 alpha: 1,
-                decay: 0.04,
+                decay: 0.045,
                 color: 'rgba(255, 255, 255, 0.95)'
             });
         }
     }
 
     /**
-     * Floating text popup for scores and combos
+     * Score Pop-Ups with Bold Gold Typography ("Great!", "Perfect!", "COMBO x4!")
      */
     addFloatingText(text, x, y, options = {}) {
-        const color = options.color || '#FFFFFF';
-        const fontSize = options.fontSize || 24;
-        const font = options.font || '900 24px Outfit, system-ui';
-        const shadow = options.shadow || 'rgba(0, 0, 0, 0.6)';
+        const isGold = options.isGold !== undefined ? options.isGold : (options.color === '#FFD700' || options.color === '#F59E0B' || options.color === '#FBBF24');
+        const color = options.color || (isGold ? '#FFD700' : '#FFFFFF');
+        const fontSize = options.fontSize || (isGold ? 32 : 24);
+        const font = options.font || `900 ${fontSize}px Outfit, Inter, sans-serif`;
+        const shadow = options.shadow || (isGold ? '#78350F' : 'rgba(0, 0, 0, 0.7)');
 
         this.floatingTexts.push({
             text,
             x,
             y,
-            vy: -2.5,
+            vy: options.vy || -2.8,
             alpha: 1,
-            scale: 0.5,
-            targetScale: 1.2,
-            decay: 0.018,
+            scale: 0.4,
+            targetScale: isGold ? 1.35 : 1.15,
+            decay: isGold ? 0.012 : 0.018,
             color,
             fontSize,
             font,
             shadow,
+            isGold,
             life: 0
         });
     }
@@ -184,12 +191,12 @@ export class ParticleSystem {
             ft.y += ft.vy;
             ft.vy *= 0.95;
 
-            // Scale bounce
+            // Elastic spring scale bounce
             if (ft.scale < ft.targetScale) {
-                ft.scale = Math.min(ft.targetScale, ft.scale + 0.1);
+                ft.scale = Math.min(ft.targetScale, ft.scale + 0.12);
             }
 
-            if (ft.life > 300) {
+            if (ft.life > 320) {
                 ft.alpha -= ft.decay;
             }
 
@@ -233,14 +240,14 @@ export class ParticleSystem {
             if (sw.type === 'row') {
                 const gradient = ctx.createLinearGradient(sw.x, sw.y - sw.height / 2, sw.x, sw.y + sw.height / 2);
                 gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.9)');
+                gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.95)');
                 gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(sw.x, sw.y - sw.height / 2, sw.width, sw.height);
             } else {
                 const gradient = ctx.createLinearGradient(sw.x - sw.width / 2, sw.y, sw.x + sw.width / 2, sw.y);
                 gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.9)');
+                gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.95)');
                 gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(sw.x - sw.width / 2, sw.y, sw.width, sw.height);
@@ -277,7 +284,7 @@ export class ParticleSystem {
             ctx.restore();
         }
 
-        // 4. Draw Floating Texts
+        // 4. Draw Score Pop-Ups & Bold Gold Typography
         for (const ft of this.floatingTexts) {
             ctx.save();
             ctx.globalAlpha = Math.max(0, ft.alpha);
@@ -287,13 +294,26 @@ export class ParticleSystem {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // Text Outline / Shadow
-            ctx.strokeStyle = ft.shadow;
-            ctx.lineWidth = 4;
-            ctx.strokeText(ft.text, 0, 0);
+            if (ft.isGold) {
+                // Gold outer glow
+                ctx.shadowColor = 'rgba(245, 158, 11, 0.85)';
+                ctx.shadowBlur = 16;
+                ctx.strokeStyle = ft.shadow;
+                ctx.lineWidth = 5;
+                ctx.strokeText(ft.text, 0, 0);
 
-            ctx.fillStyle = ft.color;
-            ctx.fillText(ft.text, 0, 0);
+                ctx.fillStyle = ft.color;
+                ctx.fillText(ft.text, 0, 0);
+            } else {
+                // Standard text outline
+                ctx.strokeStyle = ft.shadow;
+                ctx.lineWidth = 4;
+                ctx.strokeText(ft.text, 0, 0);
+
+                ctx.fillStyle = ft.color;
+                ctx.fillText(ft.text, 0, 0);
+            }
+
             ctx.restore();
         }
 

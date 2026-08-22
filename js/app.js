@@ -187,6 +187,29 @@ export class BlockBlastApp {
         this.renderer.resize(w, h);
     }
 
+    triggerHaptic(type = 'snap') {
+        if (typeof navigator === 'undefined' || !navigator.vibrate) return;
+        try {
+            switch (type) {
+                case 'click':
+                    navigator.vibrate(10); // Light haptic click on touch selection
+                    break;
+                case 'snap':
+                    navigator.vibrate(22); // Crisp medium pulse on grid snap
+                    break;
+                case 'clear-1':
+                    navigator.vibrate([35, 25, 35]); // Single line clear
+                    break;
+                case 'clear-multi':
+                    navigator.vibrate([55, 30, 75]); // Multi-line clear
+                    break;
+                case 'all-clear':
+                    navigator.vibrate([80, 30, 80, 30, 120]); // All clear celebration
+                    break;
+            }
+        } catch (e) {}
+    }
+
     handlePlaceAction(shapeIdx, row, col) {
         if (this.gameState.gameOver) return false;
 
@@ -199,46 +222,46 @@ export class BlockBlastApp {
         // Clear active hint
         this.renderer.aiHint = null;
 
-        // Sound effects
+        // 1. Auditory & Haptic Feedback Engine
         if (result.allClear) {
             this.audio.playAllClear();
-            this.particles.addConfettiBurst(this.renderer.width, this.renderer.height, 90);
+            this.triggerHaptic('all-clear');
+            this.particles.addConfettiBurst(this.renderer.width, this.renderer.height, 95);
+            this.particles.triggerShake(16, 420);
         } else if (result.linesCleared >= 2) {
             this.audio.playMultiClear(result.linesCleared);
             this.audio.playClear(result.comboCount);
+            this.triggerHaptic('clear-multi');
+            this.particles.triggerShake(result.linesCleared >= 3 ? 12 : 7, result.linesCleared >= 3 ? 320 : 220);
         } else if (result.linesCleared === 1) {
             this.audio.playClear(result.comboCount);
+            this.triggerHaptic('clear-1');
+            this.particles.triggerShake(3.5, 160);
         } else {
             this.audio.playPlace();
+            this.triggerHaptic('snap');
         }
 
-        // Screen Shake on multi-clears
-        if (result.linesCleared >= 3) {
-            this.particles.triggerShake(10, 320);
-        } else if (result.linesCleared === 2) {
-            this.particles.triggerShake(5, 200);
-        }
-
-        // Particles for placed blocks & cleared lines
+        // 2. Visual Effects: Color-Matched Particle Bursts & Shockwaves
         const { cellSize, gap } = this.renderer.boardMetrics;
+        const shapeColor = result.shapePlaced.color;
 
-        // Line clear laser waves
         for (const r of result.rowsCleared) {
             this.particles.addLineClearWave('row', r, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap);
             for (let c = 0; c < 8; c++) {
                 const rect = this.renderer.getCellRect(r, c);
-                this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, result.shapePlaced.color);
+                this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, shapeColor);
             }
         }
         for (const c of result.colsCleared) {
             this.particles.addLineClearWave('col', c, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap);
             for (let r = 0; r < 8; r++) {
                 const rect = this.renderer.getCellRect(r, c);
-                this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, result.shapePlaced.color);
+                this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, shapeColor);
             }
         }
 
-        // Floating score popup
+        // 3. Score Pop-Up at Placement Center
         const centerPlaced = result.placedCells[Math.floor(result.placedCells.length / 2)];
         if (centerPlaced) {
             const rect = this.renderer.getCellRect(centerPlaced.row, centerPlaced.col);
@@ -248,24 +271,52 @@ export class BlockBlastApp {
             });
         }
 
-        // Floating combo text
-        if (result.comboMessage) {
-            const bx = this.renderer.boardMetrics.x + this.renderer.boardMetrics.size / 2;
-            const by = this.renderer.boardMetrics.y + this.renderer.boardMetrics.size / 2;
-            this.particles.addFloatingText(result.comboMessage, bx, by - 30, {
-                color: '#F97316',
+        // 4. Bold Gold Typography Overlays ("Great!", "Superb!", "Perfect!", "COMBO x4!")
+        const centerX = this.renderer.boardMetrics.x + this.renderer.boardMetrics.size / 2;
+        const centerY = this.renderer.boardMetrics.y + this.renderer.boardMetrics.size / 2;
+
+        if (result.allClear) {
+            this.particles.addFloatingText('ALL CLEAR!', centerX, centerY - 20, {
+                isGold: true,
+                fontSize: 38,
+                color: '#FFD700'
+            });
+        } else if (result.linesCleared >= 4) {
+            this.particles.addFloatingText('PERFECT!', centerX, centerY - 20, {
+                isGold: true,
+                fontSize: 36,
+                color: '#FFD700'
+            });
+        } else if (result.linesCleared === 3) {
+            this.particles.addFloatingText('SUPERB!', centerX, centerY - 20, {
+                isGold: true,
+                fontSize: 34,
+                color: '#FFD700'
+            });
+        } else if (result.linesCleared === 2) {
+            this.particles.addFloatingText('GREAT!', centerX, centerY - 20, {
+                isGold: true,
                 fontSize: 32,
-                font: '900 32px Outfit, sans-serif'
+                color: '#FFD700'
+            });
+        }
+
+        if (result.comboCount >= 2) {
+            const offsetY = (result.linesCleared >= 2 || result.allClear) ? 28 : -10;
+            this.particles.addFloatingText(`COMBO x${result.comboCount}!`, centerX, centerY + offsetY, {
+                isGold: true,
+                fontSize: 32,
+                color: '#F59E0B'
             });
         }
 
         // High Score celebration
         if (result.isNewRecord && !this.celebratedNewRecord) {
             this.celebratedNewRecord = true;
-            this.particles.addConfettiBurst(this.renderer.width, this.renderer.height, 60);
+            this.particles.addConfettiBurst(this.renderer.width, this.renderer.height, 70);
         }
 
-        // Update UI
+        // Update UI Displays
         this.updateScoreDisplays();
         this.updateComboFeed();
 

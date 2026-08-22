@@ -1,6 +1,10 @@
 /**
  * Block Blast - Audio Engine
  * Zero-latency procedural sound generation via Web Audio API + Audio file fallback.
+ * Features:
+ * - Solfège Pitch-Ascending Ladder (Do, Re, Mi, Fa, Sol, La, Ti, Do...) for combo streaks
+ * - Harmonic Chord Arpeggios for multi-line clears (Double, Triple, Quad)
+ * - Celebratory Fanfare for All Clear & High Records
  */
 
 export class AudioManager {
@@ -15,18 +19,23 @@ export class AudioManager {
             this.customClearAudio = new Audio('assets/clear_sf.wav');
         } catch (e) {}
 
-        // Pentatonic scale frequencies for dynamic combo chimes
-        this.comboPitches = [
-            523.25, // C5
-            587.33, // D5
-            659.25, // E5
-            783.99, // G5
-            880.00, // A5
-            1046.50,// C6
-            1174.66,// D6
-            1318.51,// E6
-            1567.98,// G6
-            1760.00 // A6
+        // Solfège Musical Scale Ladder (Do -> Re -> Mi -> Fa -> Sol -> La -> Ti -> Do_high...)
+        this.solfegePitches = [
+            261.63, // Do  (C4) - Base / Combo 0
+            293.66, // Re  (D4) - Combo 1
+            329.63, // Mi  (E4) - Combo 2
+            349.23, // Fa  (F4) - Combo 3
+            392.00, // Sol (G4) - Combo 4
+            440.00, // La  (A4) - Combo 5
+            493.88, // Ti  (B4) - Combo 6
+            523.25, // Do  (C5) - Combo 7
+            587.33, // Re  (D5) - Combo 8
+            659.25, // Mi  (E5) - Combo 9
+            698.46, // Fa  (F5) - Combo 10
+            783.99, // Sol (G5) - Combo 11
+            880.00, // La  (A5) - Combo 12
+            987.77, // Ti  (B5) - Combo 13
+            1046.50 // Do  (C6) - High Octave
         ];
     }
 
@@ -134,15 +143,17 @@ export class AudioManager {
         } catch (e) {}
     }
 
+    /**
+     * Pitch-Ascending Line Clear Chime along Musical Solfège Scale (Do -> Re -> Mi -> ...)
+     */
     playClear(comboCount = 0) {
         if (this.isMuted) return;
         this.ensureContext();
 
-        // Also play custom audio asset if available
-        if (this.customClearAudio) {
+        if (this.customClearAudio && comboCount === 0) {
             try {
                 const clone = this.customClearAudio.cloneNode();
-                clone.volume = 0.6;
+                clone.volume = 0.55;
                 clone.play().catch(() => {});
             } catch (e) {}
         }
@@ -151,43 +162,48 @@ export class AudioManager {
 
         try {
             const now = this.ctx.currentTime;
-            const pitchIndex = Math.min(comboCount, this.comboPitches.length - 1);
-            const baseFreq = this.comboPitches[pitchIndex];
+            const pitchIndex = Math.min(Math.max(0, comboCount), this.solfegePitches.length - 1);
+            const baseFreq = this.solfegePitches[pitchIndex];
 
-            // Primary chime
+            // 1. Primary Rich Chime
             const osc1 = this.ctx.createOscillator();
             const gain1 = this.ctx.createGain();
 
             osc1.type = 'sine';
             osc1.frequency.setValueAtTime(baseFreq, now);
-            osc1.frequency.exponentialRampToValueAtTime(baseFreq * 1.05, now + 0.25);
+            osc1.frequency.exponentialRampToValueAtTime(baseFreq * 1.04, now + 0.28);
 
-            gain1.gain.setValueAtTime(0.28, now);
-            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            gain1.gain.setValueAtTime(0.30, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
 
             osc1.connect(gain1);
             gain1.connect(this.ctx.destination);
 
             osc1.start(now);
-            osc1.stop(now + 0.35);
+            osc1.stop(now + 0.38);
 
-            // Harmonizing sparkle
+            // 2. Crystal Harmonic Sparkle (Major 3rd / 5th overtone)
             const osc2 = this.ctx.createOscillator();
             const gain2 = this.ctx.createGain();
 
             osc2.type = 'triangle';
-            osc2.frequency.setValueAtTime(baseFreq * 1.5, now + 0.04);
-            gain2.gain.setValueAtTime(0.18, now + 0.04);
-            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+            osc2.frequency.setValueAtTime(baseFreq * 1.5, now + 0.03);
+            osc2.frequency.exponentialRampToValueAtTime(baseFreq * 1.52, now + 0.32);
+
+            gain2.gain.setValueAtTime(0.18, now + 0.03);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.40);
 
             osc2.connect(gain2);
             gain2.connect(this.ctx.destination);
 
-            osc2.start(now + 0.04);
-            osc2.stop(now + 0.38);
+            osc2.start(now + 0.03);
+            osc2.stop(now + 0.40);
         } catch (e) {}
     }
 
+    /**
+     * Harmonic Arpeggiated Chords for Multi-Line Clears (Double, Triple, Quad)
+     */
     playMultiClear(linesCount = 2) {
         if (this.isMuted) return;
         this.ensureContext();
@@ -195,23 +211,28 @@ export class AudioManager {
 
         try {
             const now = this.ctx.currentTime;
-            const freqs = [392.0, 493.88, 587.33, 783.99]; // G chord
-            freqs.slice(0, Math.min(4, linesCount + 1)).forEach((freq, idx) => {
+            // Pentatonic arpeggio chords
+            const freqs = [392.00, 493.88, 587.33, 783.99, 987.77];
+            const count = Math.min(freqs.length, linesCount + 1);
+
+            for (let i = 0; i < count; i++) {
+                const freq = freqs[i];
+                const startTime = now + i * 0.04;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
 
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, now + idx * 0.03);
+                osc.type = i % 2 === 0 ? 'sine' : 'triangle';
+                osc.frequency.setValueAtTime(freq, startTime);
 
-                gain.gain.setValueAtTime(0.2, now + idx * 0.03);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45 + idx * 0.03);
+                gain.gain.setValueAtTime(0.22, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.45);
 
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
 
-                osc.start(now + idx * 0.03);
-                osc.stop(now + 0.45 + idx * 0.03);
-            });
+                osc.start(startTime);
+                osc.stop(startTime + 0.45);
+            }
         } catch (e) {}
     }
 
@@ -222,49 +243,23 @@ export class AudioManager {
 
         try {
             const now = this.ctx.currentTime;
-            const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51]; // C major arpeggio
+            const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98]; // C Major Fanfare
             notes.forEach((freq, i) => {
+                const startTime = now + i * 0.06;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
 
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(freq, now + i * 0.07);
+                osc.frequency.setValueAtTime(freq, startTime);
 
-                gain.gain.setValueAtTime(0.25, now + i * 0.07);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.4);
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
-                osc.start(now + i * 0.07);
-                osc.stop(now + i * 0.07 + 0.4);
-            });
-        } catch (e) {}
-    }
-
-    playGameOver() {
-        if (this.isMuted) return;
-        this.ensureContext();
-        if (!this.ctx) return;
-
-        try {
-            const now = this.ctx.currentTime;
-            const notes = [440, 415.3, 392, 349.23]; // descending melancholy notes
-            notes.forEach((freq, i) => {
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, now + i * 0.12);
-
-                gain.gain.setValueAtTime(0.22, now + i * 0.12);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.35);
+                gain.gain.setValueAtTime(0.28, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.65);
 
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
 
-                osc.start(now + i * 0.12);
-                osc.stop(now + i * 0.12 + 0.35);
+                osc.start(startTime);
+                osc.stop(startTime + 0.65);
             });
         } catch (e) {}
     }
@@ -280,17 +275,45 @@ export class AudioManager {
             const gain = this.ctx.createGain();
 
             osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(120, now);
-            osc.frequency.setValueAtTime(90, now + 0.05);
+            osc.frequency.setValueAtTime(140, now);
+            osc.frequency.setValueAtTime(110, now + 0.06);
 
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
 
             osc.connect(gain);
             gain.connect(this.ctx.destination);
 
             osc.start(now);
-            osc.stop(now + 0.12);
+            osc.stop(now + 0.14);
+        } catch (e) {}
+    }
+
+    playGameOver() {
+        if (this.isMuted) return;
+        this.ensureContext();
+        if (!this.ctx) return;
+
+        try {
+            const now = this.ctx.currentTime;
+            const notes = [440, 415.3, 392, 369.99, 329.63];
+            notes.forEach((freq, i) => {
+                const startTime = now + i * 0.12;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, startTime);
+
+                gain.gain.setValueAtTime(0.25, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.28);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + 0.28);
+            });
         } catch (e) {}
     }
 
@@ -321,4 +344,3 @@ export class AudioManager {
 }
 
 export { AudioManager as SoundFX };
-
