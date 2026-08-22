@@ -6,6 +6,9 @@
     <title>Block Blast - HTML5 Puzzle Game & AI Solver</title>
     <meta name="description" content="Play the addictive 8x8 block placement puzzle game with combo multipliers, rich visual effects, sound synthesis, and built-in AI solver.">
     <meta name="theme-color" content="#0F172A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="assets/icon.png">
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -253,5 +256,14 @@
 
     <!-- Main JavaScript Entrypoint -->
     <script type="module" src="js/app.js"></script>
+
+    <!-- Offline Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+    </script>
 </body>
 </html>
