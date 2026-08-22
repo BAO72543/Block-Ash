@@ -453,7 +453,7 @@ export class BlockBlastApp {
         // Floating revive banner
         const cx = this.renderer.boardMetrics.x + this.renderer.boardMetrics.size / 2;
         const cy = this.renderer.boardMetrics.y + this.renderer.boardMetrics.size / 2;
-        this.particles.addFloatingText('REVIVED! 4×4 CENTER SWEEP', cx, cy, {
+        this.particles.addFloatingText('Cleared', cx, cy, {
             isGold: true,
             fontSize: 30,
             color: '#38BDF8',
