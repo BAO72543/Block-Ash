@@ -1,46 +1,41 @@
 /**
- * Block Blast - Shape Definitions, Semantic Color Mapping, DDA Spawner & Solvability Engine
- * Implements Saturated Color Palette:
- * - Square / Block Shapes (2x2, 3x3): Ruby Red (#FF3B30)
- * - Line Shapes (1x2, 1x3, 1x4, 1x5): Cobalt Blue (#007AFF)
- * - Corner / L Shapes (3x3 L, 2x3 L, 2x2 corner L, 3x2): Emerald Green (#34C759)
- * - T / Step Shapes (T, Z, S): Canary Yellow (#FFCC00)
- * - Special / Dots (1x1): Vivid Magenta (#AF52DE) / Gold (#FFD700)
+ * Block Blast - Shape Definitions, DDA Spawner & Solvability Engine
+ * Features diverse vibrant block colors and S_3 forward solvability.
  */
 
-export const SEMANTIC_PALETTE = {
-    RUBY_RED:       { name: 'ruby-red',       hex: '#FF3B30', light: '#FF6961', dark: '#C92A2A', shadow: '#961919', rgb: [255, 59, 48] },
-    COBALT_BLUE:    { name: 'cobalt-blue',    hex: '#007AFF', light: '#5AC8FA', dark: '#0051A8', shadow: '#003975', rgb: [0, 122, 255] },
-    EMERALD_GREEN:  { name: 'emerald-green',  hex: '#34C759', light: '#62E484', dark: '#248A3D', shadow: '#175E28', rgb: [52, 199, 89] },
-    CANARY_YELLOW:  { name: 'canary-yellow',  hex: '#FFCC00', light: '#FFE066', dark: '#D4A000', shadow: '#997300', rgb: [255, 204, 0] },
-    VIVID_MAGENTA:  { name: 'vivid-magenta',  hex: '#AF52DE', light: '#D47AFF', dark: '#7825A8', shadow: '#511475', rgb: [175, 82, 222] },
-    ROYAL_GOLD:     { name: 'royal-gold',     hex: '#FFD700', light: '#FFE44D', dark: '#C6A700', shadow: '#8C7600', rgb: [255, 215, 0] }
-};
-
-export const SHAPE_COLORS = Object.values(SEMANTIC_PALETTE);
+export const SHAPE_COLORS = [
+    { name: 'yellow', hex: '#FBBF24', light: '#FDE68A', dark: '#D97706', rgb: [251, 191, 36] },
+    { name: 'orange', hex: '#F97316', light: '#FDBA74', dark: '#EA580C', rgb: [249, 115, 22] },
+    { name: 'red',    hex: '#EF4444', light: '#FCA5A5', dark: '#DC2626', rgb: [239, 68, 68] },
+    { name: 'green',  hex: '#10B981', light: '#6EE7B7', dark: '#059669', rgb: [16, 185, 129] },
+    { name: 'cyan',   hex: '#06B6D4', light: '#67E8F9', dark: '#0891B2', rgb: [6, 182, 212] },
+    { name: 'blue',   hex: '#3B82F6', light: '#93C5FD', dark: '#2563EB', rgb: [59, 130, 246] },
+    { name: 'purple', hex: '#8B5CF6', light: '#C4B5FD', dark: '#7C3AED', rgb: [139, 92, 246] },
+    { name: 'pink',   hex: '#EC4899', light: '#F472B6', dark: '#DB2777', rgb: [236, 72, 153] }
+];
 
 export const FORMS = [
-    // 0: 2x2 square (Class 1) -> Ruby Red
+    // 0: 2x2 square (Class 1)
     [
         [[1, 1], [1, 1]]
     ],
-    // 1: 3x2 rectangle (Class 2) -> Emerald Green
+    // 1: 3x2 rectangle (Class 2)
     [
         [[1, 1, 1], [1, 1, 1]],
         [[1, 1], [1, 1], [1, 1]]
     ],
-    // 2: 3x3 square (Class 3) -> Ruby Red
+    // 2: 3x3 square (Class 3)
     [
         [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
     ],
-    // 3: 3x3 L shape (Class 3) -> Emerald Green
+    // 3: 3x3 L shape (Class 3)
     [
         [[1, 1, 1], [1, 0, 0], [1, 0, 0]],
         [[1, 1, 1], [0, 0, 1], [0, 0, 1]],
         [[1, 0, 0], [1, 0, 0], [1, 1, 1]],
         [[0, 0, 1], [0, 0, 1], [1, 1, 1]]
     ],
-    // 4: 2x3 L shape (Class 2) -> Emerald Green
+    // 4: 2x3 L shape (Class 2)
     [
         [[1, 1, 1], [1, 0, 0]],
         [[1, 1, 1], [0, 0, 1]],
@@ -51,48 +46,48 @@ export const FORMS = [
         [[1, 1], [0, 1], [0, 1]],
         [[1, 1], [1, 0], [1, 0]]
     ],
-    // 5: Z shape (Class 3) -> Canary Yellow
+    // 5: Z shape (Class 3)
     [
         [[0, 1, 1], [1, 1, 0]],
         [[1, 1, 0], [0, 1, 1]],
         [[1, 0], [1, 1], [0, 1]],
         [[0, 1], [1, 1], [1, 0]]
     ],
-    // 6: T shape (Class 2) -> Canary Yellow
+    // 6: T shape (Class 2)
     [
         [[0, 1, 0], [1, 1, 1]],
         [[1, 0], [1, 1], [1, 0]],
         [[1, 1, 1], [0, 1, 0]],
         [[0, 1], [1, 1], [0, 1]]
     ],
-    // 7: 2x1 rectangle (Class 1) -> Cobalt Blue
+    // 7: 2x1 rectangle (Class 1)
     [
         [[1, 1]],
         [[1], [1]]
     ],
-    // 8: 3x1 rectangle (Class 1) -> Cobalt Blue
+    // 8: 3x1 rectangle (Class 1)
     [
         [[1, 1, 1]],
         [[1], [1], [1]]
     ],
-    // 9: S shape (Class 3) -> Canary Yellow
+    // 9: S shape (Class 3)
     [
         [[1, 0], [1, 1]],
         [[1, 1], [0, 1]],
         [[1, 1], [1, 0]],
         [[0, 1], [1, 1]]
     ],
-    // 10: 4x1 rectangle (Class 2) -> Cobalt Blue
+    // 10: 4x1 rectangle (Class 2)
     [
         [[1, 1, 1, 1]],
         [[1], [1], [1], [1]]
     ],
-    // 11: 5x1 rectangle (Class 3) -> Cobalt Blue
+    // 11: 5x1 rectangle (Class 3)
     [
         [[1, 1, 1, 1, 1]],
         [[1], [1], [1], [1], [1]]
     ],
-    // 12: 2x2 L / corner shape (Class 2) -> Emerald Green
+    // 12: 2x2 L / corner shape (Class 2)
     [
         [[1, 0], [1, 1]],
         [[0, 1], [1, 1]],
@@ -125,33 +120,6 @@ export const SHAPE_CLASSES = {
     ]
 };
 
-/**
- * Assign saturated semantic color based on shape category:
- * - Square / Block Shapes (2x2, 3x3): Ruby Red
- * - Line Shapes (1x2, 1x3, 1x4, 1x5): Cobalt Blue
- * - Corner / L Shapes (3x3 L, 2x3 L, 2x2 corner L, 3x2): Emerald Green
- * - T / Step Shapes (T, Z, S): Canary Yellow
- * - Special Items / 1x1 Dots: Vivid Magenta / Gold
- */
-export function getSemanticColorForShape(formIdx) {
-    if (formIdx === 0 || formIdx === 2) {
-        return SEMANTIC_PALETTE.RUBY_RED;
-    }
-    if (formIdx === 7 || formIdx === 8 || formIdx === 10 || formIdx === 11) {
-        return SEMANTIC_PALETTE.COBALT_BLUE;
-    }
-    if (formIdx === 3 || formIdx === 4 || formIdx === 12 || formIdx === 1) {
-        return SEMANTIC_PALETTE.EMERALD_GREEN;
-    }
-    if (formIdx === 6 || formIdx === 5 || formIdx === 9) {
-        return SEMANTIC_PALETTE.CANARY_YELLOW;
-    }
-    if (formIdx === -1) {
-        return Math.random() > 0.3 ? SEMANTIC_PALETTE.VIVID_MAGENTA : SEMANTIC_PALETTE.ROYAL_GOLD;
-    }
-    return SEMANTIC_PALETTE.COBALT_BLUE;
-}
-
 export class Shape {
     constructor(formData = null, color = null) {
         this.id = Math.random().toString(36).substring(2, 9);
@@ -181,8 +149,8 @@ export class Shape {
             this.variantIndex = 0;
         }
 
-        // Apply semantic saturated color according to shape geometry specification
-        this.color = color || getSemanticColorForShape(this.formIndex);
+        // Varied, vibrant random colors
+        this.color = color || SHAPE_COLORS[Math.floor(Math.random() * SHAPE_COLORS.length)];
         this.rows = this.form.length;
         this.cols = this.form[0].length;
         this.cellCount = this.form.reduce((acc, row) => acc + row.reduce((r, c) => r + c, 0), 0);
@@ -198,9 +166,6 @@ export class Shape {
     }
 }
 
-/**
- * Check if a shape can be placed at target anchor on 8x8 matrix
- */
 export function canPlaceShapeOnGrid(grid, shape, row, col) {
     if (!shape || !shape.form) return false;
     const h = shape.rows;
@@ -220,9 +185,6 @@ export function canPlaceShapeOnGrid(grid, shape, row, col) {
     return true;
 }
 
-/**
- * Simulate placement and line clears on a copied grid
- */
 export function simulatePlacementOnGrid(grid, shape, row, col) {
     const newGrid = grid.map(r => [...r]);
     const h = shape.rows;

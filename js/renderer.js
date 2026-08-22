@@ -535,39 +535,31 @@ export class GameRenderer {
     }
 
     /**
-     * Render a tactile pseudo-3D beveled block tile with 6px-8px rounded corners,
-     * bright top-left specular highlights, and soft bottom-right drop shadows.
+     * Render a gorgeous 3D beveled glossy block tile
      */
     drawBeveledBlock(x, y, size, color, isGhost = false) {
         const ctx = this.ctx;
-        // Rounded corners constrained to 6px - 8px
-        const radius = Math.max(6, Math.min(8, size * 0.16));
-        const hex = color.hex || '#007AFF';
-        const light = color.light || '#5AC8FA';
-        const dark = color.dark || '#0051A8';
-        const shadow = color.shadow || '#003975';
+        const radius = Math.max(4, size * 0.16);
+        const hex = color.hex || '#3B82F6';
+        const light = color.light || '#93C5FD';
+        const dark = color.dark || '#1D4ED8';
 
         ctx.save();
 
-        // 1. Dark drop shadow / outer bevel boundary
-        ctx.fillStyle = shadow;
-        this.roundRect(x, y, size, size, radius);
-        ctx.fill();
-
-        // 2. Base saturated gradient face
-        const bevelSize = Math.max(2, Math.round(size * 0.10));
+        // 1. Base Gradient Fill
         const bgGrad = ctx.createLinearGradient(x, y, x, y + size);
         bgGrad.addColorStop(0, light);
-        bgGrad.addColorStop(0.35, hex);
+        bgGrad.addColorStop(0.65, hex);
         bgGrad.addColorStop(1, dark);
 
         ctx.fillStyle = bgGrad;
-        this.roundRect(x, y, size - 1, size - 1, radius);
+        this.roundRect(x, y, size, size, radius);
         ctx.fill();
 
-        // 3. Pseudo-3D Bevel highlight along top-left edges
+        // 2. Beveled top/left highlight
+        const bevelSize = Math.max(2, size * 0.12);
         ctx.save();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
         ctx.beginPath();
         ctx.moveTo(x + radius, y);
         ctx.lineTo(x + size - radius, y);
@@ -580,36 +572,17 @@ export class GameRenderer {
         ctx.fill();
         ctx.restore();
 
-        // 4. Soft bottom-right drop shadow edge
-        ctx.save();
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-        ctx.beginPath();
-        ctx.moveTo(x + size, y + radius);
-        ctx.lineTo(x + size, y + size - radius);
-        ctx.quadraticCurveTo(x + size, y + size, x + size - radius, y + size);
-        ctx.lineTo(x + radius, y + size);
-        ctx.lineTo(x + radius + bevelSize, y + size - bevelSize);
-        ctx.lineTo(x + size - bevelSize, y + size - bevelSize);
-        ctx.lineTo(x + size - bevelSize, y + radius + bevelSize);
-        ctx.closePath();
+        // 3. Inner glossy center sheen
+        const innerRadius = Math.max(2, radius * 0.6);
+        const innerMargin = bevelSize * 0.8;
+        const innerGrad = ctx.createLinearGradient(x + innerMargin, y + innerMargin, x + size - innerMargin, y + size - innerMargin);
+        innerGrad.addColorStop(0, 'rgba(255, 255, 255, 0.28)');
+        innerGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
+        innerGrad.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
+
+        ctx.fillStyle = innerGrad;
+        this.roundRect(x + innerMargin, y + innerMargin, size - innerMargin * 2, size - innerMargin * 2, innerRadius);
         ctx.fill();
-        ctx.restore();
-
-        // 5. Tactile toy-like inner glossy reflection
-        const innerMargin = bevelSize + 1;
-        const innerW = size - innerMargin * 2;
-        const innerH = size - innerMargin * 2;
-
-        if (innerW > 4 && innerH > 4) {
-            const innerGrad = ctx.createLinearGradient(x + innerMargin, y + innerMargin, x + innerMargin, y + innerMargin + innerH);
-            innerGrad.addColorStop(0, 'rgba(255, 255, 255, 0.35)');
-            innerGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
-            innerGrad.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
-
-            ctx.fillStyle = innerGrad;
-            this.roundRect(x + innerMargin, y + innerMargin, innerW, innerH, Math.max(3, radius - 3));
-            ctx.fill();
-        }
 
         ctx.restore();
     }
