@@ -1,6 +1,7 @@
 /**
- * Block Blast - Shape Definitions & Generation Logic
- * Exact replica of the 13 shape categories and solvability generator from game_state.py
+ * Block Blast - Shape Definitions, DDA Spawner & Solvability Engine
+ * Implements Class 1/2/3 Difficulty tiers, Dynamic Difficulty Adjustment (DDA),
+ * and Forward Solvability verification V(B, T) over permutations S_3.
  */
 
 export const SHAPE_COLORS = [
@@ -15,27 +16,27 @@ export const SHAPE_COLORS = [
 ];
 
 export const FORMS = [
-    // 0: 2x2 square
+    // 0: 2x2 square (Class 1)
     [
         [[1, 1], [1, 1]]
     ],
-    // 1: 3x2 rectangle (2 variants)
+    // 1: 3x2 rectangle (Class 2)
     [
         [[1, 1, 1], [1, 1, 1]],
         [[1, 1], [1, 1], [1, 1]]
     ],
-    // 2: 3x3 square
+    // 2: 3x3 square (Class 3)
     [
         [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
     ],
-    // 3: 3x3 L shape (4 variants)
+    // 3: 3x3 L shape (Class 3)
     [
         [[1, 1, 1], [1, 0, 0], [1, 0, 0]],
         [[1, 1, 1], [0, 0, 1], [0, 0, 1]],
         [[1, 0, 0], [1, 0, 0], [1, 1, 1]],
         [[0, 0, 1], [0, 0, 1], [1, 1, 1]]
     ],
-    // 4: 2x3 L shape (8 variants)
+    // 4: 2x3 L shape (Class 2)
     [
         [[1, 1, 1], [1, 0, 0]],
         [[1, 1, 1], [0, 0, 1]],
@@ -46,48 +47,48 @@ export const FORMS = [
         [[1, 1], [0, 1], [0, 1]],
         [[1, 1], [1, 0], [1, 0]]
     ],
-    // 5: Z shape (4 variants)
+    // 5: Z shape (Class 3)
     [
         [[0, 1, 1], [1, 1, 0]],
         [[1, 1, 0], [0, 1, 1]],
         [[1, 0], [1, 1], [0, 1]],
         [[0, 1], [1, 1], [1, 0]]
     ],
-    // 6: T shape (4 variants)
+    // 6: T shape (Class 2)
     [
         [[0, 1, 0], [1, 1, 1]],
         [[1, 0], [1, 1], [1, 0]],
         [[1, 1, 1], [0, 1, 0]],
         [[0, 1], [1, 1], [0, 1]]
     ],
-    // 7: 2x1 rectangle (2 variants)
+    // 7: 2x1 rectangle (Class 1)
     [
         [[1, 1]],
         [[1], [1]]
     ],
-    // 8: 3x1 rectangle (2 variants)
+    // 8: 3x1 rectangle (Class 1)
     [
         [[1, 1, 1]],
         [[1], [1], [1]]
     ],
-    // 9: S shape (4 variants)
+    // 9: S shape (Class 3)
     [
         [[1, 0], [1, 1]],
         [[1, 1], [0, 1]],
         [[1, 1], [1, 0]],
         [[0, 1], [1, 1]]
     ],
-    // 10: 4x1 rectangle (2 variants)
+    // 10: 4x1 rectangle (Class 2)
     [
         [[1, 1, 1, 1]],
         [[1], [1], [1], [1]]
     ],
-    // 11: 5x1 rectangle (2 variants)
+    // 11: 5x1 rectangle (Class 3)
     [
         [[1, 1, 1, 1, 1]],
         [[1], [1], [1], [1], [1]]
     ],
-    // 12: 2x2 L / corner shape (4 variants)
+    // 12: 2x2 L / corner shape (Class 2)
     [
         [[1, 0], [1, 1]],
         [[0, 1], [1, 1]],
@@ -96,11 +97,34 @@ export const FORMS = [
     ]
 ];
 
+// Difficulty Class Categorization
+export const SHAPE_CLASSES = {
+    // Class 1 (Easy / Fillers): 1x1 dot, 1x2, 1x3, 2x2
+    CLASS_1: [
+        { formIdx: -1, varIdx: 0 }, // 1x1 dot
+        { formIdx: 7, varIdx: null }, // 2x1
+        { formIdx: 8, varIdx: null }, // 3x1
+        { formIdx: 0, varIdx: null }  // 2x2
+    ],
+    // Class 2 (Medium / Connectors): L-shapes (2x3), 2x2 corner, T-shapes, 1x4, 3x2
+    CLASS_2: [
+        { formIdx: 1, varIdx: null }, // 3x2
+        { formIdx: 4, varIdx: null }, // 2x3 L
+        { formIdx: 6, varIdx: null }, // T-shape
+        { formIdx: 10, varIdx: null },// 4x1
+        { formIdx: 12, varIdx: null } // 2x2 corner L
+    ],
+    // Class 3 (Hard / Fillers): 3x3 square, 3x3 large L, 1x5 line, Z, S
+    CLASS_3: [
+        { formIdx: 2, varIdx: null }, // 3x3 square
+        { formIdx: 3, varIdx: null }, // 3x3 large L
+        { formIdx: 5, varIdx: null }, // Z-shape
+        { formIdx: 9, varIdx: null }, // S-shape
+        { formIdx: 11, varIdx: null } // 5x1 line
+    ]
+};
+
 export class Shape {
-    /**
-     * @param {Array<number>|number|null} formData [formIndex, variantIndex] or -1 for 1x1
-     * @param {Object} [color] Optional predefined color object
-     */
     constructor(formData = null, color = null) {
         this.id = Math.random().toString(36).substring(2, 9);
         if (formData === -1 || formData === null) {
@@ -109,10 +133,15 @@ export class Shape {
             this.variantIndex = 0;
         } else if (Array.isArray(formData)) {
             const [formIdx, varIdx] = formData;
-            if (FORMS[formIdx] && FORMS[formIdx][varIdx]) {
-                this.form = FORMS[formIdx][varIdx].map(row => [...row]);
+            if (formIdx === -1) {
+                this.form = [[1]];
+                this.formIndex = -1;
+                this.variantIndex = 0;
+            } else if (FORMS[formIdx] && FORMS[formIdx][varIdx !== undefined ? varIdx : 0]) {
+                const actualVar = varIdx !== undefined ? varIdx : 0;
+                this.form = FORMS[formIdx][actualVar].map(row => [...row]);
                 this.formIndex = formIdx;
-                this.variantIndex = varIdx;
+                this.variantIndex = actualVar;
             } else {
                 this.form = [[1]];
                 this.formIndex = -1;
@@ -141,12 +170,12 @@ export class Shape {
 }
 
 /**
- * Check if a shape can be placed on a specific 8x8 grid
+ * Check if a shape can be placed at target anchor on 8x8 matrix
  */
 export function canPlaceShapeOnGrid(grid, shape, row, col) {
     if (!shape || !shape.form) return false;
-    const h = shape.form.length;
-    const w = shape.form[0].length;
+    const h = shape.rows;
+    const w = shape.cols;
 
     if (row < 0 || col < 0 || row + h > 8 || col + w > 8) {
         return false;
@@ -163,12 +192,12 @@ export function canPlaceShapeOnGrid(grid, shape, row, col) {
 }
 
 /**
- * Simulate placing shape and clearing lines on a copied grid
+ * Simulate placement and line clears on a copied grid
  */
 export function simulatePlacementOnGrid(grid, shape, row, col) {
     const newGrid = grid.map(r => [...r]);
-    const h = shape.form.length;
-    const w = shape.form[0].length;
+    const h = shape.rows;
+    const w = shape.cols;
 
     for (let r = 0; r < h; r++) {
         for (let c = 0; c < w; c++) {
@@ -178,7 +207,6 @@ export function simulatePlacementOnGrid(grid, shape, row, col) {
         }
     }
 
-    // Rows to clear
     const rowsToClear = [];
     for (let r = 0; r < 8; r++) {
         if (newGrid[r].every(cell => cell !== 0)) {
@@ -186,7 +214,6 @@ export function simulatePlacementOnGrid(grid, shape, row, col) {
         }
     }
 
-    // Cols to clear
     const colsToClear = [];
     for (let c = 0; c < 8; c++) {
         let full = true;
@@ -215,66 +242,163 @@ export function simulatePlacementOnGrid(grid, shape, row, col) {
 }
 
 /**
- * Greedily generates 3 shapes that are guaranteed to have at least one valid sequence
- * of placements on the current board, matching game_state.py
+ * Sample a random shape from a given difficulty class
  */
-export function generateValidShapes(grid) {
-    const remaining = Array.from({ length: FORMS.length }, (_, i) => i);
-    const nextShapes = [];
-    let currentGrid = grid.map(row => [...row]);
+function sampleFromClass(classKey) {
+    const items = SHAPE_CLASSES[classKey];
+    const item = items[Math.floor(Math.random() * items.length)];
 
-    for (let s = 0; s < 3; s++) {
-        let placed = false;
-        // Shuffle remaining
-        const shuffled = [...remaining].sort(() => Math.random() - 0.5);
+    if (item.formIdx === -1) {
+        return new Shape(-1);
+    }
 
-        for (const formIdx of shuffled) {
-            const variantsCount = FORMS[formIdx].length;
-            const varIndices = Array.from({ length: variantsCount }, (_, i) => i).sort(() => Math.random() - 0.5);
+    const formIdx = item.formIdx;
+    const variantsCount = FORMS[formIdx].length;
+    const varIdx = item.varIdx !== null ? item.varIdx : Math.floor(Math.random() * variantsCount);
 
-            for (const varIdx of varIndices) {
-                const shape = new Shape([formIdx, varIdx]);
-                // Test all spots
-                for (let r = 0; r <= 8 - shape.rows; r++) {
-                    for (let c = 0; c <= 8 - shape.cols; c++) {
-                        if (canPlaceShapeOnGrid(currentGrid, shape, r, c)) {
-                            nextShapes.push(shape);
-                            currentGrid = simulatePlacementOnGrid(currentGrid, shape, r, c).grid;
-                            placed = true;
-                            break;
-                        }
-                    }
-                    if (placed) break;
+    return new Shape([formIdx, varIdx]);
+}
+
+/**
+ * Sample a random shape according to dynamic weights w1, w2, w3
+ */
+function sampleWeightedShape(w1, w2, w3) {
+    const totalWeight = w1 + w2 + w3;
+    const rand = Math.random() * totalWeight;
+
+    if (rand < w1) {
+        return sampleFromClass('CLASS_1');
+    } else if (rand < w1 + w2) {
+        return sampleFromClass('CLASS_2');
+    } else {
+        return sampleFromClass('CLASS_3');
+    }
+}
+
+/**
+ * Forward Solvability Check: V(B, T1, T2, T3)
+ * Tests if there exists at least one permutation sigma in S_3
+ * where all 3 pieces can be placed sequentially on board B.
+ */
+export function verifySolvability(grid, pieces) {
+    const permIndices = [
+        [0, 1, 2], [0, 2, 1],
+        [1, 0, 2], [1, 2, 0],
+        [2, 0, 1], [2, 1, 0]
+    ];
+
+    for (const perm of permIndices) {
+        if (canPlacePermutation(grid, pieces, perm, 0)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function canPlacePermutation(currentGrid, pieces, perm, step) {
+    if (step === perm.length) return true;
+
+    const piece = pieces[perm[step]];
+    for (let r = 0; r <= 8 - piece.rows; r++) {
+        for (let c = 0; c <= 8 - piece.cols; c++) {
+            if (canPlaceShapeOnGrid(currentGrid, piece, r, c)) {
+                const nextState = simulatePlacementOnGrid(currentGrid, piece, r, c);
+                if (canPlacePermutation(nextState.grid, pieces, perm, step + 1)) {
+                    return true;
                 }
-                if (placed) break;
-            }
-
-            if (placed) {
-                const idx = remaining.indexOf(formIdx);
-                if (idx !== -1) remaining.splice(idx, 1);
-                break;
             }
         }
+    }
+    return false;
+}
 
-        if (!placed) {
-            // Fallback to 1x1 block
-            const single = new Shape(-1);
-            for (let r = 0; r < 8; r++) {
-                for (let c = 0; c < 8; c++) {
-                    if (canPlaceShapeOnGrid(currentGrid, single, r, c)) {
-                        nextShapes.push(single);
-                        currentGrid = simulatePlacementOnGrid(currentGrid, single, r, c).grid;
+/**
+ * Dynamic Difficulty Adjustment (DDA) Piece Spawner
+ * Adjusts weights w1 : w2 : w3 based on board fill ratio and combo streak,
+ * then guarantees forward solvability V(B, T) = True.
+ */
+export function generateValidShapes(grid, comboStreak = 0) {
+    // 1. Calculate Board Fill Ratio
+    let filledCells = 0;
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            if (grid[r][c] !== 0) filledCells++;
+        }
+    }
+    const fillRatio = filledCells / 64.0;
+
+    // 2. Compute DDA weights
+    let w1 = 10;
+    let w2 = 5;
+    let w3 = 3;
+
+    if (fillRatio > 0.75) {
+        // High danger: boost Class 1 recovery pieces
+        w1 = 28;
+        w2 = 6;
+        w3 = 1;
+    } else if (comboStreak >= 4) {
+        // High combo streak: increase Class 3 challenge
+        w1 = 5;
+        w2 = 7;
+        w3 = 10;
+    } else if (fillRatio > 0.55) {
+        w1 = 16;
+        w2 = 6;
+        w3 = 2;
+    }
+
+    // 3. Generate 3 shapes with forward solvability check
+    const MAX_ATTEMPTS = 40;
+    for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+        const candidatePieces = [
+            sampleWeightedShape(w1, w2, w3),
+            sampleWeightedShape(w1, w2, w3),
+            sampleWeightedShape(w1, w2, w3)
+        ];
+
+        if (verifySolvability(grid, candidatePieces)) {
+            return candidatePieces;
+        }
+    }
+
+    // Fallback: guaranteed solvable construction with Class 1 fillers
+    const safePieces = [];
+    let simGrid = grid.map(r => [...r]);
+
+    for (let i = 0; i < 3; i++) {
+        let placed = false;
+        // Try Class 1 shapes
+        for (let t = 0; t < 15; t++) {
+            const piece = sampleFromClass('CLASS_1');
+            for (let r = 0; r <= 8 - piece.rows; r++) {
+                for (let c = 0; c <= 8 - piece.cols; c++) {
+                    if (canPlaceShapeOnGrid(simGrid, piece, r, c)) {
+                        safePieces.push(piece);
+                        simGrid = simulatePlacementOnGrid(simGrid, piece, r, c).grid;
                         placed = true;
                         break;
                     }
                 }
                 if (placed) break;
             }
-            if (!placed) {
-                nextShapes.push(single);
+            if (placed) break;
+        }
+
+        if (!placed) {
+            const dot = new Shape(-1);
+            safePieces.push(dot);
+            // find spot for dot
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (canPlaceShapeOnGrid(simGrid, dot, r, c)) {
+                        simGrid = simulatePlacementOnGrid(simGrid, dot, r, c).grid;
+                        break;
+                    }
+                }
             }
         }
     }
 
-    return nextShapes;
+    return safePieces;
 }

@@ -1,18 +1,19 @@
 /**
  * Block Blast - Heuristic AI Solver & Assistant
- * Evaluates board states with lookahead to find optimal moves for Hints and Autoplay.
+ * Optimized for the exponential scoring model: S_turn = N_cells + (10 * L * 2^(L-1)) * (1 + 0.5 * C)
+ * and DDA board fill maintenance.
  */
 
-import { canPlaceShapeOnGrid, simulatePlacementOnGrid, FORMS, Shape } from './shapes.js';
+import { canPlaceShapeOnGrid, simulatePlacementOnGrid, Shape } from './shapes.js';
 
-// Key reference shapes used to test board flexibility/openness
+// Key reference benchmark shapes to test board flexibility
 const BENCHMARK_TEST_SHAPES = [
-    new Shape([2, 0]), // 3x3 square
-    new Shape([11, 0]),// 5x1 horizontal
-    new Shape([11, 1]),// 5x1 vertical
-    new Shape([1, 0]), // 3x2
-    new Shape([0, 0]), // 2x2
-    new Shape([4, 0])  // 3x2 L
+    new Shape([2, 0]), // 3x3 square (Class 3)
+    new Shape([11, 0]),// 5x1 horizontal (Class 3)
+    new Shape([11, 1]),// 5x1 vertical (Class 3)
+    new Shape([1, 0]), // 3x2 (Class 2)
+    new Shape([0, 0]), // 2x2 (Class 1)
+    new Shape([4, 0])  // 3x2 L (Class 2)
 ];
 
 export class BlockBlastAI {
@@ -21,32 +22,37 @@ export class BlockBlastAI {
     }
 
     /**
-     * Evaluate the quality of a board state
+     * Evaluate board state value under the exponential scoring formula
      */
     evaluateBoard(grid, linesCleared, comboCount, shapeCellCount) {
         let score = 0;
 
-        // 1. Line Clear Reward
+        // 1. Exponential Line Clear & Combo Value
         if (linesCleared > 0) {
-            score += linesCleared * 120;
-            if (linesCleared >= 2) {
-                score += linesCleared * 80; // Multi-line bonus
-            }
-            score += comboCount * 30; // Combo bonus
+            const baseClear = 10 * linesCleared * Math.pow(2, linesCleared - 1);
+            const comboMultiplier = 1 + (0.5 * comboCount);
+            const turnClearScore = baseClear * comboMultiplier;
+
+            score += turnClearScore * 1.5;
         }
 
-        // 2. Count occupied cells & free cells
+        // 2. Board Occupancy & Fill Rate
         let filledCount = 0;
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 if (grid[r][c] !== 0) filledCount++;
             }
         }
+        const fillRatio = filledCount / 64.0;
 
-        // Penalty for too crowded board
-        score -= (filledCount * 2.5);
+        // Penalize higher board density (especially above 0.75)
+        if (fillRatio > 0.75) {
+            score -= (fillRatio - 0.75) * 800;
+        } else {
+            score -= filledCount * 2.0;
+        }
 
-        // 3. Isolated Holes & Trapped Empty Cells Penalty
+        // 3. Isolated Holes / Trapped Cells Penalty
         let trappedHoles = 0;
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
@@ -57,14 +63,14 @@ export class BlockBlastAI {
                     if (c === 0 || grid[r][c - 1] !== 0) walls++;
                     if (c === 7 || grid[r][c + 1] !== 0) walls++;
 
-                    if (walls >= 4) trappedHoles += 3;
+                    if (walls === 4) trappedHoles += 3;
                     else if (walls === 3) trappedHoles += 1;
                 }
             }
         }
-        score -= trappedHoles * 15;
+        score -= trappedHoles * 18;
 
-        // 4. Test Board Flexibility (can big pieces fit?)
+        // 4. Test Board Openness / Flexibility
         let fitCount = 0;
         for (const testShape of BENCHMARK_TEST_SHAPES) {
             let canFit = false;
@@ -79,26 +85,28 @@ export class BlockBlastAI {
                 if (canFit) break;
             }
         }
-        score += fitCount * 20;
+        score += fitCount * 25;
 
-        // 5. Line Completeness Incentive (lines close to 8 cells get rewarded)
+        // 5. High-density Line Readiness (lines with 6-7 blocks are primed for combos)
         for (let r = 0; r < 8; r++) {
             const count = grid[r].filter(c => c !== 0).length;
-            if (count >= 6) score += (count - 5) * 8;
+            if (count === 6) score += 10;
+            else if (count === 7) score += 25;
         }
         for (let c = 0; c < 8; c++) {
             let count = 0;
             for (let r = 0; r < 8; r++) {
                 if (grid[r][c] !== 0) count++;
             }
-            if (count >= 6) score += (count - 5) * 8;
+            if (count === 6) score += 10;
+            else if (count === 7) score += 25;
         }
 
         return score;
     }
 
     /**
-     * Find the best immediate move for the current available shapes
+     * Find optimal move evaluating all available pieces and 2-ply lookahead
      */
     findBestMove(gameState) {
         const availableIndices = [];
@@ -113,26 +121,27 @@ export class BlockBlastAI {
         let bestMove = null;
         let highestScore = -Infinity;
 
-        // Permutations / Lookahead search
         for (const shapeIdx of availableIndices) {
             const shape = gameState.currentShapes[shapeIdx];
             for (let r = 0; r <= 8 - shape.rows; r++) {
                 for (let c = 0; c <= 8 - shape.cols; c++) {
                     if (!gameState.canPlaceShape(shape, r, c)) continue;
 
-                    // 1st Ply simulation
+                    // 1st Ply Simulation
                     const sim1 = simulatePlacementOnGrid(gameState.grid, shape, r, c);
+                    const nextCombo = sim1.linesCleared > 0 ? (gameState.comboCount + 1) : gameState.comboCount;
+
                     let moveScore = this.evaluateBoard(
                         sim1.grid,
                         sim1.linesCleared,
-                        gameState.combos[1] + sim1.linesCleared,
+                        nextCombo,
                         shape.cellCount
                     );
 
-                    // 2nd Ply: Check remaining available shapes to see if they can still be placed
+                    // 2nd Ply Lookahead: Test feasibility of other remaining shapes
                     const remainingShapes = availableIndices.filter(idx => idx !== shapeIdx);
-                    let subsequentFitBonus = 0;
-                    let canFitNext = remainingShapes.length === 0;
+                    let canFitRemaining = remainingShapes.length === 0;
+                    let fitBonus = 0;
 
                     for (const nextIdx of remainingShapes) {
                         const nextShape = gameState.currentShapes[nextIdx];
@@ -141,20 +150,19 @@ export class BlockBlastAI {
                             for (let nc = 0; nc <= 8 - nextShape.cols; nc++) {
                                 if (canPlaceShapeOnGrid(sim1.grid, nextShape, nr, nc)) {
                                     canFit = true;
-                                    subsequentFitBonus += 15;
+                                    fitBonus += 20;
                                     break;
                                 }
                             }
                             if (canFit) break;
                         }
-                        if (canFit) canFitNext = true;
+                        if (canFit) canFitRemaining = true;
                     }
 
-                    if (!canFitNext && remainingShapes.length > 0) {
-                        // Severe penalty if this move traps all remaining pieces
-                        moveScore -= 500;
+                    if (!canFitRemaining && remainingShapes.length > 0) {
+                        moveScore -= 800; // Heavy penalty if move locks out remaining pieces
                     } else {
-                        moveScore += subsequentFitBonus;
+                        moveScore += fitBonus;
                     }
 
                     if (moveScore > highestScore) {

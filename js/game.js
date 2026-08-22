@@ -1,6 +1,8 @@
 /**
  * Block Blast - Game State & Engine
- * Exact replica of game_state.py mechanics with score, combos, and game loop.
+ * Implements Mathematical Scoring Specification:
+ * S_turn = N_cells + I(L > 0) * [(10 * L * 2^(L-1)) * (1 + 0.5 * C)]
+ * and Turn-based Combo Streak tracking.
  */
 
 import { Shape, canPlaceShapeOnGrid, generateValidShapes } from './shapes.js';
@@ -10,7 +12,8 @@ export class BlockGameState {
         this.STORAGE_KEY_HIGH_SCORE = 'blockblast_high_score';
         this.STORAGE_KEY_STATS = 'blockblast_stats';
 
-        this.MAX_COMBO_STREAK = 3; // Resets combo after 3 placements without clearing lines
+        this.MAX_NON_CLEAR_TURNS = 2; // Combo resets on the 3rd placement without line clear
+        this.COMBO_ALPHA = 0.5; // alpha = 0.5 combo scaling factor
 
         this.comboNames = {
             1: '',
@@ -30,24 +33,29 @@ export class BlockGameState {
     }
 
     reset() {
-        // 8x8 grid (0 = empty, object = filled cell with color data)
+        // 8x8 matrix B in {0, 1}^(8x8)
         this.grid = Array.from({ length: 8 }, () => Array(8).fill(0));
         this.score = 0;
         this.displayedScore = 0;
         this.gameOver = false;
-        this.comboStreak = false;
-        this.combos = [['COMBO 0'], 0]; // [history array, current count]
+        this.comboCount = 0; // C in specification
+        this.comboHistory = ['COMBO 0'];
         this.placementsWithoutClear = 0;
         this.lastLinesCleared = 0;
         this.lastActionScore = 0;
         this.totalLinesClearedThisGame = 0;
         this.placementsCount = 0;
 
-        // Generate 3 initial solvable shapes
-        this.currentShapes = generateValidShapes(this.grid);
+        // Generate 3 initial solvable pieces with DDA
+        this.currentShapes = generateValidShapes(this.grid, this.comboCount);
 
         this.stats.gamesPlayed = (this.stats.gamesPlayed || 0) + 1;
         this.saveStats();
+    }
+
+    get combos() {
+        // Compatibility getter for UI feeds
+        return [this.comboHistory, this.comboCount];
     }
 
     loadHighScore() {
@@ -125,7 +133,7 @@ export class BlockGameState {
         const w = shape.cols;
         const placedCells = [];
 
-        // 1. Place blocks on grid
+        // 1. Commit Shape into matrix B
         for (let r = 0; r < h; r++) {
             for (let c = 0; c < w; c++) {
                 if (shape.form[r][c]) {
@@ -139,47 +147,46 @@ export class BlockGameState {
             }
         }
 
-        // Add 1 point per placed tile
-        const baseTileScore = shape.cellCount;
-        this.score += baseTileScore;
+        const N_cells = shape.cellCount;
         this.placementsCount++;
 
         // 2. Consume the shape
         this.currentShapes[shapeIdx] = null;
 
-        // 3. Clear lines & calculate bonus
-        const clearResult = this.updateGrid();
+        // 3. Line clear pass and score calculation
+        const clearResult = this.updateGrid(N_cells);
         const linesCleared = clearResult.linesCleared;
 
-        // 4. Update combo streak tracking
+        // 4. Update Combo Streak C and non-clear placements
         let comboReset = false;
         if (linesCleared > 0) {
             this.placementsWithoutClear = 0;
+            this.comboCount += 1; // Increases by +1 per clearing turn
+            this.comboHistory[this.comboHistory.length - 1] = `COMBO ${this.comboCount}`;
             this.totalLinesClearedThisGame += linesCleared;
             this.stats.totalLinesCleared = (this.stats.totalLinesCleared || 0) + linesCleared;
-            this.stats.maxComboStreak = Math.max(this.stats.maxComboStreak || 0, this.combos[1]);
+            this.stats.maxComboStreak = Math.max(this.stats.maxComboStreak || 0, this.comboCount);
         } else {
             this.placementsWithoutClear++;
-            if (this.placementsWithoutClear >= this.MAX_COMBO_STREAK) {
-                if (this.combos[1] > 0) comboReset = true;
-                this.comboStreak = false;
-                this.combos[1] = 0;
-                this.combos[0][this.combos[0].length - 1] = 'COMBO 0';
+            if (this.placementsWithoutClear > this.MAX_NON_CLEAR_TURNS) {
+                if (this.comboCount > 0) comboReset = true;
+                this.comboCount = 0;
+                this.comboHistory[this.comboHistory.length - 1] = 'COMBO 0';
                 this.placementsWithoutClear = 0;
             }
         }
 
-        // 5. Generate new shapes if all 3 are used
+        // 5. Generate new shapes via DDA if all 3 slots empty
         let newShapesGenerated = false;
         if (this.currentShapes.every(s => s === null)) {
-            this.currentShapes = generateValidShapes(this.grid);
+            this.currentShapes = generateValidShapes(this.grid, this.comboCount);
             newShapesGenerated = true;
         }
 
         // 6. Check Game Over
         this.checkGameOver();
 
-        // 7. Check & update high score
+        // 7. High score check
         const isNewRecord = this.score > this.highestScore;
         if (isNewRecord) {
             this.saveHighScore(this.score);
@@ -194,9 +201,9 @@ export class BlockGameState {
             rowsCleared: clearResult.rowsCleared,
             colsCleared: clearResult.colsCleared,
             allClear: clearResult.allClear,
-            scoreGained: this.lastActionScore + baseTileScore,
-            bonusScore: clearResult.bonus,
-            comboCount: this.combos[1],
+            scoreGained: clearResult.totalTurnScore,
+            bonusScore: clearResult.lineClearScore,
+            comboCount: this.comboCount,
             comboMessage: clearResult.comboMessage,
             comboReset,
             newShapesGenerated,
@@ -205,21 +212,18 @@ export class BlockGameState {
         };
     }
 
-    updateGrid() {
-        this.lastLinesCleared = 0;
-        const scoreBefore = this.score;
-
+    updateGrid(N_cells) {
         const rowsToDelete = [];
         const colsToDelete = [];
 
-        // Check rows
+        // Check complete rows: sum B[r][c] == 8
         for (let r = 0; r < 8; r++) {
             if (this.grid[r].every(cell => cell !== 0)) {
                 rowsToDelete.push(r);
             }
         }
 
-        // Check cols
+        // Check complete columns: sum B[r][c] == 8
         for (let c = 0; c < 8; c++) {
             let full = true;
             for (let r = 0; r < 8; r++) {
@@ -245,7 +249,7 @@ export class BlockGameState {
             }
         }
 
-        // Check All-Clear
+        // Check All Clear
         let allClear = true;
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
@@ -257,50 +261,45 @@ export class BlockGameState {
             if (!allClear) break;
         }
 
-        const linesCleared = rowsToDelete.length + colsToDelete.length;
-        this.lastLinesCleared = linesCleared;
-        let bonus = 0;
+        const L = rowsToDelete.length + colsToDelete.length;
+        this.lastLinesCleared = L;
+
+        // Mathematical Formula:
+        // S_turn = N_cells + I(L > 0) * [(10 * L * 2^(L-1)) * (1 + alpha * C)]
+        let lineClearScore = 0;
         let comboMessage = null;
 
-        if (linesCleared > 0) {
-            // Formula from original game_state.py:
-            // bonus = lines_cleared * 10 * (combos[1] + 1)
-            // if lines_cleared > 2: bonus *= (lines_cleared - 1)
-            bonus = linesCleared * 10 * (this.combos[1] + 1);
-            if (linesCleared > 2) {
-                bonus *= (linesCleared - 1);
-            }
+        if (L > 0) {
+            const baseClear = 10 * L * Math.pow(2, L - 1);
+            const comboMultiplier = 1 + (this.COMBO_ALPHA * this.comboCount);
+            lineClearScore = Math.round(baseClear * comboMultiplier);
 
-            const prefix = this.comboNames[linesCleared] || 'MULTI ';
-            comboMessage = `${prefix}CLEAR +${bonus}`;
-            this.combos[0].splice(this.combos[0].length - 1, 0, comboMessage);
+            const prefix = this.comboNames[L] || 'MULTI ';
+            comboMessage = `${prefix}CLEAR +${lineClearScore}`;
+            this.comboHistory.splice(this.comboHistory.length - 1, 0, comboMessage);
 
             if (allClear) {
-                bonus += 300;
-                this.combos[0].splice(this.combos[0].length - 1, 0, 'ALL CLEAR +300');
+                lineClearScore += 300;
+                this.comboHistory.splice(this.comboHistory.length - 1, 0, 'ALL CLEAR +300');
                 this.stats.allClearsCount = (this.stats.allClearsCount || 0) + 1;
             }
 
-            // Keep combo history capped at 8 entries
-            if (this.combos[0].length > 8) {
-                this.combos[0] = this.combos[0].slice(-8);
+            if (this.comboHistory.length > 8) {
+                this.comboHistory = this.comboHistory.slice(-8);
             }
-
-            this.combos[1] += linesCleared;
-            this.combos[0][this.combos[0].length - 1] = `COMBO ${this.combos[1]}`;
-            this.comboStreak = true;
-
-            this.score += bonus;
         }
 
-        this.lastActionScore = this.score - scoreBefore;
+        const totalTurnScore = N_cells + lineClearScore;
+        this.score += totalTurnScore;
+        this.lastActionScore = totalTurnScore;
 
         return {
-            linesCleared,
+            linesCleared: L,
             rowsCleared: rowsToDelete,
             colsCleared: colsToDelete,
             allClear,
-            bonus,
+            lineClearScore,
+            totalTurnScore,
             comboMessage
         };
     }
@@ -332,9 +331,8 @@ export class BlockGameState {
             score: this.score,
             highestScore: this.highestScore,
             gameOver: this.gameOver,
-            comboStreak: this.comboStreak,
-            comboCount: this.combos[1],
-            combos: [...this.combos[0]],
+            comboCount: this.comboCount,
+            comboHistory: [...this.comboHistory],
             placementsWithoutClear: this.placementsWithoutClear
         };
     }
