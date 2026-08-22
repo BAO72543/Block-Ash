@@ -1,7 +1,10 @@
 /**
- * Block Blast - Classic Canvas Renderer
- * Restores classic Block Blast block aesthetic: smooth glossy gradients,
- * top-left highlight, clean grid cells, and crisp visual feedback.
+ * Block Blast - Canvas Renderer & UX Micro-Interaction Pipeline
+ * Features:
+ * - Vertical Y-axis Drag Offset (y_offset ≈ 48px - 60px) to solve finger occlusion
+ * - Smooth Elastic Spring Scale-Up (60% Tray Scale -> 100% Full Grid Size)
+ * - Elastic Return Snap-Back Animation on invalid drop locations
+ * - Gorgeous 3D Beveled Glossy Block Tiles & Ghost Previews
  */
 
 export class GameRenderer {
@@ -15,10 +18,16 @@ export class GameRenderer {
         this.selectedShapeIdx = -1;
         this.draggingShapeIdx = -1;
         this.dragPointer = { x: 0, y: 0 };
-        this.dragOffset = { x: 0, y: 0 };
+        this.dragOffset = { x: 0, y: 54 }; // Y-axis lift (48px - 60px)
+        this.isTouchDrag = false;
         this.hoverGridCell = null; // { row, col }
         this.aiHint = null; // { shapeIdx, row, col }
         this.aiThinking = false;
+
+        // Spring & Animation State
+        this.dragScaleProgress = 0; // 0 (at tray 60%) to 1 (at grid 100%)
+        this.currentDragScale = 0.60;
+        this.snapBack = null; // { shapeIdx, shape, startX, startY, targetX, targetY, startTime, duration }
 
         // Theme configuration
         this.currentTheme = 'neon-dark';
@@ -101,9 +110,8 @@ export class GameRenderer {
     }
 
     resize(containerWidth, containerHeight) {
-        this.dpr = window.devicePixelRatio || 1;
+        this.dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
         
-        // Fallback to parent element or default minimum dimensions
         const fallbackW = this.canvas && this.canvas.parentElement ? this.canvas.parentElement.clientWidth : 500;
         const fallbackH = this.canvas && this.canvas.parentElement ? this.canvas.parentElement.clientHeight : 640;
 
@@ -129,7 +137,6 @@ export class GameRenderer {
         const maxBoardWidth = this.width - padding * 2;
         const maxBoardHeight = this.height - dockHeight - padding * 2.5;
 
-        // Ensure boardSize is always strictly positive
         const boardSize = Math.max(260, Math.min(maxBoardWidth, maxBoardHeight, 480));
         const boardX = (this.width - boardSize) / 2;
         const boardY = padding;
@@ -195,8 +202,74 @@ export class GameRenderer {
         return -1;
     }
 
+    getSlotCenter(slotIdx) {
+        const slot = this.dockMetrics.slots[slotIdx];
+        if (!slot) return { x: this.width / 2, y: this.height - 80 };
+        return {
+            x: slot.x + slot.width / 2,
+            y: slot.y + slot.height / 2
+        };
+    }
+
+    startDrag(shapeIdx, pointer, isTouch = false) {
+        this.draggingShapeIdx = shapeIdx;
+        this.selectedShapeIdx = shapeIdx;
+        this.dragPointer = pointer;
+        this.isTouchDrag = isTouch;
+        // Y-axis drag offset (54px for touch, 36px for mouse) to prevent thumb/finger occlusion
+        this.dragOffset = { x: 0, y: isTouch ? 54 : 36 };
+        this.dragScaleProgress = 0;
+        this.currentDragScale = 0.60;
+        this.snapBack = null;
+    }
+
+    updateDrag(pointer) {
+        this.dragPointer = pointer;
+    }
+
+    startSnapBack(shapeIdx, currentPointer, dragOffset) {
+        const shape = this.gameState.currentShapes[shapeIdx];
+        if (!shape) {
+            this.draggingShapeIdx = -1;
+            return;
+        }
+
+        const slotCenter = this.getSlotCenter(shapeIdx);
+        const currentY = currentPointer.y - (dragOffset ? dragOffset.y : 0);
+
+        this.snapBack = {
+            shapeIdx,
+            shape: shape.clone(),
+            startX: currentPointer.x,
+            startY: currentY,
+            targetX: slotCenter.x,
+            targetY: slotCenter.y,
+            startTime: performance.now(),
+            duration: 260 // 260ms smooth elastic return curve
+        };
+
+        this.draggingShapeIdx = -1;
+    }
+
+    cancelSnapBack() {
+        this.snapBack = null;
+        this.draggingShapeIdx = -1;
+    }
+
     render(dt = 16) {
         this.pulsePhase += dt * 0.004;
+
+        // Animate Drag Elastic Spring Scale-Up (60% -> 100% with spring overshoot)
+        if (this.draggingShapeIdx !== -1) {
+            this.dragScaleProgress = Math.min(1, this.dragScaleProgress + dt / 140);
+            const p = this.dragScaleProgress;
+            // Elastic spring overshoot equation
+            const springBonus = 0.12 * Math.sin(p * Math.PI);
+            this.currentDragScale = 0.60 + (1.0 - 0.60) * Math.sin(p * Math.PI * 0.5) + springBonus;
+        } else {
+            this.dragScaleProgress = 0;
+            this.currentDragScale = 0.60;
+        }
 
         this.ctx.save();
         this.ctx.scale(this.dpr, this.dpr);
@@ -218,19 +291,22 @@ export class GameRenderer {
         // 3. Draw AI Hint Highlight on Grid if active
         this.drawAiHintHighlight(theme);
 
-        // 4. Draw Ghost Placement Preview
+        // 4. Draw Ghost Placement Preview (Lift-offset aware)
         this.drawGhostPreview(theme);
 
         // 5. Draw Particles, Shockwaves, and Floating Texts
         this.particles.render(this.ctx);
 
-        // 6. Draw Shape Dock Slots and Available Shapes
+        // 6. Draw Shape Dock Slots and Available Shapes (at ~60% size)
         this.drawDock(theme);
 
-        // 7. Draw Currently Dragged Shape following cursor/finger
+        // 7. Draw Currently Dragged Shape with Y-offset lift & Spring Scale
         this.drawDraggingShape(theme);
 
-        // 8. Draw AI Thinking Overlay if active
+        // 8. Draw Elastic Snap-Back Return Animation if active
+        this.drawSnapBackShape(theme);
+
+        // 9. Draw AI Thinking Overlay if active
         if (this.aiThinking) {
             this.drawAiThinkingBanner(theme);
         }
@@ -295,8 +371,9 @@ export class GameRenderer {
             const shapePixelW = shape.cols * (cellSize + gap);
             const shapePixelH = shape.rows * (cellSize + gap);
 
+            // Shape origin in canvas space taking into account the Y-axis lift offset (y_offset = 48px - 60px)
             const originX = this.dragPointer.x - shapePixelW / 2;
-            const originY = this.dragPointer.y - shapePixelH / 2;
+            const originY = this.dragPointer.y - shapePixelH / 2 - this.dragOffset.y;
 
             const col = Math.round((originX - bx - gap) / (cellSize + gap));
             const row = Math.round((originY - by - gap) / (cellSize + gap));
@@ -418,6 +495,7 @@ export class GameRenderer {
 
             const isSelected = this.selectedShapeIdx === i;
             const isDragging = this.draggingShapeIdx === i;
+            const isSnappingBack = this.snapBack && this.snapBack.shapeIdx === i;
             const isHinted = this.aiHint && this.aiHint.shapeIdx === i;
             const shape = this.gameState.currentShapes[i];
 
@@ -446,8 +524,8 @@ export class GameRenderer {
             ctx.fillText(keys[i], slot.x + 8, slot.y + 6);
             ctx.restore();
 
-            // Shape inside dock
-            if (shape && shape.form && !isDragging) {
+            // Unplaced piece sitting in the tray scaled down to ~60% size
+            if (shape && shape.form && !isDragging && !isSnappingBack) {
                 const canFitAnywhere = this.checkShapeCanFit(shape);
 
                 ctx.save();
@@ -456,6 +534,7 @@ export class GameRenderer {
                 }
 
                 const maxDim = Math.max(shape.rows, shape.cols, 3);
+                // 60% relative scale in the tray
                 const miniBlockSize = Math.min((slot.width - 24) / maxDim, (slot.height - 28) / maxDim, 26);
                 const shapePixelW = shape.cols * miniBlockSize;
                 const shapePixelH = shape.rows * miniBlockSize;
@@ -487,29 +566,90 @@ export class GameRenderer {
         return false;
     }
 
+    /**
+     * Render the active dragged piece with:
+     * 1. Y-axis lift offset (y_offset = 48px - 60px) to solve finger occlusion
+     * 2. Smooth Spring Scale-Up (60% -> 100% Full Grid Size)
+     */
     drawDraggingShape(theme) {
         if (this.draggingShapeIdx === -1) return;
         const shape = this.gameState.currentShapes[this.draggingShapeIdx];
         if (!shape || !shape.form) return;
 
         const { cellSize, gap } = this.boardMetrics;
-        const blockSize = cellSize;
-        const shapePixelW = shape.cols * (blockSize + gap) - gap;
-        const shapePixelH = shape.rows * (blockSize + gap) - gap;
+        // Spring scaled block size
+        const blockSize = cellSize * this.currentDragScale;
+        const blockGap = gap * this.currentDragScale;
+        const shapePixelW = shape.cols * (blockSize + blockGap) - blockGap;
+        const shapePixelH = shape.rows * (blockSize + blockGap) - blockGap;
 
+        // Position lifted above the touch point
         const startX = this.dragPointer.x - shapePixelW / 2;
         const startY = this.dragPointer.y - shapePixelH / 2 - this.dragOffset.y;
 
         this.ctx.save();
         this.ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
-        this.ctx.shadowBlur = 18;
-        this.ctx.shadowOffsetY = 10;
+        this.ctx.shadowBlur = 20;
+        this.ctx.shadowOffsetY = 12;
 
         for (let r = 0; r < shape.rows; r++) {
             for (let c = 0; c < shape.cols; c++) {
                 if (shape.form[r][c]) {
-                    const x = startX + c * (blockSize + gap);
-                    const y = startY + r * (blockSize + gap);
+                    const x = startX + c * (blockSize + blockGap);
+                    const y = startY + r * (blockSize + blockGap);
+                    this.drawBeveledBlock(x, y, blockSize, shape.color);
+                }
+            }
+        }
+        this.ctx.restore();
+    }
+
+    /**
+     * Render elastic snap-back return animation if dropped on invalid grid locations
+     */
+    drawSnapBackShape(theme) {
+        if (!this.snapBack) return;
+
+        const now = performance.now();
+        const elapsed = now - this.snapBack.startTime;
+        const t = Math.min(1, elapsed / this.snapBack.duration);
+
+        if (t >= 1) {
+            this.snapBack = null;
+            return;
+        }
+
+        // Elastic return curve (easeOutBack)
+        const c1 = 1.70158;
+        const c3 = c1 + 1;
+        const ease = 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+
+        // Interpolate position
+        const currentX = this.snapBack.startX + (this.snapBack.targetX - this.snapBack.startX) * ease;
+        const currentY = this.snapBack.startY + (this.snapBack.targetY - this.snapBack.startY) * ease;
+
+        // Interpolate scale from 100% down to 60% tray size
+        const scale = 1.0 - (1.0 - 0.60) * Math.min(1, ease);
+        const { cellSize, gap } = this.boardMetrics;
+        const blockSize = cellSize * scale;
+        const blockGap = gap * scale;
+
+        const shape = this.snapBack.shape;
+        const shapePixelW = shape.cols * (blockSize + blockGap) - blockGap;
+        const shapePixelH = shape.rows * (blockSize + blockGap) - blockGap;
+
+        const startX = currentX - shapePixelW / 2;
+        const startY = currentY - shapePixelH / 2;
+
+        this.ctx.save();
+        this.ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        this.ctx.shadowBlur = 12 * (1 - t);
+
+        for (let r = 0; r < shape.rows; r++) {
+            for (let c = 0; c < shape.cols; c++) {
+                if (shape.form[r][c]) {
+                    const x = startX + c * (blockSize + blockGap);
+                    const y = startY + r * (blockSize + blockGap);
                     this.drawBeveledBlock(x, y, blockSize, shape.color);
                 }
             }
@@ -609,7 +749,7 @@ export class GameRenderer {
         ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
         ctx.lineTo(x + radius, y + height);
         ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-        ctx.lineTo(x, y + radius);
+        ctx.lineTo(x + radius, y);
         ctx.quadraticCurveTo(x, y, x + radius, y);
         ctx.closePath();
     }

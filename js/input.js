@@ -42,10 +42,7 @@ export class InputHandler {
             const slotIdx = this.renderer.getShapeSlotAt(pos.x, pos.y);
             if (slotIdx !== -1 && this.gameState.currentShapes[slotIdx]) {
                 this.isDragging = true;
-                this.renderer.draggingShapeIdx = slotIdx;
-                this.renderer.selectedShapeIdx = slotIdx;
-                this.renderer.dragPointer = pos;
-                this.renderer.dragOffset = { x: 0, y: 0 };
+                this.renderer.startDrag(slotIdx, pos, false);
                 return;
             }
 
@@ -66,7 +63,7 @@ export class InputHandler {
         window.addEventListener('mousemove', (e) => {
             const pos = this.getCanvasPos(e);
             if (this.isDragging && this.renderer.draggingShapeIdx !== -1) {
-                this.renderer.dragPointer = pos;
+                this.renderer.updateDrag(pos);
             } else if (this.renderer.selectedShapeIdx !== -1) {
                 this.renderer.hoverGridCell = this.renderer.screenToGrid(pos.x, pos.y);
             }
@@ -86,7 +83,7 @@ export class InputHandler {
                 const shapePixelH = shape.rows * (cellSize + gap);
 
                 const originX = this.renderer.dragPointer.x - shapePixelW / 2;
-                const originY = this.renderer.dragPointer.y - shapePixelH / 2;
+                const originY = this.renderer.dragPointer.y - shapePixelH / 2 - this.renderer.dragOffset.y;
 
                 const col = Math.round((originX - bx - gap) / (cellSize + gap));
                 const row = Math.round((originY - by - gap) / (cellSize + gap));
@@ -97,10 +94,14 @@ export class InputHandler {
                 const placed = this.tryPlace(shapeIdx, targetRow, targetCol);
                 if (placed) {
                     this.renderer.selectedShapeIdx = -1;
+                    this.renderer.cancelSnapBack();
+                } else {
+                    // Elastic Snap-Back return animation on invalid drop
+                    this.renderer.startSnapBack(shapeIdx, this.renderer.dragPointer, this.renderer.dragOffset);
                 }
+            } else {
+                this.renderer.draggingShapeIdx = -1;
             }
-
-            this.renderer.draggingShapeIdx = -1;
         });
     }
 
@@ -114,11 +115,8 @@ export class InputHandler {
                 e.preventDefault();
                 this.isDragging = true;
                 this.touchActive = true;
-                this.renderer.draggingShapeIdx = slotIdx;
-                this.renderer.selectedShapeIdx = slotIdx;
-                this.renderer.dragPointer = pos;
-                // Offset shape upwards so player's finger doesn't cover the piece
-                this.renderer.dragOffset = { x: 0, y: 55 };
+                // Lift piece above thumb contact point (y_offset = 54px)
+                this.renderer.startDrag(slotIdx, pos, true);
 
                 if (navigator.vibrate) navigator.vibrate(8);
                 return;
@@ -142,7 +140,7 @@ export class InputHandler {
             if (!this.isDragging || this.renderer.draggingShapeIdx === -1) return;
             e.preventDefault();
             const pos = this.getCanvasPos(e);
-            this.renderer.dragPointer = pos;
+            this.renderer.updateDrag(pos);
         }, { passive: false });
 
         window.addEventListener('touchend', (e) => {
@@ -171,15 +169,22 @@ export class InputHandler {
                 const placed = this.tryPlace(shapeIdx, targetRow, targetCol);
                 if (placed) {
                     this.renderer.selectedShapeIdx = -1;
+                    this.renderer.cancelSnapBack();
+                } else {
+                    // Elastic Snap-Back return animation on invalid drop
+                    this.renderer.startSnapBack(shapeIdx, this.renderer.dragPointer, this.renderer.dragOffset);
                 }
+            } else {
+                this.renderer.draggingShapeIdx = -1;
             }
-
-            this.renderer.draggingShapeIdx = -1;
         });
 
         window.addEventListener('touchcancel', () => {
+            if (this.isDragging && this.renderer.draggingShapeIdx !== -1) {
+                this.renderer.startSnapBack(this.renderer.draggingShapeIdx, this.renderer.dragPointer, this.renderer.dragOffset);
+            }
             this.isDragging = false;
-            this.renderer.draggingShapeIdx = -1;
+            this.touchActive = false;
         });
     }
 
