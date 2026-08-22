@@ -10,6 +10,7 @@ import { ParticleSystem } from './particles.js';
 import { SoundFX } from './audio.js';
 import { InputHandler } from './input.js';
 import { BlockBlastAI } from './ai.js';
+import { GAME_MODES, ModeManager, ADVENTURE_STAGES } from './modes.js';
 
 export class BlockBlastApp {
     constructor() {
@@ -34,6 +35,24 @@ export class BlockBlastApp {
             comboCurrent: document.getElementById('combo-count') || document.getElementById('combo-current'),
             comboFlame: document.getElementById('combo-flame'),
             comboFeed: document.getElementById('combo-feed'),
+            tabModeClassic: document.getElementById('tab-mode-classic'),
+            tabModeAdventure: document.getElementById('tab-mode-adventure'),
+            tabModeDrop: document.getElementById('tab-mode-drop'),
+            modeStatusBar: document.getElementById('mode-status-bar'),
+            modeStageBadge: document.getElementById('mode-stage-badge'),
+            modeGoalText: document.getElementById('mode-goal-text'),
+            modeMovesText: document.getElementById('mode-moves-text'),
+            btnOpenStageMap: document.getElementById('btn-open-stage-map'),
+            adventureMapModal: document.getElementById('adventure-map-modal'),
+            stageMapContainer: document.getElementById('stage-map-container'),
+            btnCloseStageMap: document.getElementById('btn-close-stage-map'),
+            stageClearModal: document.getElementById('stage-clear-modal'),
+            stageClearTitle: document.getElementById('stage-clear-title'),
+            stageClearStars: document.getElementById('stage-clear-stars'),
+            stageClearScore: document.getElementById('stage-clear-score'),
+            stageClearMovesLeft: document.getElementById('stage-clear-moves-left'),
+            btnStageMapAfterWin: document.getElementById('btn-stage-map-after-win'),
+            btnNextStage: document.getElementById('btn-next-stage'),
             btnHint: document.getElementById('btn-hint'),
             btnAutoplay: document.getElementById('btn-autoplay'),
             btnSound: document.getElementById('btn-sound'),
@@ -84,6 +103,7 @@ export class BlockBlastApp {
         this.updateAudioButtonState();
         this.updateScoreDisplays();
         this.updateComboFeed();
+        this.updateModeStatusBar();
 
         // Handle resize
         this.handleResize();
@@ -94,6 +114,34 @@ export class BlockBlastApp {
     }
 
     setupEventListeners() {
+        // Mode Tabs
+        if (this.dom.tabModeClassic) {
+            this.dom.tabModeClassic.addEventListener('click', () => this.switchMode(GAME_MODES.CLASSIC));
+        }
+        if (this.dom.tabModeAdventure) {
+            this.dom.tabModeAdventure.addEventListener('click', () => this.switchMode(GAME_MODES.ADVENTURE));
+        }
+        if (this.dom.tabModeDrop) {
+            this.dom.tabModeDrop.addEventListener('click', () => this.switchMode(GAME_MODES.DROP));
+        }
+
+        // Stage Map Buttons
+        if (this.dom.btnOpenStageMap) {
+            this.dom.btnOpenStageMap.addEventListener('click', () => this.openAdventureMap());
+        }
+        if (this.dom.btnCloseStageMap) {
+            this.dom.btnCloseStageMap.addEventListener('click', () => this.closeAdventureMap());
+        }
+        if (this.dom.btnStageMapAfterWin) {
+            this.dom.btnStageMapAfterWin.addEventListener('click', () => {
+                this.dom.stageClearModal.style.display = 'none';
+                this.openAdventureMap();
+            });
+        }
+        if (this.dom.btnNextStage) {
+            this.dom.btnNextStage.addEventListener('click', () => this.nextAdventureStage());
+        }
+
         // Audio Toggle
         this.dom.btnSound.addEventListener('click', () => {
             this.toggleAudio();
@@ -319,6 +367,39 @@ export class BlockBlastApp {
             });
         }
 
+        // Item collection effects in Adventure Mode
+        if (result.collectedItems && result.collectedItems.length > 0) {
+            this.audio.playClear(result.comboCount + 2);
+            for (const it of result.collectedItems) {
+                const rect = this.renderer.getCellRect(it.row, it.col);
+                this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, { hex: '#FDE047', light: '#FEF08A' });
+                this.particles.addFloatingText('COLLECTED!', rect.x + cellSize / 2, rect.y + cellSize / 2, {
+                    isGold: true,
+                    fontSize: 24,
+                    color: '#FBBF24'
+                });
+            }
+        }
+
+        // Drop Mode Rising Stack effect
+        if (result.rowPushed) {
+            this.particles.triggerShake(8, 260);
+            this.audio.playMultiClear(2);
+            this.particles.addFloatingText('STACK RISE!', centerX, centerY + 60, {
+                fontSize: 26,
+                color: '#EF4444'
+            });
+        }
+
+        // Adventure Mode Victory
+        if (result.isAdventureWin) {
+            this.audio.playAllClear();
+            this.triggerHaptic('all-clear');
+            this.particles.addConfettiBurst(this.renderer.width, this.renderer.height, 100);
+            this.showStageClearModal(result);
+            return true;
+        }
+
         // High Score celebration
         if (result.isNewRecord && !this.celebratedNewRecord) {
             this.celebratedNewRecord = true;
@@ -328,6 +409,7 @@ export class BlockBlastApp {
         // Update UI Displays
         this.updateScoreDisplays();
         this.updateComboFeed();
+        this.updateModeStatusBar();
 
         // Game Over Check
         if (result.gameOver) {
@@ -335,6 +417,168 @@ export class BlockBlastApp {
         }
 
         return true;
+    }
+
+    /* ==========================================================================
+       Mode Switching & Progression Handlers
+       ========================================================================== */
+
+    switchMode(mode) {
+        if (this.isAutoplayActive) {
+            this.stopAutoplay();
+        }
+
+        // Update Tab Active States
+        [this.dom.tabModeClassic, this.dom.tabModeAdventure, this.dom.tabModeDrop].forEach(tab => {
+            if (tab) tab.classList.remove('active');
+        });
+
+        if (mode === GAME_MODES.CLASSIC && this.dom.tabModeClassic) this.dom.tabModeClassic.classList.add('active');
+        if (mode === GAME_MODES.ADVENTURE && this.dom.tabModeAdventure) this.dom.tabModeAdventure.classList.add('active');
+        if (mode === GAME_MODES.DROP && this.dom.tabModeDrop) this.dom.tabModeDrop.classList.add('active');
+
+        this.gameState.mode = mode;
+
+        if (mode === GAME_MODES.ADVENTURE) {
+            const progress = ModeManager.loadAdventureProgress();
+            this.initAdventureStage(progress.unlockedStage || 1);
+        } else if (mode === GAME_MODES.DROP) {
+            this.gameState.initDropMode();
+        } else {
+            this.gameState.reset();
+        }
+
+        this.particles.reset();
+        this.renderer.selectedShapeIdx = -1;
+        this.renderer.draggingShapeIdx = -1;
+        this.renderer.aiHint = null;
+        this.dom.gameOverModal.classList.remove('active');
+        if (this.dom.stageClearModal) this.dom.stageClearModal.style.display = 'none';
+
+        this.updateScoreDisplays();
+        this.updateComboFeed();
+        this.updateModeStatusBar();
+    }
+
+    initAdventureStage(stageId) {
+        this.gameState.initAdventureStage(stageId);
+        this.particles.reset();
+        this.renderer.selectedShapeIdx = -1;
+        this.renderer.draggingShapeIdx = -1;
+        this.renderer.aiHint = null;
+        this.dom.gameOverModal.classList.remove('active');
+        if (this.dom.stageClearModal) this.dom.stageClearModal.style.display = 'none';
+        if (this.dom.adventureMapModal) this.dom.adventureMapModal.style.display = 'none';
+
+        this.updateScoreDisplays();
+        this.updateComboFeed();
+        this.updateModeStatusBar();
+    }
+
+    updateModeStatusBar() {
+        if (!this.dom.modeStatusBar) return;
+
+        if (this.gameState.mode === GAME_MODES.ADVENTURE) {
+            this.dom.modeStatusBar.style.display = 'flex';
+            if (this.dom.modeStageBadge) this.dom.modeStageBadge.textContent = `Stage ${this.gameState.stageId}`;
+            if (this.dom.modeGoalText) {
+                const g = this.gameState.stageGoals;
+                this.dom.modeGoalText.textContent = `Goal: ${g.collected}/${g.target} ${g.type.toUpperCase()}`;
+            }
+            if (this.dom.modeMovesText) {
+                this.dom.modeMovesText.textContent = `Moves Left: ${this.gameState.movesRemaining}`;
+            }
+            if (this.dom.btnOpenStageMap) this.dom.btnOpenStageMap.style.display = 'inline-block';
+        } else if (this.gameState.mode === GAME_MODES.DROP) {
+            this.dom.modeStatusBar.style.display = 'flex';
+            if (this.dom.modeStageBadge) this.dom.modeStageBadge.textContent = 'DROP MODE';
+            if (this.dom.modeGoalText) {
+                this.dom.modeGoalText.textContent = `Survive Rising Stacks`;
+            }
+            if (this.dom.modeMovesText) {
+                this.dom.modeMovesText.textContent = `Next Rise in: ${this.gameState.movesUntilDrop} moves`;
+            }
+            if (this.dom.btnOpenStageMap) this.dom.btnOpenStageMap.style.display = 'none';
+        } else {
+            this.dom.modeStatusBar.style.display = 'none';
+        }
+    }
+
+    openAdventureMap() {
+        if (!this.dom.adventureMapModal || !this.dom.stageMapContainer) return;
+
+        const progress = ModeManager.loadAdventureProgress();
+        this.dom.stageMapContainer.innerHTML = '';
+
+        for (let i = 1; i <= 12; i++) {
+            const isUnlocked = i <= progress.unlockedStage;
+            const isCurrent = i === this.gameState.stageId && this.gameState.mode === GAME_MODES.ADVENTURE;
+            const stageScoreInfo = progress.stageScores[i] || { stars: 0, highScore: 0 };
+
+            const node = document.createElement('div');
+            node.className = `stage-node ${isUnlocked ? '' : 'locked'} ${isCurrent ? 'current' : ''}`;
+            
+            const starsText = isUnlocked && stageScoreInfo.stars > 0 
+                ? '★'.repeat(stageScoreInfo.stars) + '☆'.repeat(3 - stageScoreInfo.stars)
+                : (isUnlocked ? '☆☆☆' : '🔒 Locked');
+
+            node.innerHTML = `
+                <div class="stage-node-title">Stage ${i}</div>
+                <div class="stage-node-stars">${starsText}</div>
+                ${isUnlocked && stageScoreInfo.highScore > 0 ? `<div class="stage-node-score">Score: ${stageScoreInfo.highScore}</div>` : ''}
+            `;
+
+            if (isUnlocked) {
+                node.addEventListener('click', () => {
+                    this.closeAdventureMap();
+                    this.switchMode(GAME_MODES.ADVENTURE);
+                    this.initAdventureStage(i);
+                });
+            }
+
+            this.dom.stageMapContainer.appendChild(node);
+        }
+
+        this.dom.adventureMapModal.style.display = 'flex';
+        this.dom.adventureMapModal.classList.add('active');
+    }
+
+    closeAdventureMap() {
+        if (this.dom.adventureMapModal) {
+            this.dom.adventureMapModal.classList.remove('active');
+            this.dom.adventureMapModal.style.display = 'none';
+        }
+    }
+
+    showStageClearModal(result) {
+        if (!this.dom.stageClearModal) return;
+
+        if (this.dom.stageClearTitle) this.dom.stageClearTitle.textContent = `Stage ${this.gameState.stageId} Cleared!`;
+        if (this.dom.stageClearStars) {
+            const stars = result.starsEarned || 1;
+            this.dom.stageClearStars.textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+        }
+        if (this.dom.stageClearScore) this.dom.stageClearScore.textContent = this.gameState.score.toLocaleString();
+        if (this.dom.stageClearMovesLeft) this.dom.stageClearMovesLeft.textContent = this.gameState.movesRemaining;
+
+        this.dom.stageClearModal.style.display = 'flex';
+        this.dom.stageClearModal.classList.add('active');
+
+        // Interstitial Ad trigger on stage clear
+        this.gamesSinceLastInterstitial++;
+        if (this.gamesSinceLastInterstitial >= 2 && this.dom.interstitialAdModal) {
+            this.gamesSinceLastInterstitial = 0;
+            this.showInterstitialAd(() => {});
+        }
+    }
+
+    nextAdventureStage() {
+        if (this.dom.stageClearModal) {
+            this.dom.stageClearModal.classList.remove('active');
+            this.dom.stageClearModal.style.display = 'none';
+        }
+        const nextId = (this.gameState.stageId || 1) + 1;
+        this.initAdventureStage(nextId);
     }
 
     forceGameOver() {

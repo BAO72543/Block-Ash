@@ -336,9 +336,67 @@ export class GameRenderer {
                 if (cell && cell.color) {
                     const rect = this.getCellRect(r, c);
                     this.drawBeveledBlock(rect.x, rect.y, rect.size, cell.color);
+                    if (cell.item) {
+                        this.drawCollectibleItem(rect.x, rect.y, rect.size, cell.item);
+                    }
                 }
             }
         }
+    }
+
+    drawCollectibleItem(x, y, size, itemType) {
+        const ctx = this.ctx;
+        const cx = x + size / 2;
+        const cy = y + size / 2;
+        const r = size * 0.3;
+
+        ctx.save();
+        if (itemType === 'gem') {
+            // Shiny Diamond / Gem
+            ctx.fillStyle = '#FFFFFF';
+            ctx.shadowColor = '#38BDF8';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - r);
+            ctx.lineTo(cx + r, cy);
+            ctx.lineTo(cx, cy + r);
+            ctx.lineTo(cx - r, cy);
+            ctx.closePath();
+            ctx.fill();
+
+            // Inner facet
+            ctx.fillStyle = 'rgba(14, 165, 233, 0.75)';
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - r * 0.5);
+            ctx.lineTo(cx + r * 0.5, cy);
+            ctx.lineTo(cx, cy + r * 0.5);
+            ctx.lineTo(cx - r * 0.5, cy);
+            ctx.closePath();
+            ctx.fill();
+        } else if (itemType === 'puzzle') {
+            // Puzzle Piece
+            ctx.fillStyle = '#FFFFFF';
+            ctx.shadowColor = '#C084FC';
+            ctx.shadowBlur = 8;
+            ctx.fillRect(cx - r * 0.65, cy - r * 0.65, r * 1.3, r * 1.3);
+            ctx.beginPath();
+            ctx.arc(cx, cy - r * 0.65, r * 0.35, 0, Math.PI * 2);
+            ctx.arc(cx + r * 0.65, cy, r * 0.35, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (itemType === 'star') {
+            // 5-Point Star
+            ctx.fillStyle = '#FDE047';
+            ctx.shadowColor = '#EAB308';
+            ctx.shadowBlur = 12;
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * r + cx, -Math.sin((18 + i * 72) * Math.PI / 180) * r + cy);
+                ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * (r * 0.5) + cx, -Math.sin((54 + i * 72) * Math.PI / 180) * (r * 0.5) + cy);
+            }
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.restore();
     }
 
     drawGhostPreview(theme) {

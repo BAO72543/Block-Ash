@@ -24,6 +24,13 @@
                 </div>
             </div>
 
+            <!-- Game Mode Selector -->
+            <div class="mode-tabs" id="mode-tabs">
+                <button class="mode-tab active" data-mode="classic" id="tab-mode-classic">Classic</button>
+                <button class="mode-tab" data-mode="adventure" id="tab-mode-adventure">Adventure</button>
+                <button class="mode-tab" data-mode="drop" id="tab-mode-drop">Drop Mode</button>
+            </div>
+
             <div class="score-board">
                 <div class="combo-pill" id="combo-badge">
                     <span id="combo-flame" style="display: none;">🔥</span>
@@ -41,6 +48,16 @@
                 </div>
             </div>
         </header>
+
+        <!-- Mode Objectives / Status HUD Bar -->
+        <div class="mode-status-bar" id="mode-status-bar" style="display: none;">
+            <div class="status-content" id="mode-status-content">
+                <span class="status-badge" id="mode-stage-badge">Stage 1</span>
+                <span class="status-goal" id="mode-goal-text">Goals: Collect 4 Gems</span>
+                <span class="status-moves" id="mode-moves-text">Moves Left: 16</span>
+            </div>
+            <button class="btn btn-sm" id="btn-open-stage-map" style="padding: 6px 12px; font-size: 12px;">Stage Map</button>
+        </div>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -259,6 +276,42 @@
             <button class="btn" id="btn-close-stats" style="width: 100%; padding: 12px; font-size: 14px; border-radius: var(--radius-sm);">
                 <span>Close</span>
             </button>
+        </div>
+    </div>
+
+    <!-- Adventure Stage Map Modal -->
+    <div class="modal-backdrop" id="adventure-map-modal" style="display: none;">
+        <div class="modal-card" style="max-width: 520px;">
+            <h2 class="modal-title">Adventure Realm Map</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Select a stage to embark on objective quests.</p>
+            <div class="stage-map-grid" id="stage-map-container">
+                <!-- Dynamically generated stage nodes -->
+            </div>
+            <div style="margin-top: 24px; display: flex; gap: 10px;">
+                <button class="btn btn-primary" id="btn-close-stage-map" style="width: 100%; padding: 12px; font-size: 14px; border-radius: var(--radius-sm);">
+                    <span>Back to Game</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stage Clear Victory Modal -->
+    <div class="modal-backdrop" id="stage-clear-modal" style="display: none;">
+        <div class="modal-card">
+            <div class="record-badge" style="background: linear-gradient(135deg, #10B981, #059669); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">STAGE COMPLETE!</div>
+            <h2 class="modal-title" id="stage-clear-title">Stage 1 Cleared</h2>
+            <div class="stage-stars-row" id="stage-clear-stars" style="font-size: 28px; margin: 12px 0 16px; color: #FBBF24;">
+                ★★★
+            </div>
+            <div class="modal-score-box">
+                <div class="label">Stage Score</div>
+                <div class="score-value" id="stage-clear-score">0</div>
+                <div class="best-score">Moves Left: <span id="stage-clear-moves-left">0</span></div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" id="btn-stage-map-after-win" style="flex: 1; padding: 12px;">Stage Map</button>
+                <button class="btn btn-primary" id="btn-next-stage" style="flex: 1; padding: 12px;">Next Stage &rarr;</button>
+            </div>
         </div>
     </div>
 
