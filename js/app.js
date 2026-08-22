@@ -70,7 +70,8 @@ export class BlockBlastApp {
             this.toggleHint.bind(this),
             this.toggleAutoplay.bind(this),
             this.toggleAudio.bind(this),
-            this.restartGame.bind(this)
+            this.restartGame.bind(this),
+            this.forceGameOver.bind(this)
         );
 
         this.lastTime = performance.now();
@@ -326,6 +327,14 @@ export class BlockBlastApp {
         }
 
         return true;
+    }
+
+    forceGameOver() {
+        if (this.isAutoplayActive) {
+            this.stopAutoplay();
+        }
+        this.gameState.gameOver = true;
+        this.handleGameOver();
     }
 
     handleGameOver() {

@@ -4,7 +4,7 @@
  */
 
 export class InputHandler {
-    constructor(canvas, renderer, gameState, onPlaceAction, onHintToggle, onAutoplayToggle, onAudioToggle, onRestart) {
+    constructor(canvas, renderer, gameState, onPlaceAction, onHintToggle, onAutoplayToggle, onAudioToggle, onRestart, onForceGameOver) {
         this.canvas = canvas;
         this.renderer = renderer;
         this.gameState = gameState;
@@ -13,6 +13,7 @@ export class InputHandler {
         this.onAutoplayToggle = onAutoplayToggle;
         this.onAudioToggle = onAudioToggle;
         this.onRestart = onRestart;
+        this.onForceGameOver = onForceGameOver;
 
         this.keyboardCursor = { row: 3, col: 3 };
         this.isDragging = false;
@@ -34,6 +35,7 @@ export class InputHandler {
     }
 
     initMouseEvents() {
+        if (typeof window === 'undefined' || !this.canvas) return;
         this.canvas.addEventListener('mousedown', (e) => {
             if (this.gameState.gameOver) return;
             const pos = this.getCanvasPos(e);
@@ -108,6 +110,7 @@ export class InputHandler {
     }
 
     initTouchEvents() {
+        if (typeof window === 'undefined' || !this.canvas) return;
         this.canvas.addEventListener('touchstart', (e) => {
             if (this.gameState.gameOver) return;
             const pos = this.getCanvasPos(e);
@@ -193,6 +196,7 @@ export class InputHandler {
     }
 
     initKeyboardEvents() {
+        if (typeof window === 'undefined') return;
         window.addEventListener('keydown', (e) => {
             const key = e.key.toUpperCase();
 
@@ -200,6 +204,12 @@ export class InputHandler {
             if ((key === ' ' || key === 'ENTER' || key === 'R') && this.gameState.gameOver) {
                 e.preventDefault();
                 if (this.onRestart) this.onRestart();
+                return;
+            }
+
+            // Debug Lose Menu shortcut: key 'O'
+            if (key === 'O') {
+                if (this.onForceGameOver) this.onForceGameOver();
                 return;
             }
 
