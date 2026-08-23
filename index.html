@@ -189,104 +189,80 @@
                 <button class="btn btn-sm" id="btn-open-stage-map" style="padding: 4px 10px; font-size: 11px;">Stage Map</button>
             </div>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Game Canvas Stage -->
-            <section class="game-stage-container" id="stage-container">
-                <canvas id="game-canvas"></canvas>
+        <!-- Main 3-Column Wide Screen Layout -->
+        <main class="main-content-wide">
+            <!-- Left Wing: Visual Theme & High Score Stats -->
+            <aside class="game-wing-left">
+                <div class="panel-card wing-card">
+                    <h2 class="panel-title">🎨 Theme</h2>
+                    <select id="theme-selector" class="select-input">
+                        <option value="neon-dark" selected>Deep Slate Navy</option>
+                        <option value="cyber-midnight">Cyber Midnight</option>
+                        <option value="sunset-blast">Sunset Blast</option>
+                        <option value="classic-pastel">Classic Light</option>
+                    </select>
+                </div>
+
+                <div class="panel-card wing-card">
+                    <h2 class="panel-title">🏆 Best Record</h2>
+                    <div class="wing-stat-item">
+                        <span class="wing-stat-label">Best Score</span>
+                        <span class="wing-stat-val" id="wing-high-score">0</span>
+                    </div>
+                    <div class="wing-stat-item" style="margin-top: 8px;">
+                        <span class="wing-stat-label">Max Streak</span>
+                        <span class="wing-stat-val" id="wing-max-combo">0</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center Column: Primary 8x8 Board & 3-Piece Dock -->
+            <section class="game-center-column">
+                <div class="game-stage-container" id="stage-container">
+                    <canvas id="game-canvas"></canvas>
+                </div>
             </section>
 
-            <!-- Sidebar Dashboard -->
-            <aside class="sidebar-panel" id="game-sidebar">
-                <!-- Action Controls -->
-                <div class="panel-card">
+            <!-- Right Wing: Quick Actions & AI Speed -->
+            <aside class="game-wing-right">
+                <div class="panel-card wing-card">
                     <h2 class="panel-title">⚡ Quick Actions</h2>
-                    <div class="controls-grid">
-                        <button class="btn btn-accent" id="btn-hint" title="Get AI recommended move (H)">
+                    <div class="controls-grid-wing">
+                        <button class="btn btn-accent btn-wing" id="btn-hint" title="Get AI recommended move (H)">
                             <span class="icon">💡</span>
                             <span class="btn-text">Hint</span>
                         </button>
-                        <button class="btn btn-primary" id="btn-autoplay" title="Let AI play automatically (A)">
+                        <button class="btn btn-primary btn-wing" id="btn-autoplay" title="Let AI play automatically (A)">
                             <span class="icon">🤖</span>
-                            <span class="btn-text">AI Autoplay</span>
+                            <span class="btn-text">AI Play</span>
                         </button>
-                        <button class="btn" id="btn-sound" title="Toggle audio (M)">
+                        <button class="btn btn-wing" id="btn-sound" title="Toggle audio (M)">
                             <span class="icon">🔊</span>
                             <span class="btn-text">Sound</span>
                         </button>
-                        <button class="btn" id="btn-restart" title="Start new game (R)">
+                        <button class="btn btn-wing" id="btn-restart" title="Start new game (R)">
                             <span class="icon">🔄</span>
                             <span class="btn-text">Restart</span>
                         </button>
-                        <button class="btn" id="btn-stats" title="View gameplay statistics">
+                        <button class="btn btn-wing" id="btn-stats" title="View gameplay statistics">
                             <span class="icon">📊</span>
                             <span class="btn-text">Stats</span>
                         </button>
-                        <button class="btn" id="btn-force-lose" title="Trigger Game Over screen (O)" style="border-color: rgba(239, 68, 68, 0.4); color: #FCA5A5;">
+                        <button class="btn btn-wing" id="btn-force-lose" title="Trigger Game Over screen (O)" style="border-color: rgba(239, 68, 68, 0.4); color: #FCA5A5;">
                             <span class="icon">💀</span>
                             <span class="btn-text">Lose</span>
                         </button>
                     </div>
 
                     <!-- AI Speed Option -->
-                    <div style="margin-top: 12px;">
+                    <div style="margin-top: 10px;">
                         <label for="autoplay-speed-select" class="panel-title" style="margin-bottom: 2px; font-size: 11px;">🤖 AI Speed</label>
                         <select id="autoplay-speed-select" class="select-input">
-                            <option value="slow">Slow (Relaxed)</option>
+                            <option value="slow">Slow</option>
                             <option value="normal" selected>Normal</option>
                             <option value="fast">Fast</option>
                             <option value="turbo">Turbo ⚡</option>
                         </select>
-                    </div>
-
-                    <!-- Theme Option -->
-                    <div style="margin-top: 10px;">
-                        <label for="theme-selector" class="panel-title" style="margin-bottom: 2px; font-size: 11px;">🎨 Visual Theme</label>
-                        <select id="theme-selector" class="select-input">
-                            <option value="neon-dark" selected>Deep Slate Navy</option>
-                            <option value="cyber-midnight">Cyber Midnight</option>
-                            <option value="sunset-blast">Sunset Blast</option>
-                            <option value="classic-pastel">Classic Light</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Combo History Feed -->
-                <div class="panel-card">
-                    <h2 class="panel-title">🔥 Combo Feed</h2>
-                    <div class="combo-feed-box" id="combo-feed">
-                        <div class="feed-item">Ready to blast!</div>
-                    </div>
-                </div>
-
-                <!-- Controls Guide -->
-                <div class="panel-card">
-                    <h2 class="panel-title">🎮 Controls</h2>
-                    <div class="keys-list">
-                        <div class="key-row">
-                            <span>Drag & Drop</span>
-                            <kbd>Mouse / Touch</kbd>
-                        </div>
-                        <div class="key-row">
-                            <span>Select Shapes</span>
-                            <div><kbd>E</kbd> <kbd>R</kbd> <kbd>T</kbd></div>
-                        </div>
-                        <div class="key-row">
-                            <span>Move Cursor</span>
-                            <div><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd></div>
-                        </div>
-                        <div class="key-row">
-                            <span>Place Shape</span>
-                            <kbd>Space / Enter</kbd>
-                        </div>
-                        <div class="key-row">
-                            <span>AI Hint / Bot</span>
-                            <div><kbd>H</kbd> / <kbd>A</kbd></div>
-                        </div>
-                        <div class="key-row">
-                            <span>Debug Lose Menu</span>
-                            <kbd>O</kbd>
-                        </div>
                     </div>
                 </div>
             </aside>

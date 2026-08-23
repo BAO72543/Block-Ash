@@ -51,6 +51,8 @@ export class BlockBlastApp {
             homeBtnSound: document.getElementById('home-btn-sound'),
             scoreCurrent: document.getElementById('current-score') || document.getElementById('score-current'),
             scoreHighest: document.getElementById('high-score') || document.getElementById('score-highest'),
+            wingHighScore: document.getElementById('wing-high-score'),
+            wingMaxCombo: document.getElementById('wing-max-combo'),
             comboCurrent: document.getElementById('combo-count') || document.getElementById('combo-current'),
             comboFlame: document.getElementById('combo-flame'),
             comboFeed: document.getElementById('combo-feed'),
@@ -1033,6 +1035,8 @@ export class BlockBlastApp {
     updateScoreDisplays() {
         if (this.dom.scoreCurrent) this.dom.scoreCurrent.textContent = this.gameState.score.toLocaleString();
         if (this.dom.scoreHighest) this.dom.scoreHighest.textContent = this.gameState.highestScore.toLocaleString();
+        if (this.dom.wingHighScore) this.dom.wingHighScore.textContent = this.gameState.highestScore.toLocaleString();
+        if (this.dom.wingMaxCombo) this.dom.wingMaxCombo.textContent = this.gameState.stats?.maxComboStreak || this.gameState.comboCount || 0;
         if (this.dom.comboCurrent) this.dom.comboCurrent.textContent = this.gameState.comboCount;
         if (this.dom.comboFlame) {
             this.dom.comboFlame.style.display = this.gameState.comboCount >= 2 ? 'inline' : 'none';
@@ -1040,6 +1044,7 @@ export class BlockBlastApp {
     }
 
     updateComboFeed() {
+        if (!this.dom.comboFeed) return;
         const history = this.gameState.comboHistory;
         this.dom.comboFeed.innerHTML = '';
 
