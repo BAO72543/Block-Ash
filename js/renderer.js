@@ -93,8 +93,6 @@ export class GameRenderer {
 
         this.canvas.width = Math.round(this.width * this.dpr);
         this.canvas.height = Math.round(this.height * this.dpr);
-        this.canvas.style.width = `${this.width}px`;
-        this.canvas.style.height = `${this.height}px`;
 
         this.computeLayout();
     }
@@ -103,58 +101,46 @@ export class GameRenderer {
         const isMobile = this.width < 640;
         const aspect = this.width / Math.max(1, this.height);
 
-        // Calculate potential board size in Side-Dock Mode vs Bottom-Dock Mode
-        // Side Dock requires width for board + side dock + gaps
-        const sidePadding = isMobile ? 10 : 16;
-        const topPadding = isMobile ? 16 : 22;
-        const estSideDockW = Math.min(220, Math.max(120, Math.round(this.width * 0.23)));
+        // Minimum safety paddings
+        const sidePadding = isMobile ? 12 : 16;
+        const topPadding = isMobile ? 12 : 16;
+        const bottomPadding = isMobile ? 14 : 18;
 
-        const sideMaxBoardW = this.width - estSideDockW - sidePadding * 3;
-        const sideMaxBoardH = this.height - topPadding - sidePadding;
-        const sidePossibleBoardSize = Math.max(0, Math.min(sideMaxBoardW, sideMaxBoardH));
+        // Determine orientation:
+        // Use Side Dock if aspect ratio >= 1.05 and width is at least 500px
+        const isWide = (aspect >= 1.05 && this.width >= 500);
 
-        // Bottom Dock requires height for board + bottom dock + gaps
-        const estBottomDockH = Math.min(160, Math.max(85, Math.round(this.height * 0.22)));
-        const bottomMaxBoardW = this.width - sidePadding * 2;
-        const bottomMaxBoardH = this.height - estBottomDockH - topPadding - (isMobile ? 10 : 16);
-        const bottomPossibleBoardSize = Math.max(0, Math.min(bottomMaxBoardW, bottomMaxBoardH));
-
-        // Decision heuristic: Use Side Dock if aspect >= 1.05 and Side Dock gives a viable board size,
-        // otherwise use Bottom Dock.
-        const useSideDock = (aspect >= 1.05) && (sidePossibleBoardSize >= bottomPossibleBoardSize * 0.92 || this.width >= 560);
-
-        if (useSideDock) {
+        if (isWide) {
             // ==========================================
-            // WIDESCREEN / PC FULLSCREEN / TABLET LANDSCAPE: SIDE DOCK
+            // WIDESCREEN / SIDE DOCK MODE
             // ==========================================
-            const sideDockWidth = estSideDockW;
-            const maxBoardWidth = this.width - sideDockWidth - sidePadding * 3;
-            const maxBoardHeight = this.height - topPadding - sidePadding;
+            const maxAvailableHeight = this.height - topPadding - bottomPadding;
+            const sideDockWidth = Math.min(200, Math.max(110, Math.round(this.width * 0.22)));
+            const maxAvailableWidthForBoard = this.width - sideDockWidth - (sidePadding * 3);
 
-            // Allow board to scale up to 750px on 1440p/4K fullscreen monitors!
-            const boardSize = Math.max(220, Math.min(maxBoardWidth, maxBoardHeight, 750));
-            const totalStageW = boardSize + sidePadding + sideDockWidth;
+            // Board must fit inside both available width and height
+            const maxBoardSize = Math.max(180, Math.min(maxAvailableWidthForBoard, maxAvailableHeight));
+            const gap = Math.max(2, Math.min(4, Math.round(maxBoardSize / 130)));
+            const cellSize = Math.floor((maxBoardSize - (gap * 9)) / 8);
+            const actualBoardSize = cellSize * 8 + gap * 9;
 
-            const boardX = Math.max(sidePadding, Math.round((this.width - totalStageW) / 2));
-            const boardY = Math.max(topPadding, Math.round((this.height - boardSize) / 2));
-
-            const gap = Math.max(2, Math.min(4, Math.round(boardSize / 130)));
-            const cellSize = Math.floor((boardSize - (gap * 9)) / 8);
+            const totalUsedWidth = actualBoardSize + sidePadding + sideDockWidth;
+            const boardX = Math.max(sidePadding, Math.round((this.width - totalUsedWidth) / 2));
+            const boardY = Math.max(topPadding, Math.round((this.height - actualBoardSize) / 2));
 
             this.boardMetrics = {
                 x: boardX,
                 y: boardY,
-                size: boardSize,
+                size: actualBoardSize,
                 cellSize,
                 gap
             };
 
-            // Vertical Side Dock: 3 puzzle pieces stacked cleanly on the right
-            const dockX = boardX + boardSize + sidePadding;
+            const dockX = boardX + actualBoardSize + sidePadding;
             const dockY = boardY;
-            const slotGap = Math.max(6, Math.round((boardSize - 30) * 0.035));
-            const slotWidth = sideDockWidth;
-            const slotHeight = Math.floor((boardSize - slotGap * 2) / 3);
+            const slotGap = Math.max(6, Math.round((actualBoardSize - 30) * 0.035));
+            const slotWidth = Math.min(sideDockWidth, this.width - dockX - sidePadding);
+            const slotHeight = Math.floor((actualBoardSize - slotGap * 2) / 3);
 
             this.dockMetrics.slots = [];
             this.dockMetrics.isVertical = true;
@@ -170,34 +156,34 @@ export class GameRenderer {
             }
         } else {
             // ==========================================
-            // PORTRAIT / MOBILE / SQUARE RATIO: BOTTOM DOCK
+            // PORTRAIT / BOTTOM DOCK MODE
             // ==========================================
-            const bottomSafetyPadding = isMobile ? 14 : 20;
-            const dockHeight = estBottomDockH;
-            const maxBoardWidth = this.width - sidePadding * 2;
-            const maxBoardHeight = this.height - dockHeight - topPadding - bottomSafetyPadding;
+            const maxAvailableWidth = this.width - sidePadding * 2;
+            const dockHeight = Math.min(140, Math.max(80, Math.round(this.height * 0.20)));
+            const maxAvailableHeightForBoard = this.height - dockHeight - topPadding - bottomPadding - (isMobile ? 8 : 12);
 
-            const boardSize = Math.max(200, Math.min(maxBoardWidth, maxBoardHeight, 650));
-            const boardX = Math.round((this.width - boardSize) / 2);
-            const boardY = topPadding;
+            const maxBoardSize = Math.max(180, Math.min(maxAvailableWidth, maxAvailableHeightForBoard));
+            const gap = Math.max(2, Math.min(4, Math.round(maxBoardSize / 130)));
+            const cellSize = Math.floor((maxBoardSize - (gap * 9)) / 8);
+            const actualBoardSize = cellSize * 8 + gap * 9;
 
-            const gap = Math.max(2, Math.min(4, Math.round(boardSize / 135)));
-            const cellSize = Math.floor((boardSize - (gap * 9)) / 8);
+            const boardX = Math.round((this.width - actualBoardSize) / 2);
+            const boardY = topPadding + Math.max(0, Math.round((maxAvailableHeightForBoard - actualBoardSize) * 0.3));
 
             this.boardMetrics = {
                 x: boardX,
                 y: boardY,
-                size: boardSize,
+                size: actualBoardSize,
                 cellSize,
                 gap
             };
 
-            const remainingSpace = Math.max(0, this.height - (boardY + boardSize) - dockHeight - (isMobile ? 8 : 12));
-            const dockY = boardY + boardSize + (sidePadding * 0.65) + Math.round(remainingSpace * 0.3);
-            const dockWidth = boardSize;
-            const slotGap = Math.max(6, Math.round(boardSize * 0.022));
-            const slotWidth = (dockWidth - slotGap * 2) / 3;
-            const slotHeight = Math.min(dockHeight, Math.round(dockHeight * 0.95));
+            const dockY = boardY + actualBoardSize + (isMobile ? 10 : 14);
+            const dockWidth = actualBoardSize;
+            const slotGap = Math.max(6, Math.round(actualBoardSize * 0.022));
+            const slotWidth = Math.floor((dockWidth - slotGap * 2) / 3);
+            const availableDockHeight = Math.max(60, this.height - dockY - bottomPadding);
+            const slotHeight = Math.min(dockHeight, availableDockHeight);
 
             this.dockMetrics.slots = [];
             this.dockMetrics.isVertical = false;
