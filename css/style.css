@@ -88,8 +88,7 @@
 
 body {
     font-family: 'Fredoka', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: var(--bg-color, #7B1113);
-    background-image: none !important;
+    background: var(--bg-color, #7B1113);
     color: var(--text-main);
     min-height: 100vh;
     display: flex;
@@ -97,7 +96,7 @@ body {
     align-items: flex-start;
     overflow-x: hidden;
     overflow-y: auto;
-    transition: background-color 0.3s ease;
+    transition: background 0.3s ease;
 }
 
 /* Mobile-First Centered Arcade Shell Layout */
@@ -118,96 +117,6 @@ body {
     z-index: 2;
     box-sizing: border-box;
     overflow: hidden;
-}
-
-/* ==========================================================================
-   Ambient Background Ghost Grid & Parallax Atmosphere
-   ========================================================================== */
-.ghost-grid-bg {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    width: 420px;
-    height: 420px;
-    transform: translate(-50%, -50%);
-    background-image: 
-        linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
-    background-size: 52px 52px;
-    mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.9) 30%, transparent 75%);
-    -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.9) 30%, transparent 75%);
-    pointer-events: none;
-    z-index: 0;
-}
-
-.parallax-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 1;
-}
-
-.parallax-cube {
-    position: absolute;
-    border-radius: 8px;
-    opacity: 0.16;
-    filter: blur(1.5px);
-}
-
-.p-cube-1 {
-    width: 40px;
-    height: 40px;
-    top: 10%;
-    left: 12%;
-    background: linear-gradient(135deg, #EF4444, #DC2626);
-    box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
-    animation: parallax-drift-1 14s ease-in-out infinite alternate;
-}
-
-.p-cube-2 {
-    width: 34px;
-    height: 34px;
-    top: 22%;
-    right: 12%;
-    background: linear-gradient(135deg, #3B82F6, #1D4ED8);
-    box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
-    animation: parallax-drift-2 16s ease-in-out infinite alternate;
-}
-
-.p-cube-3 {
-    width: 30px;
-    height: 30px;
-    bottom: 22%;
-    left: 10%;
-    background: linear-gradient(135deg, #FBBF24, #D97706);
-    box-shadow: 0 0 14px rgba(251, 191, 36, 0.4);
-    animation: parallax-drift-1 18s ease-in-out infinite alternate reverse;
-}
-
-.p-cube-4 {
-    width: 36px;
-    height: 36px;
-    bottom: 14%;
-    right: 12%;
-    background: linear-gradient(135deg, #10B981, #059669);
-    box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
-    animation: parallax-drift-2 15s ease-in-out infinite alternate reverse;
-}
-
-@keyframes parallax-drift-1 {
-    0% { transform: translateY(0) rotate(0deg) scale(1); }
-    50% { transform: translateY(-20px) rotate(15deg) scale(1.06); }
-    100% { transform: translateY(12px) rotate(-10deg) scale(0.95); }
-}
-
-@keyframes parallax-drift-2 {
-    0% { transform: translateY(0) rotate(0deg) scale(1); }
-    50% { transform: translateY(22px) rotate(-18deg) scale(1.05); }
-    100% { transform: translateY(-16px) rotate(12deg) scale(0.93); }
 }
 
 /* ==========================================================================

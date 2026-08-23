@@ -1117,7 +1117,7 @@ export class BlockBlastApp {
                     </div>
                 </div>
                 <div class="skin-card-footer">
-                    <span class="skin-chip-tag" style="background: ${bg.bg}; color: #FFFFFF;">${bg.bg}</span>
+                    <span class="skin-chip-tag" style="background: ${bg.bg.includes('gradient') ? (bg.solidFallback || '#1E293B') : bg.bg}; color: #FFFFFF;">${bg.bg.includes('gradient') ? 'SPECTRUM' : bg.bg}</span>
                     <button class="btn-skin-action ${isEquipped ? 'equipped' : ''}">
                         ${isEquipped ? 'EQUIPPED' : 'SELECT'}
                     </button>
@@ -1234,12 +1234,13 @@ export class BlockBlastApp {
         if (save) SkinManager.saveConfig('bg', bg.id);
         this.renderer.applyBackgroundSkin(bg);
 
-        // Update solid background CSS variables and body background
+        // Update solid / gradient background CSS variables and body background
         document.documentElement.style.setProperty('--bg-color', bg.bg);
         document.documentElement.style.setProperty('--card-bg', bg.boardBg);
         document.documentElement.style.setProperty('--score-color', bg.scoreColor || '#A3E635');
         document.documentElement.style.setProperty('--diamond-color', bg.diamondColor || '#F59E0B');
-        document.body.style.backgroundColor = bg.bg;
+        document.body.style.background = bg.bg;
+        document.body.style.backgroundColor = bg.solidFallback || bg.bg;
 
         this.renderBackgroundTab();
         this.updateSkinsSummary();
