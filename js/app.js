@@ -10,7 +10,7 @@ import { ParticleSystem } from './particles.js';
 import { SoundFX } from './audio.js';
 import { InputHandler } from './input.js';
 import { BlockBlastAI } from './ai.js';
-import { GAME_MODES, ModeManager, ADVENTURE_STAGES } from './modes.js';
+import { GAME_MODES, ModeManager, DailyChallengeManager, ADVENTURE_STAGES } from './modes.js';
 
 export class BlockBlastApp {
     constructor() {
@@ -24,9 +24,11 @@ export class BlockBlastApp {
         // Autoplay controller
         this.isAutoplayActive = false;
         this.autoplayTimer = null;
-        this.autoplaySpeed = 'normal'; // slow: 600ms, normal: 300ms, fast: 120ms, turbo: 30ms
-        this.celebratedNewRecord = false;
+        this.autoplaySpeed = 'normal'; // slow (650ms), normal (320ms), fast (130ms), turbo (30ms)
+
+        // Monetization loops
         this.gamesSinceLastInterstitial = 0;
+        this.rewardReviveTimer = null;
 
         // Cache DOM Elements with robust fallbacks
         this.dom = {
@@ -35,9 +37,13 @@ export class BlockBlastApp {
             btnPlayClassic: document.getElementById('btn-play-classic'),
             btnPlayAdventure: document.getElementById('btn-play-adventure'),
             btnPlayDrop: document.getElementById('btn-play-drop'),
+            btnPlayDaily: document.getElementById('btn-play-daily'),
             btnReturnHome: document.getElementById('btn-return-home'),
             homeClassicScore: document.getElementById('home-classic-score'),
             homeAdventureStage: document.getElementById('home-adventure-stage'),
+            homeDailyStreak: document.getElementById('home-daily-streak'),
+            milestoneBarFill: document.getElementById('milestone-bar-fill'),
+            milestoneTargetText: document.getElementById('milestone-target-text'),
             homeBtnStats: document.getElementById('home-btn-stats'),
             homeBtnSound: document.getElementById('home-btn-sound'),
             scoreCurrent: document.getElementById('current-score') || document.getElementById('score-current'),
@@ -130,12 +136,27 @@ export class BlockBlastApp {
         if (this.dom.gameplayView) this.dom.gameplayView.style.display = 'none';
 
         // Update home screen metadata
+        const highestScore = this.gameState.highestScore || 0;
         if (this.dom.homeClassicScore) {
-            this.dom.homeClassicScore.textContent = (this.gameState.highestScore || 0).toLocaleString();
+            this.dom.homeClassicScore.textContent = highestScore.toLocaleString();
         }
         if (this.dom.homeAdventureStage) {
             const progress = ModeManager.loadAdventureProgress();
             this.dom.homeAdventureStage.textContent = `Stage ${progress.unlockedStage || 1}`;
+        }
+
+        // Milestone Progress Track Calculation
+        const TIERS = [1000, 2500, 5000, 10000, 20000, 50000, 100000];
+        const nextTier = TIERS.find(t => t > highestScore) || (highestScore + 5000);
+        const prevTier = TIERS[TIERS.indexOf(nextTier) - 1] || 0;
+        const pct = Math.min(100, Math.max(8, Math.round(((highestScore - prevTier) / (nextTier - prevTier)) * 100)));
+        if (this.dom.milestoneTargetText) this.dom.milestoneTargetText.textContent = `${nextTier.toLocaleString()} PTS`;
+        if (this.dom.milestoneBarFill) this.dom.milestoneBarFill.style.width = `${pct}%`;
+
+        // Update Daily Challenge Streak
+        const dailyData = DailyChallengeManager.loadDailyData();
+        if (this.dom.homeDailyStreak) {
+            this.dom.homeDailyStreak.textContent = `Streak: ${dailyData.streakDays || 1}`;
         }
     }
 
@@ -151,14 +172,14 @@ export class BlockBlastApp {
 
     setupEventListeners() {
         // Tactile Hover Audio for 3D Arcade Cards and Buttons
-        const hoverElements = document.querySelectorAll('.hero-mode-card, .secondary-mode-card, .btn-3d-circle, .btn-3d');
+        const hoverElements = document.querySelectorAll('.hero-mode-card, .secondary-mode-card, .daily-challenge-card, .btn-3d-circle, .btn-3d, .theme-pill');
         hoverElements.forEach(el => {
             el.addEventListener('mouseenter', () => {
                 this.audio.playHover();
             });
         });
 
-        // Home Screen Buttons
+        // Home Screen Mode Buttons
         if (this.dom.btnPlayClassic) {
             this.dom.btnPlayClassic.addEventListener('click', () => this.enterGameWithMode(GAME_MODES.CLASSIC));
         }
@@ -167,6 +188,9 @@ export class BlockBlastApp {
         }
         if (this.dom.btnPlayDrop) {
             this.dom.btnPlayDrop.addEventListener('click', () => this.enterGameWithMode(GAME_MODES.DROP));
+        }
+        if (this.dom.btnPlayDaily) {
+            this.dom.btnPlayDaily.addEventListener('click', () => this.enterGameWithMode(GAME_MODES.DAILY));
         }
         if (this.dom.btnReturnHome) {
             this.dom.btnReturnHome.addEventListener('click', () => {
@@ -185,6 +209,18 @@ export class BlockBlastApp {
                 this.toggleAudio();
             });
         }
+
+        // Theme Quick Selector Pills on Home Screen
+        const themePills = document.querySelectorAll('.theme-pill');
+        themePills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                this.audio.playPop();
+                const themeVal = pill.getAttribute('data-theme-val');
+                themePills.forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                this.changeTheme(themeVal);
+            });
+        });
 
         // Mode Tabs
         if (this.dom.tabModeClassic) {
@@ -523,6 +559,8 @@ export class BlockBlastApp {
             this.initAdventureStage(progress.unlockedStage || 1);
         } else if (mode === GAME_MODES.DROP) {
             this.gameState.initDropMode();
+        } else if (mode === GAME_MODES.DAILY) {
+            this.gameState.initDailyChallenge();
         } else {
             this.gameState.reset();
         }
@@ -576,6 +614,17 @@ export class BlockBlastApp {
             }
             if (this.dom.modeMovesText) {
                 this.dom.modeMovesText.textContent = `Next Rise in: ${this.gameState.movesUntilDrop} moves`;
+            }
+            if (this.dom.btnOpenStageMap) this.dom.btnOpenStageMap.style.display = 'none';
+        } else if (this.gameState.mode === GAME_MODES.DAILY) {
+            this.dom.modeStatusBar.style.display = 'flex';
+            if (this.dom.modeStageBadge) this.dom.modeStageBadge.textContent = 'DAILY PUZZLE';
+            if (this.dom.modeGoalText) {
+                const g = this.gameState.stageGoals;
+                this.dom.modeGoalText.textContent = `Goal: ${g.collected}/${g.target} GEMS`;
+            }
+            if (this.dom.modeMovesText) {
+                this.dom.modeMovesText.textContent = `Moves Left: ${this.gameState.movesRemaining}`;
             }
             if (this.dom.btnOpenStageMap) this.dom.btnOpenStageMap.style.display = 'none';
         } else {

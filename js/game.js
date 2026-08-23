@@ -6,7 +6,7 @@
  */
 
 import { Shape, canPlaceShapeOnGrid, generateValidShapes } from './shapes.js';
-import { GAME_MODES, ModeManager } from './modes.js';
+import { GAME_MODES, ModeManager, DailyChallengeManager } from './modes.js';
 
 export class BlockGameState {
     constructor() {
@@ -143,6 +143,40 @@ export class BlockGameState {
                     };
                 }
             }
+        }
+
+        this.currentShapes = generateValidShapes(this.grid, this.comboCount);
+    }
+
+    initDailyChallenge() {
+        this.mode = GAME_MODES.DAILY;
+        const challenge = DailyChallengeManager.getTodayChallenge();
+        this.grid = Array.from({ length: 8 }, () => Array(8).fill(0));
+        this.score = 0;
+        this.displayedScore = 0;
+        this.gameOver = false;
+        this.comboCount = 0;
+        this.comboHistory = ['COMBO 0'];
+        this.placementsWithoutClear = 0;
+        this.hasUsedRevive = false;
+        this.movesRemaining = challenge.movesLimit;
+        this.stageGoals = {
+            type: 'gems',
+            target: challenge.goals.gems,
+            collected: 0
+        };
+
+        // Seed 4 corner gem blocks
+        const seedGems = [
+            { row: 2, col: 2 }, { row: 2, col: 5 },
+            { row: 5, col: 2 }, { row: 5, col: 5 }
+        ];
+        for (const pt of seedGems) {
+            this.grid[pt.row][pt.col] = {
+                color: { hex: '#F59E0B', light: '#FDE047', dark: '#D97706' },
+                placedAt: Date.now(),
+                item: 'gem'
+            };
         }
 
         this.currentShapes = generateValidShapes(this.grid, this.comboCount);
@@ -325,16 +359,20 @@ export class BlockGameState {
         let starsEarned = 0;
         let rowPushed = false;
 
-        if (this.mode === GAME_MODES.ADVENTURE) {
+        if (this.mode === GAME_MODES.ADVENTURE || this.mode === GAME_MODES.DAILY) {
             this.movesRemaining = Math.max(0, this.movesRemaining - 1);
 
-            // Check Adventure Win condition: stage target reached
+            // Check Win condition: stage/daily target reached
             if (this.stageGoals && this.stageGoals.collected >= this.stageGoals.target) {
                 isAdventureWin = true;
                 this.gameOver = true;
                 this.stageCompleted = true;
                 starsEarned = (this.movesRemaining >= 4) ? 3 : (this.movesRemaining >= 1 ? 2 : 1);
-                ModeManager.saveStageVictory(this.stageId, starsEarned, this.score);
+                if (this.mode === GAME_MODES.ADVENTURE) {
+                    ModeManager.saveStageVictory(this.stageId, starsEarned, this.score);
+                } else if (this.mode === GAME_MODES.DAILY) {
+                    DailyChallengeManager.saveDailyCompletion(this.score);
+                }
             } else if (this.movesRemaining <= 0) {
                 // Loss condition: out of moves before goals met
                 this.gameOver = true;

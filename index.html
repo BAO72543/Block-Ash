@@ -16,6 +16,15 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-theme="neon-dark">
+    <!-- Ambient Background Ghost Grid & Parallax Atmosphere -->
+    <div class="ghost-grid-bg" aria-hidden="true"></div>
+    <div class="parallax-container" aria-hidden="true">
+        <div class="parallax-cube p-cube-1"></div>
+        <div class="parallax-cube p-cube-2"></div>
+        <div class="parallax-cube p-cube-3"></div>
+        <div class="parallax-cube p-cube-4"></div>
+    </div>
+
     <div class="app-wrapper">
         <!-- 1. Home Menu Title Screen (Mobile-First Arcade Interface) -->
         <div class="home-screen" id="home-screen">
@@ -43,28 +52,40 @@
                 </div>
             </div>
 
-            <!-- Mode Selection Menu: Primary Hero Card + Secondary 2-Tile Grid -->
+            <!-- Mode Selection Menu: Primary Hero Card + Secondary 2-Tile Grid + Daily Banner -->
             <div class="home-modes-container">
-                <!-- HERO CARD: Classic Mode -->
+                <!-- HERO CARD: Classic Mode with Milestone Track -->
                 <div class="hero-mode-card" id="btn-play-classic">
-                    <div class="hero-card-art">
-                        <div class="art-block-cluster">
-                            <div class="art-cube cube-1"></div>
-                            <div class="art-cube cube-2"></div>
-                            <div class="art-cube cube-3"></div>
-                            <div class="art-cube cube-4"></div>
-                        </div>
-                    </div>
-                    <div class="hero-card-info">
-                        <div class="hero-card-header">
-                            <h2 class="hero-mode-title">CLASSIC</h2>
-                            <div class="badge-crown">
-                                <span class="badge-crown-icon">👑</span>
-                                <span id="home-classic-score">0</span>
+                    <div class="hero-card-top-row">
+                        <div class="hero-card-art">
+                            <div class="art-block-cluster">
+                                <div class="art-cube cube-1"></div>
+                                <div class="art-cube cube-2"></div>
+                                <div class="art-cube cube-3"></div>
+                                <div class="art-cube cube-4"></div>
                             </div>
                         </div>
-                        <button class="btn-3d btn-3d-play btn-breathe">PLAY</button>
+                        <div class="hero-card-info">
+                            <div class="hero-card-header">
+                                <h2 class="hero-mode-title">CLASSIC</h2>
+                                <div class="badge-crown">
+                                    <span class="badge-crown-icon">👑</span>
+                                    <span id="home-classic-score">0</span>
+                                </div>
+                            </div>
+                            <!-- Milestone Progress Track -->
+                            <div class="milestone-track">
+                                <div class="milestone-track-header">
+                                    <span class="milestone-label">NEXT RANK</span>
+                                    <span class="milestone-target" id="milestone-target-text">5,000 PTS</span>
+                                </div>
+                                <div class="milestone-bar-bg">
+                                    <div class="milestone-bar-fill" id="milestone-bar-fill" style="width: 25%;"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    <button class="btn-3d btn-3d-play btn-breathe">PLAY</button>
                 </div>
 
                 <!-- SECONDARY ROW: Adventure & Drop Mode -->
@@ -92,6 +113,32 @@
                             <span>RISING</span>
                         </div>
                         <button class="btn-3d btn-3d-secondary btn-3d-orange">START</button>
+                    </div>
+                </div>
+
+                <!-- DAILY CHALLENGE BANNER -->
+                <div class="daily-challenge-card" id="btn-play-daily">
+                    <div class="daily-card-left">
+                        <div class="daily-calendar-badge">
+                            <span class="daily-cal-icon">📅</span>
+                            <span class="daily-streak-text" id="home-daily-streak">Streak: 1</span>
+                        </div>
+                        <div class="daily-card-info">
+                            <h3 class="daily-card-title">DAILY PUZZLE</h3>
+                            <div class="daily-reward-tag">🎁 +100 Gems Reward</div>
+                        </div>
+                    </div>
+                    <button class="btn-3d btn-3d-daily">PLAY</button>
+                </div>
+
+                <!-- THEME QUICK SELECTOR STRIP -->
+                <div class="home-themes-strip">
+                    <span class="themes-strip-label">THEME</span>
+                    <div class="theme-pills-row">
+                        <button class="theme-pill active" data-theme-val="neon-dark" title="Neon Dark">Neon</button>
+                        <button class="theme-pill" data-theme-val="cyber-midnight" title="Cyber">Cyber</button>
+                        <button class="theme-pill" data-theme-val="sunset-blast" title="Sunset">Sunset</button>
+                        <button class="theme-pill" data-theme-val="classic-pastel" title="Pastel">Pastel</button>
                     </div>
                 </div>
             </div>

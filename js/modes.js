@@ -9,7 +9,8 @@
 export const GAME_MODES = {
     CLASSIC: 'classic',
     ADVENTURE: 'adventure',
-    DROP: 'drop'
+    DROP: 'drop',
+    DAILY: 'daily'
 };
 
 export const ADVENTURE_STAGES = [
@@ -163,6 +164,81 @@ export class ModeManager {
                 { row: 5, col: 2, color: { hex: '#10B981', light: '#6EE7B7' }, item: 'gem' },
                 { row: 5, col: 5, color: { hex: '#10B981', light: '#6EE7B7' }, item: 'gem' }
             ]
+        };
+    }
+}
+
+export class DailyChallengeManager {
+    static STORAGE_KEY_DAILY = 'blockblast_daily_challenge';
+
+    static getTodayKey() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    static loadDailyData() {
+        try {
+            const raw = localStorage.getItem(this.STORAGE_KEY_DAILY);
+            if (raw) return JSON.parse(raw);
+        } catch (e) {}
+
+        return {
+            lastPlayedDate: null,
+            streakDays: 1,
+            completedDates: {},
+            highestDailyScore: 0
+        };
+    }
+
+    static saveDailyCompletion(score) {
+        const data = this.loadDailyData();
+        const today = this.getTodayKey();
+
+        data.completedDates[today] = {
+            score,
+            completedAt: Date.now()
+        };
+
+        if (data.lastPlayedDate !== today) {
+            // Check if streak continues from yesterday
+            const yesterday = new Date(Date.now() - 86400000);
+            const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+            if (data.lastPlayedDate === yesterdayKey) {
+                data.streakDays = (data.streakDays || 0) + 1;
+            } else if (!data.lastPlayedDate) {
+                data.streakDays = 1;
+            }
+            data.lastPlayedDate = today;
+        }
+
+        data.highestDailyScore = Math.max(data.highestDailyScore || 0, score);
+
+        try {
+            localStorage.setItem(this.STORAGE_KEY_DAILY, JSON.stringify(data));
+        } catch (e) {}
+
+        return data;
+    }
+
+    static getTodayChallenge() {
+        const today = this.getTodayKey();
+        // Generate deterministic daily parameters from date string hash
+        let hash = 0;
+        for (let i = 0; i < today.length; i++) {
+            hash = ((hash << 5) - hash) + today.charCodeAt(i);
+            hash |= 0;
+        }
+        const absHash = Math.abs(hash);
+
+        const targetGems = 6 + (absHash % 5);
+        const movesLimit = 16 + (absHash % 4);
+
+        return {
+            dateKey: today,
+            name: `Daily Puzzle - ${today}`,
+            movesLimit,
+            goals: { gems: targetGems },
+            rewardText: '100 Gems + Trophy'
         };
     }
 }
