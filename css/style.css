@@ -102,16 +102,20 @@ body {
 .app-wrapper {
     width: 100%;
     max-width: 480px;
+    height: 100vh;
     min-height: 100vh;
-    padding: 14px 16px 56px;
+    max-height: 100vh;
+    padding: 8px 14px 8px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    gap: 14px;
+    gap: 6px;
     position: relative;
     margin: 0 auto;
     z-index: 2;
+    box-sizing: border-box;
+    overflow-y: hidden;
 }
 
 /* ==========================================================================
@@ -121,13 +125,13 @@ body {
     position: fixed;
     top: 50%;
     left: 50%;
-    width: 420px;
-    height: 420px;
+    width: 400px;
+    height: 400px;
     transform: translate(-50%, -50%);
     background-image: 
         linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
-    background-size: 52px 52px;
+    background-size: 50px 50px;
     mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.9) 30%, transparent 75%);
     -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.9) 30%, transparent 75%);
     pointer-events: none;
@@ -148,75 +152,76 @@ body {
 .parallax-cube {
     position: absolute;
     border-radius: 8px;
-    opacity: 0.18;
+    opacity: 0.16;
     filter: blur(1.5px);
 }
 
 .p-cube-1 {
-    width: 42px;
-    height: 42px;
-    top: 12%;
-    left: 15%;
+    width: 38px;
+    height: 38px;
+    top: 10%;
+    left: 12%;
     background: linear-gradient(135deg, #EF4444, #DC2626);
-    box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
     animation: parallax-drift-1 14s ease-in-out infinite alternate;
 }
 
 .p-cube-2 {
-    width: 36px;
-    height: 36px;
-    top: 25%;
-    right: 14%;
+    width: 32px;
+    height: 32px;
+    top: 22%;
+    right: 12%;
     background: linear-gradient(135deg, #3B82F6, #1D4ED8);
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
     animation: parallax-drift-2 16s ease-in-out infinite alternate;
 }
 
 .p-cube-3 {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     bottom: 22%;
-    left: 12%;
+    left: 10%;
     background: linear-gradient(135deg, #FBBF24, #D97706);
-    box-shadow: 0 0 16px rgba(251, 191, 36, 0.4);
+    box-shadow: 0 0 14px rgba(251, 191, 36, 0.4);
     animation: parallax-drift-1 18s ease-in-out infinite alternate reverse;
 }
 
 .p-cube-4 {
-    width: 38px;
-    height: 38px;
-    bottom: 15%;
-    right: 16%;
+    width: 34px;
+    height: 34px;
+    bottom: 14%;
+    right: 12%;
     background: linear-gradient(135deg, #10B981, #059669);
-    box-shadow: 0 0 18px rgba(16, 185, 129, 0.4);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
     animation: parallax-drift-2 15s ease-in-out infinite alternate reverse;
 }
 
 @keyframes parallax-drift-1 {
     0% { transform: translateY(0) rotate(0deg) scale(1); }
-    50% { transform: translateY(-25px) rotate(15deg) scale(1.08); }
-    100% { transform: translateY(15px) rotate(-10deg) scale(0.95); }
+    50% { transform: translateY(-20px) rotate(15deg) scale(1.06); }
+    100% { transform: translateY(12px) rotate(-10deg) scale(0.95); }
 }
 
 @keyframes parallax-drift-2 {
     0% { transform: translateY(0) rotate(0deg) scale(1); }
-    50% { transform: translateY(30px) rotate(-20deg) scale(1.05); }
-    100% { transform: translateY(-20px) rotate(12deg) scale(0.92); }
+    50% { transform: translateY(22px) rotate(-18deg) scale(1.05); }
+    100% { transform: translateY(-16px) rotate(12deg) scale(0.93); }
 }
 
 /* ==========================================================================
-   Home Menu Screen (Casual Arcade Style - Full Viewport Rebalancing)
+   Home Menu Screen (Casual Arcade Style - Compact 16:9 Fit)
    ========================================================================== */
 .home-screen {
     width: 100%;
     max-width: 440px;
-    min-height: calc(100vh - 80px);
+    height: 100%;
+    max-height: calc(100vh - 16px);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    gap: 16px;
-    padding: 4px 0;
+    gap: 6px;
+    padding: 0;
     animation: fadeIn 0.35s ease-out;
 }
 
@@ -226,28 +231,28 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 4px;
+    padding: 0;
 }
 
 .home-top-title-mini {
     font-family: 'Lilita One', 'Fredoka', sans-serif;
-    font-size: 13px;
+    font-size: 12px;
     letter-spacing: 2px;
     color: rgba(255, 255, 255, 0.45);
 }
 
 /* Circular 3D Corner Action Buttons */
 .btn-3d-circle {
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     background: linear-gradient(180deg, #334155 0%, #1E293B 100%);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 4px 0 #0F172A, 0 6px 12px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.3);
+    box-shadow: 0 3px 0 #0F172A, 0 4px 8px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 17px;
     cursor: pointer;
     transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
@@ -257,8 +262,8 @@ body {
 }
 
 .btn-3d-circle:active {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 #0F172A, 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #0F172A, 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Header Zone: 3D Scaled Game Logo */
@@ -267,7 +272,9 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 2px 0;
+    padding: 0;
+    margin-top: -2px;
+    margin-bottom: -2px;
 }
 
 .home-logo-container {
@@ -279,17 +286,17 @@ body {
 
 .home-logo-blocks {
     display: flex;
-    gap: 5px;
-    margin-bottom: -12px;
+    gap: 4px;
+    margin-bottom: -10px;
     z-index: 2;
     transform: rotate(4deg);
 }
 
 .mini-block {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 .b-red { background: linear-gradient(135deg, #EF4444, #DC2626); }
 .b-blue { background: linear-gradient(135deg, #3B82F6, #2563EB); }
@@ -298,15 +305,15 @@ body {
 
 .home-arcade-title {
     font-family: 'Lilita One', 'Fredoka', cursive, sans-serif;
-    font-size: 58px;
-    line-height: 0.92;
-    letter-spacing: 2px;
+    font-size: 44px;
+    line-height: 0.88;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
     text-align: center;
     background: linear-gradient(180deg, #FFFFFF 0%, #FDE047 35%, #F59E0B 75%, #D97706 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 5px 0 #78350F) drop-shadow(0 10px 20px rgba(0, 0, 0, 0.65));
+    filter: drop-shadow(0 4px 0 #78350F) drop-shadow(0 8px 14px rgba(0, 0, 0, 0.65));
     animation: float-title 3s ease-in-out infinite alternate;
 }
 
@@ -314,12 +321,12 @@ body {
     background: linear-gradient(180deg, #FFFFFF 0%, #60A5FA 40%, #2563EB 80%, #1E40AF 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 5px 0 #1E3A8A) drop-shadow(0 10px 20px rgba(0, 0, 0, 0.65));
+    filter: drop-shadow(0 4px 0 #1E3A8A) drop-shadow(0 8px 14px rgba(0, 0, 0, 0.65));
 }
 
 @keyframes float-title {
     0% { transform: translateY(0) rotate(-1deg); }
-    100% { transform: translateY(-4px) rotate(1deg); }
+    100% { transform: translateY(-3px) rotate(1deg); }
 }
 
 /* Mode Selection Containers */
@@ -327,38 +334,52 @@ body {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 13px;
+    gap: 8px;
 }
 
 /* ==========================================================================
-   Hero Mode Card (Classic Mode with Milestone Track)
+   Tactile 3D Beveled Unified Button Cards (.btn-3d-card)
    ========================================================================== */
-.hero-mode-card {
+.btn-3d-card {
+    appearance: none;
+    border: none;
+    text-align: left;
+    font: inherit;
     width: 100%;
-    background: linear-gradient(165deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.98) 100%);
-    border: 2px solid rgba(59, 130, 246, 0.45);
-    border-radius: 24px;
-    padding: 18px;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5), 0 0 25px rgba(59, 130, 246, 0.22);
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
     cursor: pointer;
     position: relative;
-    overflow: hidden;
-    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.1s ease, border-color 0.1s ease;
+}
+
+/* Hero Mode Card (Classic Mode) */
+.hero-mode-card {
+    background: linear-gradient(165deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.98) 100%);
+    border: 2px solid rgba(59, 130, 246, 0.45);
+    border-radius: 16px;
+    padding: 10px 12px;
+    box-shadow: 0 5px 0 #1D4ED8, 0 8px 16px rgba(0, 0, 0, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .hero-mode-card:hover {
-    transform: translateY(-3px) scale(1.015);
-    border-color: #3B82F6;
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6), 0 0 30px rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
+    border-color: #60A5FA;
+    box-shadow: 0 7px 0 #1D4ED8, 0 10px 20px rgba(59, 130, 246, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+}
+
+.hero-mode-card:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #1D4ED8, 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .hero-card-top-row {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     width: 100%;
 }
 
@@ -371,28 +392,28 @@ body {
 
 .art-block-cluster {
     display: grid;
-    grid-template-columns: repeat(2, 28px);
-    gap: 4px;
+    grid-template-columns: repeat(2, 22px);
+    gap: 3px;
     transform: rotate(-8deg) perspective(300px) rotateX(12deg);
-    filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
 }
 
 .art-cube {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
     position: relative;
 }
-.cube-1 { background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); box-shadow: inset 0 2px 0 #FCA5A5, 0 3px 0 #991B1B; }
-.cube-2 { background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); box-shadow: inset 0 2px 0 #93C5FD, 0 3px 0 #1E40AF; }
-.cube-3 { background: linear-gradient(135deg, #FBBF24 0%, #D97706 100%); box-shadow: inset 0 2px 0 #FDE68A, 0 3px 0 #B45309; }
-.cube-4 { background: linear-gradient(135deg, #10B981 0%, #059669 100%); box-shadow: inset 0 2px 0 #6EE7B7, 0 3px 0 #047857; }
+.cube-1 { background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); box-shadow: inset 0 2px 0 #FCA5A5, 0 2px 0 #991B1B; }
+.cube-2 { background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); box-shadow: inset 0 2px 0 #93C5FD, 0 2px 0 #1E40AF; }
+.cube-3 { background: linear-gradient(135deg, #FBBF24 0%, #D97706 100%); box-shadow: inset 0 2px 0 #FDE68A, 0 2px 0 #B45309; }
+.cube-4 { background: linear-gradient(135deg, #10B981 0%, #059669 100%); box-shadow: inset 0 2px 0 #6EE7B7, 0 2px 0 #047857; }
 
 .hero-card-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
 }
 
 .hero-card-header {
@@ -403,21 +424,22 @@ body {
 
 .hero-mode-title {
     font-family: 'Lilita One', 'Fredoka', sans-serif;
-    font-size: 24px;
+    font-size: 20px;
     letter-spacing: 1px;
     color: #FFFFFF;
+    margin: 0;
 }
 
 .badge-crown {
     background: rgba(251, 191, 36, 0.15);
     border: 1px solid rgba(251, 191, 36, 0.4);
-    border-radius: 12px;
-    padding: 3px 10px;
+    border-radius: 10px;
+    padding: 2px 8px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     font-family: 'Lilita One', 'Fredoka', sans-serif;
-    font-size: 15px;
+    font-size: 13px;
     color: #FBBF24;
     letter-spacing: 0.5px;
 }
@@ -426,14 +448,14 @@ body {
 .milestone-track {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
 }
 
 .milestone-track-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
     letter-spacing: 0.8px;
     color: #94A3B8;
@@ -441,25 +463,25 @@ body {
 
 .milestone-target {
     font-family: 'Lilita One', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     color: #FBBF24;
     letter-spacing: 0.5px;
 }
 
 .milestone-bar-bg {
     width: 100%;
-    height: 7px;
+    height: 6px;
     background: rgba(0, 0, 0, 0.45);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
+    border-radius: 5px;
     overflow: hidden;
 }
 
 .milestone-bar-fill {
     height: 100%;
-    border-radius: 6px;
+    border-radius: 5px;
     background: linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%);
-    box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
     transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -470,179 +492,89 @@ body {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 8px;
 }
 
 .secondary-mode-card {
     background: linear-gradient(165deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.98) 100%);
-    border: 2px solid rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border-radius: 20px;
-    padding: 16px 14px;
+    border-radius: 14px;
+    padding: 8px 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.15s ease, box-shadow 0.15s ease;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
-    position: relative;
-    overflow: hidden;
-}
-
-.secondary-mode-card:hover {
-    transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+    gap: 4px;
 }
 
 .card-adventure {
-    border-color: rgba(16, 185, 129, 0.4);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45), 0 0 16px rgba(16, 185, 129, 0.2);
+    border: 2px solid rgba(16, 185, 129, 0.45);
+    box-shadow: 0 4px 0 #047857, 0 6px 14px rgba(0, 0, 0, 0.45), inset 0 2px 0 rgba(255, 255, 255, 0.35);
 }
 .card-adventure:hover {
-    border-color: #10B981;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), 0 0 24px rgba(16, 185, 129, 0.4);
+    transform: translateY(-2px);
+    border-color: #34D399;
+    box-shadow: 0 6px 0 #047857, 0 8px 18px rgba(16, 185, 129, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+}
+.card-adventure:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #047857, 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .card-drop {
-    border-color: rgba(249, 115, 22, 0.4);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45), 0 0 16px rgba(249, 115, 22, 0.2);
+    border: 2px solid rgba(249, 115, 22, 0.45);
+    box-shadow: 0 4px 0 #C2410C, 0 6px 14px rgba(0, 0, 0, 0.45), inset 0 2px 0 rgba(255, 255, 255, 0.35);
 }
 .card-drop:hover {
-    border-color: #F97316;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), 0 0 24px rgba(249, 115, 22, 0.4);
+    transform: translateY(-2px);
+    border-color: #FB923C;
+    box-shadow: 0 6px 0 #C2410C, 0 8px 18px rgba(249, 115, 22, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+}
+.card-drop:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #C2410C, 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .secondary-card-icon-box {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 18px;
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .secondary-card-title {
     font-family: 'Lilita One', 'Fredoka', sans-serif;
-    font-size: 17px;
+    font-size: 14px;
     letter-spacing: 0.8px;
     color: #FFFFFF;
+    margin: 0;
 }
 
 .badge-star {
     background: rgba(16, 185, 129, 0.15);
     border: 1px solid rgba(16, 185, 129, 0.4);
-    border-radius: 10px;
-    padding: 3px 8px;
+    border-radius: 8px;
+    padding: 2px 6px;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     font-family: 'Lilita One', 'Fredoka', sans-serif;
-    font-size: 13px;
+    font-size: 11px;
     color: #34D399;
 }
 
 .badge-tag {
     background: rgba(249, 115, 22, 0.15);
     border: 1px solid rgba(249, 115, 22, 0.4);
-    border-radius: 10px;
-    padding: 3px 8px;
+    border-radius: 8px;
+    padding: 2px 6px;
     font-family: 'Lilita One', 'Fredoka', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 0.8px;
     color: #FB923C;
-}
-
-/* ==========================================================================
-   Tactile 3D Beveled "Juicy" Button System
-   ========================================================================== */
-.btn-3d {
-    appearance: none;
-    border: none;
-    border-radius: 14px;
-    font-family: 'Lilita One', 'Fredoka', sans-serif;
-    font-size: 20px;
-    letter-spacing: 1.5px;
-    color: #FFFFFF;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-    padding: 12px 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    position: relative;
-    transition: transform 0.08s ease, box-shadow 0.08s ease;
-}
-
-/* Primary Play Button */
-.btn-3d-play {
-    background: linear-gradient(180deg, #60A5FA 0%, #3B82F6 40%, #2563EB 100%);
-    box-shadow: 0 5px 0 #1D4ED8, 0 8px 18px rgba(37, 99, 235, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.45);
-}
-
-.btn-3d-play:hover {
-    background: linear-gradient(180deg, #93C5FD 0%, #3B82F6 40%, #1D4ED8 100%);
-}
-
-.btn-3d-play:active, .hero-mode-card:active .btn-3d-play {
-    transform: translateY(4px);
-    box-shadow: 0 1px 0 #1D4ED8, 0 3px 8px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-/* Secondary 3D Buttons (Adventure & Drop Mode) */
-.btn-3d-secondary {
-    font-size: 16px;
-    letter-spacing: 1px;
-    padding: 10px 16px;
-    border-radius: 12px;
-}
-
-.btn-3d-green {
-    background: linear-gradient(180deg, #34D399 0%, #10B981 40%, #059669 100%);
-    box-shadow: 0 5px 0 #047857, 0 8px 16px rgba(16, 185, 129, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.45);
-}
-.btn-3d-green:hover {
-    background: linear-gradient(180deg, #6EE7B7 0%, #10B981 40%, #047857 100%);
-}
-.btn-3d-green:active, .card-adventure:active .btn-3d-green {
-    transform: translateY(4px);
-    box-shadow: 0 1px 0 #047857, 0 3px 6px rgba(16, 185, 129, 0.3);
-}
-
-.btn-3d-orange {
-    background: linear-gradient(180deg, #FB923C 0%, #F97316 40%, #EA580C 100%);
-    box-shadow: 0 5px 0 #C2410C, 0 8px 16px rgba(249, 115, 22, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.45);
-}
-.btn-3d-orange:hover {
-    background: linear-gradient(180deg, #FDBA74 0%, #F97316 40%, #C2410C 100%);
-}
-.btn-3d-orange:active, .card-drop:active .btn-3d-orange {
-    transform: translateY(4px);
-    box-shadow: 0 1px 0 #C2410C, 0 3px 6px rgba(249, 115, 22, 0.3);
-}
-
-/* Idle Button Pulse / Breathing */
-@keyframes button-breathe {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.028);
-        box-shadow: 0 5px 0 #1D4ED8, 0 12px 24px rgba(59, 130, 246, 0.55), inset 0 2px 0 rgba(255, 255, 255, 0.5);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-.btn-breathe {
-    animation: button-breathe 2.2s ease-in-out infinite;
 }
 
 /* ==========================================================================
@@ -650,28 +582,31 @@ body {
    ========================================================================== */
 .daily-challenge-card {
     width: 100%;
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(45, 30, 20, 0.9) 100%);
-    border: 1.5px solid rgba(245, 158, 11, 0.35);
-    border-radius: 18px;
-    padding: 12px 14px;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.96) 0%, rgba(45, 30, 20, 0.92) 100%);
+    border: 2px solid rgba(245, 158, 11, 0.45);
+    border-radius: 14px;
+    padding: 7px 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    cursor: pointer;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-    transition: transform 0.15s ease, border-color 0.15s ease;
+    box-shadow: 0 4px 0 #92400E, 0 6px 14px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.35);
 }
 
 .daily-challenge-card:hover {
     transform: translateY(-2px);
-    border-color: #F59E0B;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45), 0 0 16px rgba(245, 158, 11, 0.3);
+    border-color: #FBBF24;
+    box-shadow: 0 6px 0 #92400E, 0 8px 16px rgba(245, 158, 11, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+}
+
+.daily-challenge-card:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #92400E, 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .daily-card-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .daily-calendar-badge {
@@ -681,47 +616,83 @@ body {
     justify-content: center;
     background: rgba(245, 158, 11, 0.15);
     border: 1px solid rgba(245, 158, 11, 0.4);
-    border-radius: 10px;
-    padding: 4px 8px;
+    border-radius: 8px;
+    padding: 3px 6px;
 }
 
 .daily-cal-icon {
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .daily-streak-text {
     font-family: 'Lilita One', sans-serif;
-    font-size: 10px;
+    font-size: 9px;
     color: #FBBF24;
     letter-spacing: 0.5px;
 }
 
 .daily-card-title {
     font-family: 'Lilita One', sans-serif;
-    font-size: 16px;
+    font-size: 14px;
     letter-spacing: 0.8px;
     color: #FFFFFF;
+    margin: 0;
 }
 
 .daily-reward-tag {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     color: #34D399;
 }
 
-.btn-3d-daily {
-    width: auto;
-    padding: 8px 18px;
+/* ==========================================================================
+   Integrated Card Action Pills (.card-play-pill)
+   ========================================================================== */
+.card-play-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    border-radius: 10px;
+    font-family: 'Lilita One', 'Fredoka', sans-serif;
     font-size: 15px;
     letter-spacing: 1px;
-    border-radius: 12px;
-    background: linear-gradient(180deg, #FBBF24 0%, #F59E0B 40%, #D97706 100%);
-    box-shadow: 0 4px 0 #92400E, 0 6px 12px rgba(245, 158, 11, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+    color: #FFFFFF;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    padding: 6px 12px;
+    box-sizing: border-box;
 }
 
-.btn-3d-daily:active, .daily-challenge-card:active .btn-3d-daily {
-    transform: translateY(3px);
-    box-shadow: 0 1px 0 #92400E;
+.pill-blue {
+    background: linear-gradient(180deg, #60A5FA 0%, #3B82F6 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.pill-green {
+    background: linear-gradient(180deg, #34D399 0%, #10B981 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    font-size: 13px;
+    padding: 4px 8px;
+}
+
+.pill-orange {
+    background: linear-gradient(180deg, #FB923C 0%, #F97316 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    font-size: 13px;
+    padding: 4px 8px;
+}
+
+.pill-gold {
+    background: linear-gradient(180deg, #FBBF24 0%, #F59E0B 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    width: auto;
+    font-size: 13px;
+    padding: 5px 14px;
+}
+
+.play-icon {
+    font-size: 11px;
 }
 
 /* Theme Quick Selector Strip */
