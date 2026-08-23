@@ -135,6 +135,9 @@ export class BlockBlastApp {
         );
 
         this.lastTime = performance.now();
+        this.particles.setCellTriggerCallback((stepIdx, combo) => {
+            this.audio.playSequentialCellPop(stepIdx, combo);
+        });
         this.init();
     }
 
@@ -461,15 +464,20 @@ export class BlockBlastApp {
             this.triggerHaptic('snap');
         }
 
-        // 2. Visual Effects: Sweeping Laser Waves & Domino Ripple Particle Bursts
+        // 2. Visual Effects: Sweeping Laser Waves, Domino Ripples & Cross-Intersections
         const { cellSize, gap } = this.renderer.boardMetrics;
         const shapeColor = result.shapePlaced.color;
 
         for (const r of result.rowsCleared) {
-            this.particles.addLineClearSweep('row', r, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap, shapeColor);
+            this.particles.addLineClearSweep('row', r, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap, shapeColor, result.comboCount);
         }
         for (const c of result.colsCleared) {
-            this.particles.addLineClearSweep('col', c, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap, shapeColor);
+            this.particles.addLineClearSweep('col', c, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap, shapeColor, result.comboCount);
+        }
+
+        // Multi-line cross intersections
+        if (result.rowsCleared.length > 0 && result.colsCleared.length > 0) {
+            this.particles.addCrossIntersections(result.rowsCleared, result.colsCleared, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap, result.comboCount);
         }
 
         // If no line clear occurred, burst gentle snap particles at placed cells

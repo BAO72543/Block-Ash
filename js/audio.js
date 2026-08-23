@@ -202,6 +202,38 @@ export class AudioManager {
     }
 
     /**
+     * Pitch-ascending domino micro-pop sound as sweeping laser passes each individual block
+     */
+    playSequentialCellPop(stepIndex = 0, comboCount = 0) {
+        if (this.isMuted) return;
+        this.ensureContext();
+        if (!this.ctx) return;
+
+        try {
+            const now = this.ctx.currentTime;
+            const comboPitch = this.solfegePitches[Math.min(comboCount, this.solfegePitches.length - 1)] || 261.63;
+            const stepFreq = comboPitch * (1 + (stepIndex % 8) * 0.09);
+
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(stepFreq, now);
+            osc.frequency.exponentialRampToValueAtTime(stepFreq * 1.06, now + 0.08);
+
+            const volume = 0.09 + Math.min(0.06, (stepIndex / 8) * 0.05);
+            gain.gain.setValueAtTime(volume, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.09);
+        } catch (e) {}
+    }
+
+    /**
      * Harmonic Arpeggiated Chords for Multi-Line Clears (Double, Triple, Quad)
      */
     playMultiClear(linesCount = 2) {
