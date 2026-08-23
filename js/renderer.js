@@ -124,7 +124,7 @@ export class GameRenderer {
             gap
         };
 
-        const dockY = boardY + boardSize + (padding * 0.7);
+        const dockY = boardY + boardSize + (sidePadding * 0.7);
         const dockWidth = boardSize;
         const slotGap = 10;
         const slotWidth = (dockWidth - slotGap * 2) / 3;
