@@ -101,10 +101,10 @@ export class GameRenderer {
         const isMobile = this.width < 640;
         const aspect = this.width / Math.max(1, this.height);
 
-        // Safety paddings from outer canvas boundaries
-        const sidePadding = isMobile ? 10 : 16;
-        const topPadding = isMobile ? 12 : 16;
-        const bottomPadding = isMobile ? 14 : 18;
+        // Safety paddings from outer canvas boundaries to guarantee shadow and glow bloom
+        const sidePadding = isMobile ? 14 : 22;
+        const topPadding = isMobile ? 14 : 20;
+        const bottomPadding = isMobile ? 16 : 22;
 
         // Side Dock Mode: used when the canvas is wide enough (aspect >= 1.08 and width >= 480)
         const isWide = (aspect >= 1.08 && this.width >= 480);
