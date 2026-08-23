@@ -147,9 +147,24 @@ export class BlockBlastApp {
         this.initSkinsGallery();
         this.showHomeScreen();
 
-        // Handle resize
+        // Handle comprehensive responsive resizing across all devices, ratios and fullscreen modes
         this.handleResize();
-        window.addEventListener('resize', () => this.handleResize());
+        ['resize', 'orientationchange', 'fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange'].forEach(evt => {
+            window.addEventListener(evt, () => {
+                this.handleResize();
+                setTimeout(() => this.handleResize(), 50);
+                setTimeout(() => this.handleResize(), 200);
+            });
+        });
+
+        // ResizeObserver directly on stage container & wrapper for zero-lag responsive adaptation
+        if (typeof window !== 'undefined' && window.ResizeObserver) {
+            const ro = new ResizeObserver(() => {
+                requestAnimationFrame(() => this.handleResize());
+            });
+            if (this.dom.stageContainer) ro.observe(this.dom.stageContainer);
+            if (this.dom.appWrapper) ro.observe(this.dom.appWrapper);
+        }
 
         // Start animation loop
         requestAnimationFrame((t) => this.gameLoop(t));
@@ -403,9 +418,11 @@ export class BlockBlastApp {
     handleResize() {
         if (!this.canvas) return;
         const container = this.canvas.parentElement;
-        const rect = container ? container.getBoundingClientRect() : null;
-        const w = (rect && rect.width > 50) ? rect.width : (container && container.clientWidth > 50 ? container.clientWidth : 500);
-        const h = (rect && rect.height > 50) ? rect.height : (container && container.clientHeight > 50 ? container.clientHeight : 640);
+        if (!container) return;
+
+        const rect = container.getBoundingClientRect();
+        const w = Math.round((rect && rect.width > 50) ? rect.width : (container.clientWidth > 50 ? container.clientWidth : 420));
+        const h = Math.round((rect && rect.height > 50) ? rect.height : (container.clientHeight > 50 ? container.clientHeight : 540));
         this.renderer.resize(w, h);
     }
 
