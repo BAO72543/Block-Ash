@@ -101,19 +101,19 @@ export class GameRenderer {
 
     computeLayout() {
         const isMobile = this.width < 640;
-        const sidePadding = isMobile ? 12 : 20;
-        const topPadding = isMobile ? 36 : 46;
+        const sidePadding = isMobile ? 10 : 16;
+        const topPadding = isMobile ? 24 : 32;
 
         const dockHeight = Math.min(160, Math.max(110, this.height * 0.22));
         const maxBoardWidth = this.width - sidePadding * 2;
-        const maxBoardHeight = this.height - dockHeight - topPadding - (isMobile ? 16 : 24);
+        const maxBoardHeight = this.height - dockHeight - topPadding - (isMobile ? 12 : 18);
 
-        // Ensure boardSize is strictly positive
-        const boardSize = Math.max(260, Math.min(maxBoardWidth, maxBoardHeight, 480));
+        // Scale board dynamically to fill the available canvas space!
+        const boardSize = Math.max(260, Math.min(maxBoardWidth, maxBoardHeight, 560));
         const boardX = Math.round((this.width - boardSize) / 2);
         const boardY = topPadding;
 
-        const gap = Math.max(2, Math.min(3, Math.round(boardSize / 150)));
+        const gap = Math.max(2, Math.min(4, Math.round(boardSize / 140)));
         const cellSize = Math.floor((boardSize - (gap * 9)) / 8);
 
         this.boardMetrics = {
@@ -124,11 +124,11 @@ export class GameRenderer {
             gap
         };
 
-        const dockY = boardY + boardSize + (sidePadding * 0.7);
+        const dockY = boardY + boardSize + (sidePadding * 0.75);
         const dockWidth = boardSize;
-        const slotGap = 10;
+        const slotGap = Math.max(8, Math.round(boardSize * 0.022));
         const slotWidth = (dockWidth - slotGap * 2) / 3;
-        const slotHeight = Math.min(dockHeight, 130);
+        const slotHeight = Math.min(dockHeight, 140);
 
         this.dockMetrics.slots = [];
         for (let i = 0; i < 3; i++) {
