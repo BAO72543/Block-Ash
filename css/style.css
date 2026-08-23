@@ -244,6 +244,155 @@ body {
     margin-top: 8px;
 }
 
+/* Home Layout: Leaderboard (Left) + Mode Selection (Right) */
+.home-layout {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    align-items: stretch;
+}
+
+.home-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    min-width: 0;
+}
+
+/* Fake Leaderboard Panel */
+.home-leaderboard {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: var(--radius-xl);
+    padding: 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: var(--shadow-subtle);
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+}
+
+.leaderboard-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 4px;
+}
+
+.leaderboard-icon {
+    font-size: 20px;
+}
+
+.leaderboard-title {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: var(--text-main);
+}
+
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-dim) transparent;
+}
+
+.leaderboard-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.leaderboard-list::-webkit-scrollbar-thumb {
+    background: var(--text-dim);
+    border-radius: 4px;
+}
+
+.leaderboard-entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.leaderboard-entry.player {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+}
+
+.leaderboard-rank {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-dim);
+    min-width: 22px;
+    text-align: center;
+}
+
+.leaderboard-entry.player .leaderboard-rank {
+    color: var(--accent-blue);
+}
+
+.leaderboard-rank.top-1 {
+    color: #FFD700;
+}
+
+.leaderboard-rank.top-2 {
+    color: #C0C0C0;
+}
+
+.leaderboard-rank.top-3 {
+    color: #CD7F32;
+}
+
+.leaderboard-name {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.leaderboard-entry.player .leaderboard-name {
+    color: var(--accent-blue);
+    font-weight: 800;
+}
+
+.leaderboard-score {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.leaderboard-entry.player .leaderboard-score {
+    color: var(--accent-blue);
+}
+
+.leaderboard-footer {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding-top: 8px;
+    border-top: 1px solid var(--card-border);
+}
+
 /* Responsive Home Cards */
 @media (max-width: 800px) {
     .mode-cards-grid {
@@ -251,6 +400,45 @@ body {
     }
     .home-title {
         font-size: 34px;
+    }
+    .home-layout {
+        grid-template-columns: 1fr;
+    }
+    .home-leaderboard {
+        max-height: 260px;
+    }
+}
+
+/* Square Screen Support (PlayGamma & similar 1:1 platforms) */
+@media (max-aspect-ratio: 1/1) {
+    .home-layout {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .home-leaderboard {
+        max-height: 240px;
+    }
+    .leaderboard-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .leaderboard-entry {
+        flex: 1 1 calc(50% - 6px);
+        min-width: 0;
+    }
+    .home-screen {
+        gap: 16px;
+        padding: 12px;
+    }
+    .home-main {
+        gap: 16px;
+    }
+    .mode-cards-grid {
+        gap: 12px;
+    }
+    .mode-card {
+        padding: 16px 14px;
     }
 }
 

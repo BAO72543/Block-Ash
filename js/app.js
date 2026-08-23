@@ -12,6 +12,27 @@ import { InputHandler } from './input.js';
 import { BlockBlastAI } from './ai.js';
 import { GAME_MODES, ModeManager, ADVENTURE_STAGES } from './modes.js';
 
+// Fake leaderboard data (mirrors blockblast_game/features/leaderboard.py)
+const FAKE_LEADERBOARD_PLAYERS = [
+    { name: 'NovaBlast', score: 48250 },
+    { name: 'PixelQueen', score: 43120 },
+    { name: 'BlockMaster', score: 39870 },
+    { name: 'GridGuru', score: 35460 },
+    { name: 'TetrisTitan', score: 32190 },
+    { name: 'CubeCrusher', score: 28740 },
+    { name: 'MegaMiner', score: 25430 },
+    { name: 'ShapeShifter', score: 22180 },
+    { name: 'LineLord', score: 19850 },
+    { name: 'BrickBaron', score: 16420 }
+];
+
+function buildFakeLeaderboard(playerScore) {
+    const combined = FAKE_LEADERBOARD_PLAYERS.map(p => ({ ...p, isPlayer: false }));
+    combined.push({ name: 'You', score: playerScore || 0, isPlayer: true });
+    combined.sort((a, b) => b.score - a.score);
+    return combined.map((entry, idx) => ({ ...entry, rank: idx + 1 }));
+}
+
 export class BlockBlastApp {
     constructor() {
         this.canvas = document.getElementById('game-canvas');
@@ -20,6 +41,7 @@ export class BlockBlastApp {
         this.audio = new SoundFX();
         this.renderer = new GameRenderer(this.canvas, this.gameState, this.particles);
         this.ai = new BlockBlastAI();
+        this.leaderboardList = document.getElementById('leaderboard-list');
 
         // Autoplay controller
         this.isAutoplayActive = false;
@@ -136,6 +158,39 @@ export class BlockBlastApp {
         if (this.dom.homeAdventureStage) {
             const progress = ModeManager.loadAdventureProgress();
             this.dom.homeAdventureStage.textContent = `Stage ${progress.unlockedStage || 1}`;
+        }
+
+        // Render the fake leaderboard with the player's current high score
+        this.renderLeaderboard();
+    }
+
+    renderLeaderboard() {
+        if (!this.leaderboardList) return;
+
+        const entries = buildFakeLeaderboard(this.gameState.highestScore || 0);
+        this.leaderboardList.innerHTML = '';
+
+        for (const entry of entries) {
+            const row = document.createElement('div');
+            row.className = `leaderboard-entry${entry.isPlayer ? ' player' : ''}`;
+
+            const rankClass = entry.rank === 1 ? ' top-1' : (entry.rank === 2 ? ' top-2' : (entry.rank === 3 ? ' top-3' : ''));
+            const rank = document.createElement('span');
+            rank.className = `leaderboard-rank${rankClass}`;
+            rank.textContent = entry.rank;
+
+            const name = document.createElement('span');
+            name.className = 'leaderboard-name';
+            name.textContent = entry.name;
+
+            const score = document.createElement('span');
+            score.className = 'leaderboard-score';
+            score.textContent = entry.score.toLocaleString();
+
+            row.appendChild(rank);
+            row.appendChild(name);
+            row.appendChild(score);
+            this.leaderboardList.appendChild(row);
         }
     }
 
