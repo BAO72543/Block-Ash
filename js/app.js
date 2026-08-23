@@ -599,9 +599,11 @@ export class BlockBlastApp {
             return true;
         }
 
-        // Upward arcing golden sparks towards top score zone on score gains
-        if (result.scoreGained > 0) {
-            this.particles.addScoreAbsorptionSparks(centerX, centerY, Math.min(10, 4 + Math.floor(result.scoreGained / 30)));
+        // Upward arcing golden sparks towards top score zone ONLY on line clear / combo
+        if (result.linesCleared >= 1 || result.comboCount >= 1) {
+            if (result.scoreGained > 0) {
+                this.particles.addScoreAbsorptionSparks(centerX, centerY, Math.min(10, 4 + Math.floor(result.scoreGained / 30)));
+            }
         }
 
         // High Score celebration
@@ -610,8 +612,8 @@ export class BlockBlastApp {
             this.particles.addConfettiBurst(this.renderer.width, this.renderer.height, 70);
         }
 
-        // Update UI Displays with juicy punch animations
-        this.updateScoreDisplays(result.scoreGained, result.combo);
+        // Update UI Displays (only scale when in combo or clear 1+ row)
+        this.updateScoreDisplays(result.scoreGained, result.comboCount, result.linesCleared);
         this.updateComboFeed();
         this.updateModeStatusBar();
 
@@ -1353,7 +1355,7 @@ export class BlockBlastApp {
         }
     }
 
-    updateScoreDisplays(pointsGained = 0, combo = 0) {
+    updateScoreDisplays(pointsGained = 0, combo = 0, linesCleared = 0) {
         if (this.dom.scoreHighest) this.dom.scoreHighest.textContent = this.gameState.highestScore.toLocaleString();
         if (this.dom.wingHighScore) this.dom.wingHighScore.textContent = this.gameState.highestScore.toLocaleString();
         if (this.dom.wingMaxCombo) this.dom.wingMaxCombo.textContent = this.gameState.stats?.maxComboStreak || this.gameState.comboCount || 0;
@@ -1362,8 +1364,18 @@ export class BlockBlastApp {
             this.dom.comboFlame.style.display = this.gameState.comboCount >= 2 ? 'inline' : 'none';
         }
 
-        // Trigger Juicy Punch & Sparkle on Score Increase
-        if (pointsGained > 0 || this.gameState.score > this.lastScore) {
+        if (this.gameState.score === 0) {
+            this.displayedScore = 0;
+            this.lastScore = 0;
+            this.celebratedNewBest = false;
+            if (this.dom.scoreCurrent) this.dom.scoreCurrent.textContent = '0';
+            return;
+        }
+
+        const isSpecialGain = (linesCleared >= 1 || combo >= 1 || this.gameState.comboCount >= 1);
+
+        if (isSpecialGain && (pointsGained > 0 || this.gameState.score > this.lastScore)) {
+            // SCALE PUNCH: Only triggers when clearing 1+ row/column or during combo streaks!
             const scoreEl = this.dom.scoreCurrent;
             const emblem = document.querySelector('.score-diamond-emblem');
             if (scoreEl) {
@@ -1390,11 +1402,13 @@ export class BlockBlastApp {
                 }, 480);
             }
             this.lastScore = this.gameState.score;
-        } else if (this.gameState.score === 0) {
-            this.displayedScore = 0;
-            this.lastScore = 0;
-            this.celebratedNewBest = false;
-            if (this.dom.scoreCurrent) this.dom.scoreCurrent.textContent = '0';
+        } else {
+            // NORMAL DRAG & DROP: Add score immediately like normal without scale punch!
+            this.displayedScore = this.gameState.score;
+            this.lastScore = this.gameState.score;
+            if (this.dom.scoreCurrent) {
+                this.dom.scoreCurrent.textContent = this.displayedScore.toLocaleString();
+            }
         }
     }
 
