@@ -103,7 +103,7 @@ export class BlockGameState {
             this.initDropMode();
         } else {
             // Generate 3 initial solvable pieces with DDA
-            this.currentShapes = generateValidShapes(this.grid, this.comboCount);
+            this.currentShapes = generateValidShapes(this.grid, this.comboCount, this.mode);
         }
 
         this.stats.gamesPlayed = (this.stats.gamesPlayed || 0) + 1;
@@ -144,7 +144,7 @@ export class BlockGameState {
             }
         }
 
-        this.currentShapes = generateValidShapes(this.grid, this.comboCount);
+        this.currentShapes = generateValidShapes(this.grid, this.comboCount, this.mode);
     }
 
     initDropMode() {
@@ -184,7 +184,7 @@ export class BlockGameState {
             }
         }
 
-        this.currentShapes = generateValidShapes(this.grid, this.comboCount);
+        this.currentShapes = generateValidShapes(this.grid, this.comboCount, this.mode);
     }
 
     initDailyChallenge() {
@@ -218,7 +218,7 @@ export class BlockGameState {
             };
         }
 
-        this.currentShapes = generateValidShapes(this.grid, this.comboCount);
+        this.currentShapes = generateValidShapes(this.grid, this.comboCount, this.mode);
     }
 
     pushRisingRow() {
@@ -432,7 +432,7 @@ export class BlockGameState {
         // 6. Generate new shapes via DDA if all 3 slots empty
         let newShapesGenerated = false;
         if (this.currentShapes.every(s => s === null)) {
-            this.currentShapes = generateValidShapes(this.grid, this.comboCount);
+            this.currentShapes = generateValidShapes(this.grid, this.comboCount, this.mode);
             newShapesGenerated = true;
         }
 
@@ -653,7 +653,7 @@ export class BlockGameState {
         }
 
         if (!canFitAny) {
-            this.currentShapes = generateValidShapes(this.grid, this.comboCount);
+            this.currentShapes = generateValidShapes(this.grid, this.comboCount, this.mode);
         }
 
         return {
