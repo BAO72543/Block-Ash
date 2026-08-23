@@ -469,3 +469,13 @@ export class SkinManager {
         return EFFECT_SKINS;
     }
 }
+
+// Backwards-compatible SKINS dictionary
+export const SKINS = BACKGROUND_SKINS.reduce((acc, bg, idx) => {
+    acc[bg.id] = {
+        ...bg,
+        palette: (PUZZLE_SKINS[idx % PUZZLE_SKINS.length] || PUZZLE_SKINS[0]).palette,
+        effects: EFFECT_SKINS[idx % EFFECT_SKINS.length] || EFFECT_SKINS[0]
+    };
+    return acc;
+}, {});

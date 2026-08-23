@@ -11,7 +11,7 @@ import { SoundFX } from './audio.js';
 import { InputHandler } from './input.js';
 import { BlockBlastAI } from './ai.js';
 import { GAME_MODES, ModeManager, DailyChallengeManager, ADVENTURE_STAGES } from './modes.js';
-import { SkinManager, SKINS } from './skins.js';
+import { SkinManager, BACKGROUND_SKINS, PUZZLE_SKINS, EFFECT_SKINS } from './skins.js';
 
 export class BlockBlastApp {
     constructor() {
