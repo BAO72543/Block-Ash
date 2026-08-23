@@ -41,39 +41,45 @@ export class BlockGameState {
         this.highestScore = this.loadHighScore();
         this.stats = this.loadStats();
 
-        // Initialize skin palette
-        const initialSkinId = SkinManager.loadSelectedSkinId();
-        const initialSkin = SkinManager.getSkin(initialSkinId);
-        if (initialSkin && initialSkin.palette) {
-            setActiveColorPalette(initialSkin.palette);
+        // Initialize puzzle skin palette
+        const config = SkinManager.loadConfig();
+        const initialPuzzle = SkinManager.getPuzzle(config.puzzle);
+        if (initialPuzzle && initialPuzzle.palette) {
+            setActiveColorPalette(initialPuzzle.palette);
         }
 
         this.reset();
     }
 
-    applySkin(skinId) {
-        const skin = SkinManager.getSkin(skinId);
-        if (!skin) return;
+    applyPuzzleSkin(puzzleSkin) {
+        if (typeof puzzleSkin === 'string') {
+            puzzleSkin = SkinManager.getPuzzle(puzzleSkin);
+        }
+        if (!puzzleSkin || !puzzleSkin.palette) return;
 
-        setActiveColorPalette(skin.palette);
+        setActiveColorPalette(puzzleSkin.palette);
 
-        // Update currently held shapes in tray with palette
+        // Update currently held shapes in tray with new palette
         if (this.currentShapes) {
             this.currentShapes.forEach(shape => {
-                if (shape && skin.palette.length > 0) {
-                    shape.color = skin.palette[Math.floor(Math.random() * skin.palette.length)];
+                if (shape && puzzleSkin.palette.length > 0) {
+                    shape.color = puzzleSkin.palette[Math.floor(Math.random() * puzzleSkin.palette.length)];
                 }
             });
         }
 
-        // Update placed blocks on grid
+        // Update placed blocks on grid with new palette
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 if (this.grid && this.grid[r] && this.grid[r][c] !== 0) {
-                    this.grid[r][c] = skin.palette[Math.floor(Math.random() * skin.palette.length)];
+                    this.grid[r][c] = puzzleSkin.palette[Math.floor(Math.random() * puzzleSkin.palette.length)];
                 }
             }
         }
+    }
+
+    applySkin(skinId) {
+        this.applyPuzzleSkin(skinId);
     }
 
     reset() {

@@ -358,19 +358,59 @@
         </div>
     </div>
 
-    <!-- Skins & Visual Themes Gallery Modal -->
+    <!-- 3-Section Modular Skins & Visual Customizer Modal -->
     <div class="modal-backdrop" id="skins-modal" style="display: none;">
         <div class="modal-card skins-modal-card">
             <div class="skins-modal-header">
                 <div>
-                    <h2 class="modal-title" style="margin-bottom: 2px;">🎨 SKINS & THEMES</h2>
-                    <p class="skins-modal-subtitle">Customize shape colors, solid background, and particle effects</p>
+                    <h2 class="modal-title" style="margin-bottom: 2px;">🎨 CUSTOMIZE SKINS</h2>
+                    <p class="skins-modal-subtitle">Mix & match solid backgrounds, puzzle block colors, and animations</p>
                 </div>
-                <button class="btn-skins-close" id="btn-close-skins" title="Close Skins Gallery">&times;</button>
+                <button class="btn-skins-close" id="btn-close-skins" title="Close Customizer">&times;</button>
             </div>
 
-            <div class="skins-gallery-grid" id="skins-gallery-grid">
-                <!-- Dynamically populated 10 rich visual skin cards -->
+            <!-- 3 Category Navigation Tabs -->
+            <div class="skins-nav-tabs">
+                <button class="skins-tab-btn active" data-tab="bg" id="tab-skin-bg">
+                    <span>🖼️ Background</span>
+                </button>
+                <button class="skins-tab-btn" data-tab="puzzle" id="tab-skin-puzzle">
+                    <span>🧩 Puzzle Blocks</span>
+                </button>
+                <button class="skins-tab-btn" data-tab="effect" id="tab-skin-effect">
+                    <span>✨ Animation & FX</span>
+                </button>
+            </div>
+
+            <!-- Current Selection Summary Bar -->
+            <div class="skins-active-summary" id="skins-active-summary">
+                <div class="summary-pill"><span class="lbl">BG:</span> <span id="summary-bg-name">Classic Crimson</span></div>
+                <div class="summary-pill"><span class="lbl">Puzzle:</span> <span id="summary-puzzle-name">Amber Wood</span></div>
+                <div class="summary-pill"><span class="lbl">FX:</span> <span id="summary-effect-name">Golden Sparks</span></div>
+            </div>
+
+            <!-- Tab Panels Container -->
+            <div class="skins-tab-panels">
+                <!-- 1. Background Section Panel -->
+                <div class="skins-panel active" id="panel-skin-bg">
+                    <div class="skins-gallery-grid" id="grid-skin-bg">
+                        <!-- Populated with solid background cards -->
+                    </div>
+                </div>
+
+                <!-- 2. Puzzle Shape Colors Panel -->
+                <div class="skins-panel" id="panel-skin-puzzle" style="display: none;">
+                    <div class="skins-gallery-grid" id="grid-skin-puzzle">
+                        <!-- Populated with block palette cards -->
+                    </div>
+                </div>
+
+                <!-- 3. Animation & Particle FX Panel -->
+                <div class="skins-panel" id="panel-skin-effect" style="display: none;">
+                    <div class="skins-gallery-grid" id="grid-skin-effect">
+                        <!-- Populated with particle FX cards -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>

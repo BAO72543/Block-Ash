@@ -108,7 +108,18 @@ export class BlockBlastApp {
             btnSkins: document.getElementById('btn-skins'),
             skinsModal: document.getElementById('skins-modal'),
             btnCloseSkins: document.getElementById('btn-close-skins'),
-            skinsGalleryGrid: document.getElementById('skins-gallery-grid')
+            tabSkinBg: document.getElementById('tab-skin-bg'),
+            tabSkinPuzzle: document.getElementById('tab-skin-puzzle'),
+            tabSkinEffect: document.getElementById('tab-skin-effect'),
+            panelSkinBg: document.getElementById('panel-skin-bg'),
+            panelSkinPuzzle: document.getElementById('panel-skin-puzzle'),
+            panelSkinEffect: document.getElementById('panel-skin-effect'),
+            gridSkinBg: document.getElementById('grid-skin-bg'),
+            gridSkinPuzzle: document.getElementById('grid-skin-puzzle'),
+            gridSkinEffect: document.getElementById('grid-skin-effect'),
+            summaryBgName: document.getElementById('summary-bg-name'),
+            summaryPuzzleName: document.getElementById('summary-puzzle-name'),
+            summaryEffectName: document.getElementById('summary-effect-name')
         };
 
         this.input = new InputHandler(
@@ -255,6 +266,9 @@ export class BlockBlastApp {
                 this.closeSkinsModal();
             });
         }
+        if (this.dom.tabSkinBg) this.dom.tabSkinBg.addEventListener('click', () => this.switchSkinsTab('bg'));
+        if (this.dom.tabSkinPuzzle) this.dom.tabSkinPuzzle.addEventListener('click', () => this.switchSkinsTab('puzzle'));
+        if (this.dom.tabSkinEffect) this.dom.tabSkinEffect.addEventListener('click', () => this.switchSkinsTab('effect'));
 
         // Mode Tabs
         if (this.dom.tabModeClassic) {
@@ -1029,36 +1043,100 @@ export class BlockBlastApp {
     }
 
     initSkinsGallery() {
-        const activeSkinId = SkinManager.loadSelectedSkinId();
-        this.applySkin(activeSkinId, false);
+        const config = SkinManager.loadConfig();
+        this.selectBackgroundSkin(config.bg, false);
+        this.selectPuzzleSkin(config.puzzle, false);
+        this.selectEffectSkin(config.effect, false);
         this.renderSkinsGallery();
     }
 
-    renderSkinsGallery() {
-        if (!this.dom.skinsGalleryGrid) return;
-        const currentSkinId = SkinManager.loadSelectedSkinId();
-        const allSkins = SkinManager.getAllSkins();
+    switchSkinsTab(tabKey) {
+        this.audio.playHover();
+        const tabs = [
+            { key: 'bg', btn: this.dom.tabSkinBg, panel: this.dom.panelSkinBg },
+            { key: 'puzzle', btn: this.dom.tabSkinPuzzle, panel: this.dom.panelSkinPuzzle },
+            { key: 'effect', btn: this.dom.tabSkinEffect, panel: this.dom.panelSkinEffect }
+        ];
 
-        this.dom.skinsGalleryGrid.innerHTML = '';
-        allSkins.forEach(skin => {
-            const isEquipped = skin.id === currentSkinId;
+        tabs.forEach(t => {
+            if (t.btn) t.btn.classList.toggle('active', t.key === tabKey);
+            if (t.panel) {
+                t.panel.style.display = t.key === tabKey ? 'block' : 'none';
+                t.panel.classList.toggle('active', t.key === tabKey);
+            }
+        });
+    }
+
+    renderSkinsGallery() {
+        this.renderBackgroundTab();
+        this.renderPuzzleTab();
+        this.renderEffectTab();
+        this.updateSkinsSummary();
+    }
+
+    renderBackgroundTab() {
+        if (!this.dom.gridSkinBg) return;
+        const config = SkinManager.loadConfig();
+        const backgrounds = SkinManager.getAllBackgrounds();
+
+        this.dom.gridSkinBg.innerHTML = '';
+        backgrounds.forEach(bg => {
+            const isEquipped = bg.id === config.bg;
             const card = document.createElement('div');
             card.className = `skin-card ${isEquipped ? 'active' : ''}`;
-            card.setAttribute('data-skin-id', skin.id);
+            card.setAttribute('data-bg-id', bg.id);
 
-            // 5 color swatch dots
-            const swatchesHtml = skin.palette.slice(0, 5).map(c => 
-                `<span class="skin-dot" style="background: ${c.hex}; box-shadow: 0 0 8px ${c.hex}88;"></span>`
+            card.innerHTML = `
+                <div class="skin-card-header">
+                    <div class="skin-preview-chip" style="background: ${bg.bg}; border: 1.5px solid ${bg.dockBorder};">
+                        <div class="skin-mini-shape" style="background: ${bg.boardBg}; border: 1px solid rgba(255,255,255,0.2);"></div>
+                    </div>
+                    <div class="skin-card-info">
+                        <div class="skin-card-name">${bg.name}</div>
+                        <div class="skin-card-desc">${bg.desc}</div>
+                    </div>
+                </div>
+                <div class="skin-card-footer">
+                    <span class="skin-chip-tag" style="background: ${bg.bg}; color: #FFFFFF;">${bg.bg}</span>
+                    <button class="btn-skin-action ${isEquipped ? 'equipped' : ''}">
+                        ${isEquipped ? 'EQUIPPED' : 'SELECT'}
+                    </button>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                this.audio.playPop();
+                this.selectBackgroundSkin(bg.id);
+            });
+
+            this.dom.gridSkinBg.appendChild(card);
+        });
+    }
+
+    renderPuzzleTab() {
+        if (!this.dom.gridSkinPuzzle) return;
+        const config = SkinManager.loadConfig();
+        const puzzles = SkinManager.getAllPuzzles();
+
+        this.dom.gridSkinPuzzle.innerHTML = '';
+        puzzles.forEach(p => {
+            const isEquipped = p.id === config.puzzle;
+            const card = document.createElement('div');
+            card.className = `skin-card ${isEquipped ? 'active' : ''}`;
+            card.setAttribute('data-puzzle-id', p.id);
+
+            const swatchesHtml = p.palette.slice(0, 5).map(c => 
+                `<span class="skin-dot" style="background: ${c.hex}; box-shadow: 0 0 6px ${c.hex}88;"></span>`
             ).join('');
 
             card.innerHTML = `
                 <div class="skin-card-header">
-                    <div class="skin-preview-chip" style="background: ${skin.bg}; border: 1.5px solid ${skin.dockBorder};">
-                        <div class="skin-mini-shape" style="background: ${skin.palette[0].hex};"></div>
+                    <div class="skin-preview-chip" style="background: #111827; border: 1.5px solid rgba(255,255,255,0.15);">
+                        <div class="skin-mini-shape" style="background: ${p.palette[0].hex}; box-shadow: inset 1px 1px 0 rgba(255,255,255,0.4);"></div>
                     </div>
                     <div class="skin-card-info">
-                        <div class="skin-card-name">${skin.name}</div>
-                        <div class="skin-card-desc">${skin.description}</div>
+                        <div class="skin-card-name">${p.name}</div>
+                        <div class="skin-card-desc">${p.desc}</div>
                     </div>
                 </div>
                 <div class="skin-card-footer">
@@ -1073,11 +1151,122 @@ export class BlockBlastApp {
 
             card.addEventListener('click', () => {
                 this.audio.playPop();
-                this.applySkin(skin.id);
+                this.selectPuzzleSkin(p.id);
             });
 
-            this.dom.skinsGalleryGrid.appendChild(card);
+            this.dom.gridSkinPuzzle.appendChild(card);
         });
+    }
+
+    renderEffectTab() {
+        if (!this.dom.gridSkinEffect) return;
+        const config = SkinManager.loadConfig();
+        const effects = SkinManager.getAllEffects();
+
+        this.dom.gridSkinEffect.innerHTML = '';
+        effects.forEach(eff => {
+            const isEquipped = eff.id === config.effect;
+            const card = document.createElement('div');
+            card.className = `skin-card ${isEquipped ? 'active' : ''}`;
+            card.setAttribute('data-effect-id', eff.id);
+
+            const shapeIcon = eff.particleShape === 'star' ? '⭐' :
+                              eff.particleShape === 'diamond' ? '🔷' :
+                              eff.particleShape === 'circle' ? '⚪' : '◼️';
+
+            const swatchesHtml = eff.particleColors.slice(0, 4).map(c => 
+                `<span class="skin-dot" style="background: ${c}; box-shadow: 0 0 6px ${c}88;"></span>`
+            ).join('');
+
+            card.innerHTML = `
+                <div class="skin-card-header">
+                    <div class="skin-preview-chip" style="background: #111827; border: 1.5px solid rgba(255,255,255,0.15);">
+                        <span style="font-size: 16px;">${shapeIcon}</span>
+                    </div>
+                    <div class="skin-card-info">
+                        <div class="skin-card-name">${eff.name}</div>
+                        <div class="skin-card-desc">${eff.desc}</div>
+                    </div>
+                </div>
+                <div class="skin-card-footer">
+                    <div class="skin-swatches-row">
+                        ${swatchesHtml}
+                    </div>
+                    <button class="btn-skin-action ${isEquipped ? 'equipped' : ''}">
+                        ${isEquipped ? 'EQUIPPED' : 'SELECT'}
+                    </button>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                this.audio.playPop();
+                this.selectEffectSkin(eff.id);
+            });
+
+            this.dom.gridSkinEffect.appendChild(card);
+        });
+    }
+
+    selectBackgroundSkin(bgId, save = true) {
+        const bg = SkinManager.getBackground(bgId);
+        if (!bg) return;
+
+        if (save) SkinManager.saveConfig('bg', bg.id);
+        this.renderer.applyBackgroundSkin(bg);
+
+        // Update solid background CSS variables and body background
+        document.documentElement.style.setProperty('--bg-color', bg.bg);
+        document.documentElement.style.setProperty('--card-bg', bg.boardBg);
+        document.documentElement.style.setProperty('--score-color', bg.scoreColor || '#A3E635');
+        document.documentElement.style.setProperty('--diamond-color', bg.diamondColor || '#F59E0B');
+        document.body.style.backgroundColor = bg.bg;
+
+        this.renderBackgroundTab();
+        this.updateSkinsSummary();
+    }
+
+    selectPuzzleSkin(puzzleId, save = true) {
+        const puzzle = SkinManager.getPuzzle(puzzleId);
+        if (!puzzle) return;
+
+        if (save) SkinManager.saveConfig('puzzle', puzzle.id);
+        this.gameState.applyPuzzleSkin(puzzle);
+
+        // Update home screen display swatches
+        if (this.dom.homeActiveSwatch) {
+            const dots = this.dom.homeActiveSwatch.querySelectorAll('.swatch-dot');
+            if (dots.length >= 3 && puzzle.palette.length >= 3) {
+                dots[0].style.backgroundColor = puzzle.palette[0].hex;
+                dots[1].style.backgroundColor = puzzle.palette[1].hex;
+                dots[2].style.backgroundColor = puzzle.palette[2].hex;
+            }
+        }
+
+        this.renderPuzzleTab();
+        this.updateSkinsSummary();
+    }
+
+    selectEffectSkin(effectId, save = true) {
+        const effect = SkinManager.getEffect(effectId);
+        if (!effect) return;
+
+        if (save) SkinManager.saveConfig('effect', effect.id);
+        this.particles.setSkinEffects(effect);
+
+        this.renderEffectTab();
+        this.updateSkinsSummary();
+    }
+
+    updateSkinsSummary() {
+        const config = SkinManager.loadConfig();
+        const bg = SkinManager.getBackground(config.bg);
+        const puzzle = SkinManager.getPuzzle(config.puzzle);
+        const effect = SkinManager.getEffect(config.effect);
+
+        if (this.dom.summaryBgName) this.dom.summaryBgName.textContent = bg.name;
+        if (this.dom.summaryPuzzleName) this.dom.summaryPuzzleName.textContent = puzzle.name;
+        if (this.dom.summaryEffectName) this.dom.summaryEffectName.textContent = effect.name;
+        if (this.dom.homeActiveSkinName) this.dom.homeActiveSkinName.textContent = `${bg.name} + ${puzzle.name}`;
     }
 
     openSkinsModal() {
@@ -1093,41 +1282,6 @@ export class BlockBlastApp {
             this.dom.skinsModal.classList.remove('active');
             this.dom.skinsModal.style.display = 'none';
         }
-    }
-
-    applySkin(skinId, playSound = true) {
-        const skin = SkinManager.getSkin(skinId);
-        if (!skin) return;
-
-        SkinManager.saveSelectedSkinId(skin.id);
-        this.renderer.setTheme(skin.id);
-        this.gameState.applySkin(skin.id);
-
-        // Apply solid atmospheric background and CSS variables
-        document.documentElement.style.setProperty('--bg-color', skin.bg);
-        document.documentElement.style.setProperty('--card-bg', skin.boardBg);
-        document.documentElement.style.setProperty('--score-color', skin.scoreColor);
-        document.documentElement.style.setProperty('--diamond-color', skin.diamondColor);
-        document.body.style.backgroundColor = skin.bg;
-
-        // Update home screen display
-        if (this.dom.homeActiveSkinName) {
-            this.dom.homeActiveSkinName.textContent = skin.name;
-        }
-        if (this.dom.homeActiveSwatch) {
-            const dots = this.dom.homeActiveSwatch.querySelectorAll('.swatch-dot');
-            if (dots.length >= 3 && skin.palette.length >= 3) {
-                dots[0].style.backgroundColor = skin.palette[0].hex;
-                dots[1].style.backgroundColor = skin.palette[1].hex;
-                dots[2].style.backgroundColor = skin.palette[2].hex;
-            }
-        }
-
-        this.renderSkinsGallery();
-    }
-
-    changeTheme(themeKey) {
-        this.applySkin(themeKey);
     }
 
     openStatsModal() {

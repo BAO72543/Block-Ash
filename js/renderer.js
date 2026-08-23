@@ -29,8 +29,9 @@ export class GameRenderer {
         // Animation State
         this.snapBack = null; // { shapeIdx, shape, startX, startY, targetX, targetY, startTime, duration }
 
-        // Theme configuration
-        this.currentTheme = SkinManager.loadSelectedSkinId();
+        // Background Skin configuration
+        const config = SkinManager.loadConfig();
+        this.currentBgSkin = SkinManager.getBackground(config.bg);
 
         this.width = 0;
         this.height = 0;
@@ -49,25 +50,30 @@ export class GameRenderer {
         this.pulsePhase = 0;
     }
 
-    setTheme(themeName) {
-        const skin = SkinManager.getSkin(themeName);
-        this.currentTheme = skin.id;
-        if (this.particles && skin.effects) {
-            this.particles.setSkinEffects(skin.effects);
+    applyBackgroundSkin(bgSkin) {
+        if (typeof bgSkin === 'string') {
+            bgSkin = SkinManager.getBackground(bgSkin);
+        }
+        if (bgSkin) {
+            this.currentBgSkin = bgSkin;
         }
     }
 
+    setTheme(themeName) {
+        this.applyBackgroundSkin(themeName);
+    }
+
     getTheme() {
-        const skin = SkinManager.getSkin(this.currentTheme);
+        const bgSkin = this.currentBgSkin || SkinManager.getBackground(SkinManager.DEFAULT_BG);
         return {
-            name: skin.name,
-            bg: skin.bg,
-            boardBg: skin.boardBg,
-            cellEmpty: skin.cellEmpty,
-            dockBg: skin.dockBg,
-            dockBorder: skin.dockBorder,
-            gridLines: skin.boardBg,
-            hintGlow: skin.diamondColor,
+            name: bgSkin.name,
+            bg: bgSkin.bg,
+            boardBg: bgSkin.boardBg,
+            cellEmpty: bgSkin.cellEmpty,
+            dockBg: bgSkin.dockBg,
+            dockBorder: bgSkin.dockBorder,
+            gridLines: bgSkin.boardBg,
+            hintGlow: bgSkin.diamondColor || '#F59E0B',
             validGhost: 'rgba(255, 255, 255, 0.45)',
             invalidGhost: 'rgba(239, 68, 68, 0.45)'
         };
