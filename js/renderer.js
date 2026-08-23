@@ -82,14 +82,14 @@ export class GameRenderer {
     resize(containerWidth, containerHeight) {
         this.dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
         
-        const fallbackW = this.canvas && this.canvas.parentElement ? this.canvas.parentElement.clientWidth : 500;
-        const fallbackH = this.canvas && this.canvas.parentElement ? this.canvas.parentElement.clientHeight : 640;
+        const fallbackW = this.canvas && this.canvas.parentElement ? this.canvas.parentElement.clientWidth : 420;
+        const fallbackH = this.canvas && this.canvas.parentElement ? this.canvas.parentElement.clientHeight : 540;
 
-        const w = (containerWidth && containerWidth > 50) ? containerWidth : (fallbackW > 50 ? fallbackW : 500);
-        const h = (containerHeight && containerHeight > 50) ? containerHeight : (fallbackH > 50 ? fallbackH : 640);
+        const w = (containerWidth && containerWidth > 50) ? containerWidth : (fallbackW > 50 ? fallbackW : 420);
+        const h = (containerHeight && containerHeight > 50) ? containerHeight : (fallbackH > 50 ? fallbackH : 540);
 
-        this.width = Math.max(320, w);
-        this.height = Math.max(520, h);
+        this.width = Math.round(w);
+        this.height = Math.round(h);
 
         this.canvas.width = Math.round(this.width * this.dpr);
         this.canvas.height = Math.round(this.height * this.dpr);
@@ -101,19 +101,20 @@ export class GameRenderer {
 
     computeLayout() {
         const isMobile = this.width < 640;
-        const sidePadding = isMobile ? 10 : 14;
-        const topPadding = isMobile ? 20 : 26;
+        const sidePadding = isMobile ? 10 : 16;
+        const topPadding = isMobile ? 18 : 24;
 
-        const dockHeight = Math.min(145, Math.max(100, this.height * 0.22));
+        // Dynamic dock height proportional to available height
+        const dockHeight = Math.min(150, Math.max(90, Math.round(this.height * 0.23)));
         const maxBoardWidth = this.width - sidePadding * 2;
-        const maxBoardHeight = this.height - dockHeight - topPadding - (isMobile ? 10 : 14);
+        const maxBoardHeight = this.height - dockHeight - topPadding - (isMobile ? 12 : 18);
 
-        // Scale board with comfortable dimensions that fit cleanly above persistent ads
-        const boardSize = Math.max(250, Math.min(maxBoardWidth, maxBoardHeight, 430));
+        // Maximize board size cleanly within available container bounds
+        const boardSize = Math.max(220, Math.min(maxBoardWidth, maxBoardHeight, 520));
         const boardX = Math.round((this.width - boardSize) / 2);
         const boardY = topPadding;
 
-        const gap = Math.max(2, Math.min(3, Math.round(boardSize / 145)));
+        const gap = Math.max(2, Math.min(3, Math.round(boardSize / 140)));
         const cellSize = Math.floor((boardSize - (gap * 9)) / 8);
 
         this.boardMetrics = {
@@ -126,9 +127,9 @@ export class GameRenderer {
 
         const dockY = boardY + boardSize + (sidePadding * 0.7);
         const dockWidth = boardSize;
-        const slotGap = Math.max(7, Math.round(boardSize * 0.022));
+        const slotGap = Math.max(6, Math.round(boardSize * 0.022));
         const slotWidth = (dockWidth - slotGap * 2) / 3;
-        const slotHeight = Math.min(dockHeight, 125);
+        const slotHeight = Math.min(dockHeight, Math.round(dockHeight * 0.95));
 
         this.dockMetrics.slots = [];
         for (let i = 0; i < 3; i++) {

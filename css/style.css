@@ -1038,8 +1038,9 @@ body {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    width: 100%;
+    max-width: 480px;
     height: 100%;
-    max-height: calc(100vh - 170px);
 }
 
 /* Canvas Game Stage: Clean Proportions with Zero Bottom Ad Overlap */
@@ -1053,10 +1054,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    height: min(490px, calc(100vh - 175px));
-    width: min(390px, calc((100vh - 175px) * 0.8));
-    aspect-ratio: 4 / 5.1;
+    width: 100%;
+    max-width: 460px;
+    height: min(560px, calc(100vh - 165px));
+    aspect-ratio: 4 / 5.2;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
