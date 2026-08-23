@@ -10,58 +10,90 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="assets/icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Fredoka:wght@600;700;800;900&family=Outfit:wght@600;700;800;900&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-theme="neon-dark">
     <div class="app-wrapper">
-        <!-- 1. Home Menu Title Screen (Mode Selection) -->
+        <!-- 1. Home Menu Title Screen (Mobile-First Arcade Interface) -->
         <div class="home-screen" id="home-screen">
+            <!-- Top HUD Bar: Circular Corner Controls -->
+            <div class="home-top-bar">
+                <button class="btn-3d-circle" id="home-btn-sound" title="Toggle Sound">
+                    <span class="btn-circle-icon">🔊</span>
+                </button>
+                <div class="home-top-title-mini">BLOCK PUZZLE</div>
+                <button class="btn-3d-circle" id="home-btn-stats" title="Game Statistics">
+                    <span class="btn-circle-icon">📊</span>
+                </button>
+            </div>
+
+            <!-- Header Zone: 3D Chunky Game Logo -->
             <div class="home-hero">
-                <div class="home-logo-badge">⚡</div>
-                <h1 class="home-title">BLOCK BLAST</h1>
-                <p class="home-subtitle">Choose a Game Mode to Play</p>
-            </div>
-
-            <!-- Mode Selection Cards Grid -->
-            <div class="mode-cards-grid">
-                <!-- 1. Classic Mode -->
-                <div class="mode-card" id="btn-play-classic">
-                    <div>
-                        <div class="mode-card-icon" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">♾️</div>
-                        <h3 class="mode-card-title" style="margin-top: 12px;">Classic Mode</h3>
-                        <p class="mode-card-desc">Endless puzzle challenge. Keep the 8×8 grid clear and accumulate high scores.</p>
-                        <div class="mode-card-badge">Best Score: <span id="home-classic-score">0</span></div>
+                <div class="home-logo-container">
+                    <div class="home-logo-blocks">
+                        <span class="mini-block b-red"></span>
+                        <span class="mini-block b-blue"></span>
+                        <span class="mini-block b-yellow"></span>
+                        <span class="mini-block b-green"></span>
                     </div>
-                    <button class="btn btn-primary mode-play-btn">Play Classic &rarr;</button>
-                </div>
-
-                <!-- 2. Adventure Mode -->
-                <div class="mode-card" id="btn-play-adventure">
-                    <div>
-                        <div class="mode-card-icon" style="background: linear-gradient(135deg, #10B981, #047857);">🗺️</div>
-                        <h3 class="mode-card-title" style="margin-top: 12px;">Adventure Mode</h3>
-                        <p class="mode-card-desc">Embark on level quests. Collect embedded Gems, Puzzle Pieces, and Stars.</p>
-                        <div class="mode-card-badge">Progress: <span id="home-adventure-stage">Stage 1</span></div>
-                    </div>
-                    <button class="btn btn-accent mode-play-btn">Play Adventure &rarr;</button>
-                </div>
-
-                <!-- 3. Drop Mode -->
-                <div class="mode-card" id="btn-play-drop">
-                    <div>
-                        <div class="mode-card-icon" style="background: linear-gradient(135deg, #F59E0B, #DC2626);">⚡</div>
-                        <h3 class="mode-card-title" style="margin-top: 12px;">Drop Mode</h3>
-                        <p class="mode-card-desc">Survival challenge! Inverted block stacks rise from the bottom every 3 moves.</p>
-                        <div class="mode-card-badge">Rising Stack Tension</div>
-                    </div>
-                    <button class="btn btn-primary mode-play-btn" style="background: #F97316;">Survive Drop &rarr;</button>
+                    <h1 class="home-arcade-title">BLOCK<br><span class="title-highlight">BLAST!</span></h1>
                 </div>
             </div>
 
-            <!-- Home Footer Quick Options -->
-            <div class="home-footer-options">
-                <button class="btn" id="home-btn-stats"><span class="icon">📊</span> Statistics</button>
-                <button class="btn" id="home-btn-sound"><span class="icon">🔊</span> Sound</button>
+            <!-- Mode Selection Menu: Primary Hero Card + Secondary 2-Tile Grid -->
+            <div class="home-modes-container">
+                <!-- HERO CARD: Classic Mode -->
+                <div class="hero-mode-card" id="btn-play-classic">
+                    <div class="hero-card-art">
+                        <div class="art-block-cluster">
+                            <div class="art-cube cube-1"></div>
+                            <div class="art-cube cube-2"></div>
+                            <div class="art-cube cube-3"></div>
+                            <div class="art-cube cube-4"></div>
+                        </div>
+                    </div>
+                    <div class="hero-card-info">
+                        <div class="hero-card-header">
+                            <h2 class="hero-mode-title">CLASSIC</h2>
+                            <div class="badge-crown">
+                                <span class="badge-crown-icon">👑</span>
+                                <span id="home-classic-score">0</span>
+                            </div>
+                        </div>
+                        <button class="btn-3d btn-3d-play btn-breathe">PLAY</button>
+                    </div>
+                </div>
+
+                <!-- SECONDARY ROW: Adventure & Drop Mode -->
+                <div class="secondary-modes-grid">
+                    <!-- Adventure Mode Tile -->
+                    <div class="secondary-mode-card card-adventure" id="btn-play-adventure">
+                        <div class="secondary-card-icon-box">
+                            <div class="art-gem-icon">💎</div>
+                        </div>
+                        <div class="secondary-card-title">ADVENTURE</div>
+                        <div class="badge-star">
+                            <span class="badge-star-icon">⭐</span>
+                            <span id="home-adventure-stage">Stage 1</span>
+                        </div>
+                        <button class="btn-3d btn-3d-secondary btn-3d-green">START</button>
+                    </div>
+
+                    <!-- Drop Mode Tile -->
+                    <div class="secondary-mode-card card-drop" id="btn-play-drop">
+                        <div class="secondary-card-icon-box">
+                            <div class="art-drop-icon">⚡</div>
+                        </div>
+                        <div class="secondary-card-title">DROP MODE</div>
+                        <div class="badge-tag">
+                            <span>RISING</span>
+                        </div>
+                        <button class="btn-3d btn-3d-secondary btn-3d-orange">START</button>
+                    </div>
+                </div>
             </div>
         </div>
 

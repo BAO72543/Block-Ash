@@ -140,7 +140,8 @@ export class BlockBlastApp {
     }
 
     enterGameWithMode(mode) {
-        this.audio.playButton();
+        this.audio.playPop();
+        this.triggerHaptic('snap');
         if (this.dom.homeScreen) this.dom.homeScreen.style.display = 'none';
         if (this.dom.gameplayView) this.dom.gameplayView.style.display = 'block';
 
@@ -149,6 +150,14 @@ export class BlockBlastApp {
     }
 
     setupEventListeners() {
+        // Tactile Hover Audio for 3D Arcade Cards and Buttons
+        const hoverElements = document.querySelectorAll('.hero-mode-card, .secondary-mode-card, .btn-3d-circle, .btn-3d');
+        hoverElements.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                this.audio.playHover();
+            });
+        });
+
         // Home Screen Buttons
         if (this.dom.btnPlayClassic) {
             this.dom.btnPlayClassic.addEventListener('click', () => this.enterGameWithMode(GAME_MODES.CLASSIC));
@@ -161,13 +170,13 @@ export class BlockBlastApp {
         }
         if (this.dom.btnReturnHome) {
             this.dom.btnReturnHome.addEventListener('click', () => {
-                this.audio.playButton();
+                this.audio.playPop();
                 this.showHomeScreen();
             });
         }
         if (this.dom.homeBtnStats) {
             this.dom.homeBtnStats.addEventListener('click', () => {
-                this.audio.playButton();
+                this.audio.playPop();
                 this.openStatsModal();
             });
         }
