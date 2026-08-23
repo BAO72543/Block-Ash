@@ -849,9 +849,10 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 2px 4px;
+    padding: 0 4px;
     gap: 8px;
     flex-shrink: 0;
+    margin-bottom: 2px;
 }
 
 .hud-left-best {
@@ -861,7 +862,7 @@ body {
     background: rgba(0, 0, 0, 0.35);
     border: 1.5px solid rgba(251, 191, 36, 0.4);
     border-radius: 12px;
-    padding: 4px 10px;
+    padding: 5px 12px;
     font-family: 'Lilita One', 'Fredoka', sans-serif;
     font-size: 16px;
     color: #FBBF24;
@@ -870,62 +871,19 @@ body {
 }
 
 .crown-icon {
-    font-size: 17px;
+    font-size: 18px;
     filter: drop-shadow(0 2px 4px rgba(251, 191, 36, 0.6));
 }
 
-.hud-center-title {
-    display: flex;
-    align-items: center;
-}
-
-.hud-mode-name {
-    font-family: 'Lilita One', 'Fredoka', sans-serif;
-    font-size: 13px;
-    letter-spacing: 2px;
-    color: rgba(255, 255, 255, 0.4);
-    text-transform: uppercase;
-}
-
-.hud-right-actions {
-    display: flex;
-    gap: 6px;
-}
-
-.btn-hud-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 11px;
-    background: linear-gradient(180deg, #334155 0%, #1E293B 100%);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 3px 0 #0F172A, inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    cursor: pointer;
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
-}
-
-.btn-hud-icon:hover {
-    background: linear-gradient(180deg, #475569 0%, #334155 100%);
-}
-
-.btn-hud-icon:active {
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 #0F172A;
-}
-
-/* Giant Hero Score Area (Centered Focus) */
-.hero-score-zone {
+/* Centered Giant Score Zone at Top Header */
+.hud-center-score-zone {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     position: relative;
-    margin: 0;
-    gap: 2px;
-    flex-shrink: 0;
+    margin: 0 auto;
+    gap: 0px;
 }
 
 .score-diamond-emblem {
@@ -933,17 +891,17 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px 18px;
+    padding: 2px 14px;
 }
 
 .diamond-shape {
     position: absolute;
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     background: linear-gradient(135deg, #FBBF24 0%, #D97706 100%);
     transform: rotate(45deg);
-    border-radius: 7px;
-    box-shadow: 0 0 20px rgba(251, 191, 36, 0.7);
+    border-radius: 6px;
+    box-shadow: 0 0 18px rgba(251, 191, 36, 0.7);
     opacity: 0.85;
     z-index: 0;
 }
@@ -958,6 +916,78 @@ body {
     color: #A3E635;
     text-shadow: 0 4px 0 #15803D, 0 8px 16px rgba(0, 0, 0, 0.6);
     filter: drop-shadow(0 0 12px rgba(163, 230, 53, 0.55));
+}
+
+.hud-right-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-hud-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #334155 0%, #1E293B 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 3px 0 #0F172A, inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-hud-icon:hover {
+    background: linear-gradient(180deg, #475569 0%, #334155 100%);
+}
+
+.btn-hud-icon:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #0F172A;
+}
+
+/* Mode Objectives Status Card in Side Wing */
+.wing-mode-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 1.5px solid rgba(245, 158, 11, 0.35);
+    border-radius: var(--radius-lg);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    animation: fadeIn 0.25s ease-out;
+}
+
+.wing-mode-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.wing-mode-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status-goal-row, .status-moves-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-goal {
+    color: #FDE047;
+}
+
+.status-moves {
+    color: #60A5FA;
 }
 
 /* Combo Streak Pill */

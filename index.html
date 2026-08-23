@@ -139,16 +139,24 @@
 
         <!-- 2. Active Gameplay View (Initially Hidden until mode is selected) -->
         <div class="gameplay-view" id="gameplay-view" style="display: none; width: 100%;">
-            <!-- In-Game Header -->
-            <!-- In-Game HUD: Top Bar with High Score Crown on Left, Return Home on Right -->
+            <!-- Top In-Game Header: Crown on Left, Giant Score in Center, Home on Right -->
             <header class="game-hud-top-bar">
-                <div class="hud-left-best">
+                <div class="hud-left-best" title="Best High Score">
                     <span class="crown-icon">👑</span>
                     <span class="best-score-val" id="high-score">0</span>
                 </div>
 
-                <div class="hud-center-title">
-                    <span class="hud-mode-name" id="hud-current-mode-label">CLASSIC</span>
+                <!-- Centered Giant Score Counter (Pushed directly to top!) -->
+                <div class="hud-center-score-zone">
+                    <div class="score-diamond-emblem">
+                        <div class="diamond-shape"></div>
+                        <span class="giant-score-val" id="current-score">0</span>
+                    </div>
+                    <!-- Combo Streak Badge -->
+                    <div class="combo-pill" id="combo-badge" style="display: none;">
+                        <span id="combo-flame" style="display: none;">🔥</span>
+                        <span>COMBO <span id="combo-count">0</span></span>
+                    </div>
                 </div>
 
                 <div class="hud-right-actions">
@@ -157,29 +165,6 @@
                     </button>
                 </div>
             </header>
-
-            <!-- Giant Hero Score Area (Centered Focus) -->
-            <div class="hero-score-zone">
-                <div class="score-diamond-emblem">
-                    <div class="diamond-shape"></div>
-                    <span class="giant-score-val" id="current-score">0</span>
-                </div>
-                <!-- Combo Streak Badge -->
-                <div class="combo-pill" id="combo-badge" style="display: none;">
-                    <span id="combo-flame" style="display: none;">🔥</span>
-                    <span>COMBO <span id="combo-count">0</span></span>
-                </div>
-            </div>
-
-            <!-- Mode Objectives / Status HUD Bar (Adventure Mode) -->
-            <div class="mode-status-bar" id="mode-status-bar" style="display: none;">
-                <div class="status-content" id="mode-status-content">
-                    <span class="status-badge" id="mode-stage-badge">Stage 1</span>
-                    <span class="status-goal" id="mode-goal-text">Goals: Collect 4 Gems</span>
-                    <span class="status-moves" id="mode-moves-text">Moves Left: 16</span>
-                </div>
-                <button class="btn btn-sm" id="btn-open-stage-map" style="padding: 4px 10px; font-size: 11px;">Stage Map</button>
-            </div>
 
         <!-- Main Clean Gameplay Layout (Centered Board Hero + Side Quick Actions) -->
         <main class="main-content-wide">
@@ -190,8 +175,24 @@
                 </div>
             </section>
 
-            <!-- Flanking Side: Quick Actions & AI Speed -->
+            <!-- Flanking Side: Mode Objectives & Quick Actions -->
             <aside class="game-wing-right">
+                <!-- Mode Objectives / Status HUD Card (Adventure, Drop Mode, Daily) moved to Side -->
+                <div class="panel-card wing-mode-card" id="mode-status-bar" style="display: none;">
+                    <div class="wing-mode-header">
+                        <span class="status-badge" id="mode-stage-badge">Stage 1</span>
+                        <button class="btn btn-sm" id="btn-open-stage-map" style="padding: 3px 8px; font-size: 11px;">🗺️ Map</button>
+                    </div>
+                    <div class="wing-mode-details">
+                        <div class="status-goal-row">
+                            <span class="status-goal" id="mode-goal-text">Goals: Collect 4 Gems</span>
+                        </div>
+                        <div class="status-moves-row">
+                            <span class="status-moves" id="mode-moves-text">Moves: 16</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="panel-card wing-card">
                     <h2 class="panel-title">⚡ Quick Actions</h2>
                     <div class="controls-grid-wing">

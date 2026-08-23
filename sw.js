@@ -5,7 +5,7 @@
  * while still supporting 100% offline play when disconnected from network.
  */
 
-const CACHE_NAME = 'blockblast-v18';
+const CACHE_NAME = 'blockblast-v19';
 const STATIC_ASSETS = [
     './',
     './index.html',

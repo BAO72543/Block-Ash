@@ -101,16 +101,17 @@ export class GameRenderer {
 
     computeLayout() {
         const isMobile = this.width < 640;
-        const padding = isMobile ? 12 : 20;
+        const sidePadding = isMobile ? 12 : 20;
+        const topPadding = isMobile ? 36 : 46;
 
         const dockHeight = Math.min(160, Math.max(110, this.height * 0.22));
-        const maxBoardWidth = this.width - padding * 2;
-        const maxBoardHeight = this.height - dockHeight - padding * 2.5;
+        const maxBoardWidth = this.width - sidePadding * 2;
+        const maxBoardHeight = this.height - dockHeight - topPadding - (isMobile ? 16 : 24);
 
         // Ensure boardSize is strictly positive
         const boardSize = Math.max(260, Math.min(maxBoardWidth, maxBoardHeight, 480));
         const boardX = Math.round((this.width - boardSize) / 2);
-        const boardY = padding;
+        const boardY = topPadding;
 
         const gap = Math.max(2, Math.min(3, Math.round(boardSize / 150)));
         const cellSize = Math.floor((boardSize - (gap * 9)) / 8);

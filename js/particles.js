@@ -250,11 +250,12 @@ export class ParticleSystem {
         const font = options.font || `900 ${fontSize}px Outfit, Inter, sans-serif`;
         const shadow = options.shadow || (isGold ? '#78350F' : 'rgba(0, 0, 0, 0.7)');
 
+        const safeY = Math.max(32, y);
         this.floatingTexts.push({
             text,
             x,
-            y,
-            vy: options.vy || -2.8,
+            y: safeY,
+            vy: options.vy || -2.4,
             alpha: 1.0,
             scale: 0.35,
             targetScale: isGold ? 1.35 : 1.15,
