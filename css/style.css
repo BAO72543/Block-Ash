@@ -464,6 +464,188 @@ body {
 }
 
 /* ==========================================================================
+   Secondary Mode Cards (Adventure & Drop Mode Grid)
+   ========================================================================== */
+.secondary-modes-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.secondary-mode-card {
+    background: linear-gradient(165deg, rgba(30, 41, 59, 0.96) 0%, rgba(15, 23, 42, 0.98) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+    position: relative;
+    overflow: hidden;
+}
+
+.secondary-mode-card:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
+}
+
+.card-adventure {
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45), 0 0 16px rgba(16, 185, 129, 0.2);
+}
+.card-adventure:hover {
+    border-color: #10B981;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), 0 0 24px rgba(16, 185, 129, 0.4);
+}
+
+.card-drop {
+    border-color: rgba(249, 115, 22, 0.4);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45), 0 0 16px rgba(249, 115, 22, 0.2);
+}
+.card-drop:hover {
+    border-color: #F97316;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), 0 0 24px rgba(249, 115, 22, 0.4);
+}
+
+.secondary-card-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.secondary-card-title {
+    font-family: 'Lilita One', 'Fredoka', sans-serif;
+    font-size: 17px;
+    letter-spacing: 0.8px;
+    color: #FFFFFF;
+}
+
+.badge-star {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 10px;
+    padding: 3px 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Lilita One', 'Fredoka', sans-serif;
+    font-size: 13px;
+    color: #34D399;
+}
+
+.badge-tag {
+    background: rgba(249, 115, 22, 0.15);
+    border: 1px solid rgba(249, 115, 22, 0.4);
+    border-radius: 10px;
+    padding: 3px 8px;
+    font-family: 'Lilita One', 'Fredoka', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.8px;
+    color: #FB923C;
+}
+
+/* ==========================================================================
+   Tactile 3D Beveled "Juicy" Button System
+   ========================================================================== */
+.btn-3d {
+    appearance: none;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Lilita One', 'Fredoka', sans-serif;
+    font-size: 20px;
+    letter-spacing: 1.5px;
+    color: #FFFFFF;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    padding: 12px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+/* Primary Play Button */
+.btn-3d-play {
+    background: linear-gradient(180deg, #60A5FA 0%, #3B82F6 40%, #2563EB 100%);
+    box-shadow: 0 5px 0 #1D4ED8, 0 8px 18px rgba(37, 99, 235, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+}
+
+.btn-3d-play:hover {
+    background: linear-gradient(180deg, #93C5FD 0%, #3B82F6 40%, #1D4ED8 100%);
+}
+
+.btn-3d-play:active, .hero-mode-card:active .btn-3d-play {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #1D4ED8, 0 3px 8px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Secondary 3D Buttons (Adventure & Drop Mode) */
+.btn-3d-secondary {
+    font-size: 16px;
+    letter-spacing: 1px;
+    padding: 10px 16px;
+    border-radius: 12px;
+}
+
+.btn-3d-green {
+    background: linear-gradient(180deg, #34D399 0%, #10B981 40%, #059669 100%);
+    box-shadow: 0 5px 0 #047857, 0 8px 16px rgba(16, 185, 129, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+}
+.btn-3d-green:hover {
+    background: linear-gradient(180deg, #6EE7B7 0%, #10B981 40%, #047857 100%);
+}
+.btn-3d-green:active, .card-adventure:active .btn-3d-green {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #047857, 0 3px 6px rgba(16, 185, 129, 0.3);
+}
+
+.btn-3d-orange {
+    background: linear-gradient(180deg, #FB923C 0%, #F97316 40%, #EA580C 100%);
+    box-shadow: 0 5px 0 #C2410C, 0 8px 16px rgba(249, 115, 22, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+}
+.btn-3d-orange:hover {
+    background: linear-gradient(180deg, #FDBA74 0%, #F97316 40%, #C2410C 100%);
+}
+.btn-3d-orange:active, .card-drop:active .btn-3d-orange {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 #C2410C, 0 3px 6px rgba(249, 115, 22, 0.3);
+}
+
+/* Idle Button Pulse / Breathing */
+@keyframes button-breathe {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.028);
+        box-shadow: 0 5px 0 #1D4ED8, 0 12px 24px rgba(59, 130, 246, 0.55), inset 0 2px 0 rgba(255, 255, 255, 0.5);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.btn-breathe {
+    animation: button-breathe 2.2s ease-in-out infinite;
+}
+
+/* ==========================================================================
    Daily Challenge Banner Card
    ========================================================================== */
 .daily-challenge-card {
