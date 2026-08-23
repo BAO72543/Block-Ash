@@ -172,9 +172,10 @@ export class GameRenderer {
             // ==========================================
             // PORTRAIT / MOBILE / SQUARE RATIO: BOTTOM DOCK
             // ==========================================
+            const bottomSafetyPadding = isMobile ? 14 : 20;
             const dockHeight = estBottomDockH;
             const maxBoardWidth = this.width - sidePadding * 2;
-            const maxBoardHeight = this.height - dockHeight - topPadding - (isMobile ? 10 : 16);
+            const maxBoardHeight = this.height - dockHeight - topPadding - bottomSafetyPadding;
 
             const boardSize = Math.max(200, Math.min(maxBoardWidth, maxBoardHeight, 650));
             const boardX = Math.round((this.width - boardSize) / 2);
@@ -191,7 +192,8 @@ export class GameRenderer {
                 gap
             };
 
-            const dockY = boardY + boardSize + (sidePadding * 0.65);
+            const remainingSpace = Math.max(0, this.height - (boardY + boardSize) - dockHeight - (isMobile ? 8 : 12));
+            const dockY = boardY + boardSize + (sidePadding * 0.65) + Math.round(remainingSpace * 0.3);
             const dockWidth = boardSize;
             const slotGap = Math.max(6, Math.round(boardSize * 0.022));
             const slotWidth = (dockWidth - slotGap * 2) / 3;
