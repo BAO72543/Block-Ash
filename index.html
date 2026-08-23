@@ -28,28 +28,23 @@
     <div class="app-wrapper">
         <!-- 1. Home Menu Title Screen (Mobile-First Arcade Interface) -->
         <div class="home-screen" id="home-screen">
-            <!-- Top HUD Bar: Circular Corner Controls -->
+            <!-- Top HUD Bar: Sound Button + Compact 3D Logo + Stats Button -->
             <div class="home-top-bar">
                 <button class="btn-3d-circle" id="home-btn-sound" title="Toggle Sound">
                     <span class="btn-circle-icon">🔊</span>
                 </button>
-                <div class="home-top-title-mini">BLOCK PUZZLE</div>
-                <button class="btn-3d-circle" id="home-btn-stats" title="Game Statistics">
-                    <span class="btn-circle-icon">📊</span>
-                </button>
-            </div>
-
-            <!-- Header Zone: 3D Chunky Game Logo -->
-            <div class="home-hero">
-                <div class="home-logo-container">
-                    <div class="home-logo-blocks">
+                <div class="home-logo-compact">
+                    <div class="home-logo-blocks-mini">
                         <span class="mini-block b-red"></span>
                         <span class="mini-block b-blue"></span>
                         <span class="mini-block b-yellow"></span>
                         <span class="mini-block b-green"></span>
                     </div>
-                    <h1 class="home-arcade-title">BLOCK<br><span class="title-highlight">BLAST!</span></h1>
+                    <h1 class="home-arcade-title-compact">BLOCK <span class="title-highlight">BLAST!</span></h1>
                 </div>
+                <button class="btn-3d-circle" id="home-btn-stats" title="Game Statistics">
+                    <span class="btn-circle-icon">📊</span>
+                </button>
             </div>
 
             <!-- Mode Selection Menu: Primary Hero Card + Secondary 2-Tile Grid + Daily Banner -->
