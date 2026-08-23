@@ -1008,42 +1008,36 @@ body {
     animation: pulse-flame 1.5s infinite alternate;
 }
 
-/* Main Clean Gameplay Layout: Center Board Hero + Flanking Side Wings */
+/* Main Clean Gameplay Layout: Center Stage (Giant Board + Side Dock) & Flanking Quick Actions */
 .main-content-wide {
-    display: grid;
-    grid-template-columns: 200px auto 200px;
-    align-items: center;
-    justify-items: center;
+    display: flex;
     justify-content: center;
-    gap: 16px;
+    align-items: center;
+    gap: 20px;
     width: 100%;
-    max-width: 960px;
+    max-width: 1060px;
     flex: 1;
     min-height: 0;
     margin: 0 auto;
 }
 
-/* Left Wing Spacer: Balances the right wing for true 100% center alignment */
 .game-wing-left-spacer {
-    width: 200px;
-    visibility: hidden;
-    pointer-events: none;
+    display: none;
 }
 
 /* Center Hero Column */
 .game-center-column {
-    grid-column: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    width: 100%;
-    max-width: 480px;
+    flex: 1;
+    max-width: 780px;
     height: 100%;
+    min-height: 0;
 }
 
-/* Canvas Game Stage: Clean Proportions with Zero Bottom Ad Overlap */
+/* Canvas Game Stage: Expands to fit giant board + side selection dock on widescreen */
 .game-stage-container {
     position: relative;
     background: var(--card-bg);
@@ -1055,9 +1049,8 @@ body {
     align-items: center;
     justify-content: center;
     width: 100%;
-    max-width: 460px;
-    height: min(560px, calc(100vh - 165px));
-    aspect-ratio: 4 / 5.2;
+    max-width: 760px;
+    height: min(580px, calc(100vh - 160px));
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
@@ -1071,7 +1064,6 @@ body {
 
 /* Flanking Quick Actions Wing */
 .game-wing-right {
-    grid-column: 3;
     width: 200px;
     display: flex;
     flex-direction: column;
