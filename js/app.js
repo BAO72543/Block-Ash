@@ -77,6 +77,7 @@ export class BlockBlastApp {
             btnNextStage: document.getElementById('btn-next-stage'),
             btnHint: document.getElementById('btn-hint'),
             btnAutoplay: document.getElementById('btn-autoplay'),
+            aiSpeedContainer: document.getElementById('ai-speed-container'),
             btnSound: document.getElementById('btn-sound'),
             btnRestart: document.getElementById('btn-restart'),
             btnStats: document.getElementById('btn-stats'),
@@ -686,6 +687,18 @@ export class BlockBlastApp {
     updateModeStatusBar() {
         if (!this.dom.modeStatusBar) return;
 
+        // Show/Hide AI controls based on game mode:
+        // AI option is completely disabled & removed in Adventure and Drop Mode
+        const isAiSupportedMode = (this.gameState.mode === GAME_MODES.CLASSIC);
+        if (this.dom.btnHint) this.dom.btnHint.style.display = isAiSupportedMode ? 'flex' : 'none';
+        if (this.dom.btnAutoplay) this.dom.btnAutoplay.style.display = isAiSupportedMode ? 'flex' : 'none';
+        if (this.dom.aiSpeedContainer) this.dom.aiSpeedContainer.style.display = isAiSupportedMode ? 'block' : 'none';
+
+        if (!isAiSupportedMode) {
+            if (this.isAutoplayActive) this.stopAutoplay();
+            this.renderer.aiHint = null;
+        }
+
         if (this.gameState.mode === GAME_MODES.ADVENTURE) {
             this.dom.modeStatusBar.style.display = 'flex';
             if (this.dom.modeStageBadge) this.dom.modeStageBadge.textContent = `Stage ${this.gameState.stageId}`;
@@ -1011,6 +1024,8 @@ export class BlockBlastApp {
 
     toggleHint() {
         if (this.gameState.gameOver) return;
+        // AI option is disabled in Adventure and Drop Mode
+        if (this.gameState.mode !== GAME_MODES.CLASSIC) return;
 
         if (this.renderer.aiHint) {
             this.renderer.aiHint = null;
@@ -1028,6 +1043,12 @@ export class BlockBlastApp {
     }
 
     toggleAutoplay() {
+        // AI option is disabled in Adventure and Drop Mode
+        if (this.gameState.mode !== GAME_MODES.CLASSIC) {
+            this.stopAutoplay();
+            return;
+        }
+
         if (this.isAutoplayActive) {
             this.stopAutoplay();
         } else {
