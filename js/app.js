@@ -135,6 +135,11 @@ export class BlockBlastApp {
         );
 
         this.lastTime = performance.now();
+        this.displayedScore = 0;
+        this.lastScore = 0;
+        this.scoreTickTimer = 0;
+        this.celebratedNewBest = false;
+
         this.particles.setCellTriggerCallback((stepIdx, combo) => {
             this.audio.playSequentialCellPop(stepIdx, combo);
         });
@@ -594,14 +599,19 @@ export class BlockBlastApp {
             return true;
         }
 
+        // Upward arcing golden sparks towards top score zone on score gains
+        if (result.scoreGained > 0) {
+            this.particles.addScoreAbsorptionSparks(centerX, centerY, Math.min(10, 4 + Math.floor(result.scoreGained / 30)));
+        }
+
         // High Score celebration
         if (result.isNewRecord && !this.celebratedNewRecord) {
             this.celebratedNewRecord = true;
             this.particles.addConfettiBurst(this.renderer.width, this.renderer.height, 70);
         }
 
-        // Update UI Displays
-        this.updateScoreDisplays();
+        // Update UI Displays with juicy punch animations
+        this.updateScoreDisplays(result.scoreGained, result.combo);
         this.updateComboFeed();
         this.updateModeStatusBar();
 
@@ -1343,14 +1353,48 @@ export class BlockBlastApp {
         }
     }
 
-    updateScoreDisplays() {
-        if (this.dom.scoreCurrent) this.dom.scoreCurrent.textContent = this.gameState.score.toLocaleString();
+    updateScoreDisplays(pointsGained = 0, combo = 0) {
         if (this.dom.scoreHighest) this.dom.scoreHighest.textContent = this.gameState.highestScore.toLocaleString();
         if (this.dom.wingHighScore) this.dom.wingHighScore.textContent = this.gameState.highestScore.toLocaleString();
         if (this.dom.wingMaxCombo) this.dom.wingMaxCombo.textContent = this.gameState.stats?.maxComboStreak || this.gameState.comboCount || 0;
         if (this.dom.comboCurrent) this.dom.comboCurrent.textContent = this.gameState.comboCount;
         if (this.dom.comboFlame) {
             this.dom.comboFlame.style.display = this.gameState.comboCount >= 2 ? 'inline' : 'none';
+        }
+
+        // Trigger Juicy Punch & Sparkle on Score Increase
+        if (pointsGained > 0 || this.gameState.score > this.lastScore) {
+            const scoreEl = this.dom.scoreCurrent;
+            const emblem = document.querySelector('.score-diamond-emblem');
+            if (scoreEl) {
+                const animClass = (combo >= 3 || this.gameState.comboCount >= 3) ? 'score-punch-fire' : 'score-punch';
+                scoreEl.classList.remove('score-punch', 'score-punch-fire', 'score-new-best');
+                if (emblem) emblem.classList.remove('score-punch', 'score-punch-fire');
+
+                // Force reflow for crisp animation replay
+                void scoreEl.offsetWidth;
+                scoreEl.classList.add(animClass);
+                if (emblem) emblem.classList.add(animClass);
+
+                // High score overtake celebration
+                const oldHigh = this.gameState.highestScore;
+                if (this.gameState.score > oldHigh && oldHigh > 0 && !this.celebratedNewBest) {
+                    this.celebratedNewBest = true;
+                    scoreEl.classList.add('score-new-best');
+                    this.particles.addConfettiBurst(this.renderer.width, this.renderer.height, 40);
+                }
+
+                setTimeout(() => {
+                    scoreEl.classList.remove('score-punch', 'score-punch-fire', 'score-new-best');
+                    if (emblem) emblem.classList.remove('score-punch', 'score-punch-fire');
+                }, 480);
+            }
+            this.lastScore = this.gameState.score;
+        } else if (this.gameState.score === 0) {
+            this.displayedScore = 0;
+            this.lastScore = 0;
+            this.celebratedNewBest = false;
+            if (this.dom.scoreCurrent) this.dom.scoreCurrent.textContent = '0';
         }
     }
 
@@ -1378,6 +1422,29 @@ export class BlockBlastApp {
         // Auto-correct if canvas had uninitialized dimensions
         if (this.renderer.width < 100 || this.renderer.height < 100) {
             this.handleResize();
+        }
+
+        // Smooth rolling odometer score animation with audio tick
+        if (this.displayedScore !== this.gameState.score) {
+            const diff = this.gameState.score - this.displayedScore;
+            const step = Math.max(1, Math.ceil(Math.abs(diff) * 0.22));
+            if (diff > 0) {
+                this.displayedScore = Math.min(this.gameState.score, this.displayedScore + step);
+            } else {
+                this.displayedScore = Math.max(this.gameState.score, this.displayedScore - step);
+            }
+
+            if (this.dom.scoreCurrent) {
+                this.dom.scoreCurrent.textContent = this.displayedScore.toLocaleString();
+            }
+
+            // Audio tick while counting up
+            this.scoreTickTimer = (this.scoreTickTimer || 0) + dt;
+            if (this.scoreTickTimer > 45 && diff > 0) {
+                this.scoreTickTimer = 0;
+                const pitch = 0.8 + (Math.min(diff, 500) / 500) * 0.8;
+                this.audio.playScoreTick(pitch);
+            }
         }
 
         this.particles.update(dt);

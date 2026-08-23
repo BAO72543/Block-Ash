@@ -423,6 +423,32 @@ export class AudioManager {
             osc.stop(now + 0.02);
         } catch (e) {}
     }
+
+    playScoreTick(pitchScale = 1.0) {
+        if (this.isMuted) return;
+        this.ensureContext();
+        if (!this.ctx) return;
+
+        try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'sine';
+            const baseFreq = 880 * Math.min(2.0, Math.max(0.6, pitchScale));
+            osc.frequency.setValueAtTime(baseFreq, now);
+            osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.15, now + 0.03);
+
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            osc.start(now);
+            osc.stop(now + 0.03);
+        } catch (e) {}
+    }
 }
 
 export { AudioManager as SoundFX };

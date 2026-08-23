@@ -888,6 +888,7 @@ body {
     position: relative;
     margin: 0 auto;
     gap: 2px;
+    perspective: 800px;
 }
 
 .score-diamond-emblem {
@@ -895,31 +896,79 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2px 20px;
+    padding: 2px 24px;
+    user-select: none;
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .diamond-shape {
     position: absolute;
-    width: 44px;
-    height: 44px;
-    background: linear-gradient(135deg, #FBBF24 0%, #D97706 100%);
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #FDE047 0%, #F59E0B 50%, #D97706 100%);
     transform: rotate(45deg);
-    border-radius: 8px;
-    box-shadow: 0 0 24px rgba(251, 191, 36, 0.85);
-    opacity: 0.9;
+    border-radius: 10px;
+    box-shadow: 0 0 28px rgba(251, 191, 36, 0.95), inset 0 2px 6px rgba(255, 255, 255, 0.7);
+    opacity: 0.95;
     z-index: 0;
+    animation: diamondFloat 3s ease-in-out infinite alternate;
+}
+
+@keyframes diamondFloat {
+    0% { transform: rotate(45deg) scale(0.96); box-shadow: 0 0 20px rgba(251, 191, 36, 0.75); }
+    100% { transform: rotate(45deg) scale(1.06); box-shadow: 0 0 34px rgba(251, 191, 36, 1); }
 }
 
 .giant-score-val {
     position: relative;
     z-index: 1;
     font-family: 'Lilita One', 'Fredoka', cursive, sans-serif;
-    font-size: 58px;
+    font-size: 60px;
     line-height: 1;
     letter-spacing: 2px;
-    color: #A3E635;
-    text-shadow: 0 5px 0 #15803D, 0 10px 20px rgba(0, 0, 0, 0.7);
-    filter: drop-shadow(0 0 16px rgba(163, 230, 53, 0.7));
+    background: linear-gradient(180deg, #FFFFFF 0%, #BEF264 35%, #A3E635 65%, #65A30D 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 0 #14532D) drop-shadow(0 8px 16px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 22px rgba(163, 230, 53, 0.85));
+    display: inline-block;
+    transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: center center;
+}
+
+/* Juicy Punch Animation on Score Gain (Standard combo) */
+.score-punch {
+    animation: scorePopStandard 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+}
+
+@keyframes scorePopStandard {
+    0% { transform: scale(1) rotate(0deg); }
+    30% { transform: scale(1.35) rotate(-3deg); filter: drop-shadow(0 4px 0 #14532D) drop-shadow(0 0 30px #A3E635); }
+    60% { transform: scale(0.94) rotate(1deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Fire Punch Animation on High Combos (3+) */
+.score-punch-fire {
+    animation: scorePopFire 0.45s cubic-bezier(0.34, 1.75, 0.64, 1) forwards !important;
+}
+
+@keyframes scorePopFire {
+    0% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.52) rotate(-5deg); filter: drop-shadow(0 4px 0 #9A3412) drop-shadow(0 0 40px #F97316); }
+    55% { transform: scale(0.90) rotate(2deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+
+/* High Score Break Victory Flash */
+.score-new-best {
+    animation: newBestRainbow 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+}
+
+@keyframes newBestRainbow {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.65) rotate(4deg); filter: drop-shadow(0 0 45px #F59E0B) drop-shadow(0 0 70px #EF4444); }
+    70% { transform: scale(0.92) rotate(-2deg); }
+    100% { transform: scale(1) rotate(0deg); }
 }
 
 .hud-right-actions {

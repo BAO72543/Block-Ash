@@ -270,6 +270,32 @@ export class ParticleSystem {
     }
 
     /**
+     * Golden upward arcing sparks that float towards the top score counter
+     */
+    addScoreAbsorptionSparks(startX, startY, count = 8) {
+        for (let i = 0; i < count; i++) {
+            const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.2;
+            const speed = 4.0 + Math.random() * 5.5;
+            this.particles.push({
+                x: startX,
+                y: startY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 2.0,
+                gravity: -0.05,
+                drag: 0.96,
+                size: 4 + Math.random() * 5,
+                baseSize: 4 + Math.random() * 5,
+                color: Math.random() > 0.4 ? '#FDE047' : '#BEF264',
+                alpha: 1.0,
+                decay: 0.025 + Math.random() * 0.02,
+                rotation: Math.random() * Math.PI * 2,
+                vRot: 0.3,
+                shape: 'sparkle'
+            });
+        }
+    }
+
+    /**
      * Confetti celebration for High Score & All Clear
      */
     addConfettiBurst(canvasWidth, canvasHeight, count = 80) {
