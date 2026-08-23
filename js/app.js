@@ -461,22 +461,22 @@ export class BlockBlastApp {
             this.triggerHaptic('snap');
         }
 
-        // 2. Visual Effects: Color-Matched Particle Bursts & Shockwaves
+        // 2. Visual Effects: Sweeping Laser Waves & Domino Ripple Particle Bursts
         const { cellSize, gap } = this.renderer.boardMetrics;
         const shapeColor = result.shapePlaced.color;
 
         for (const r of result.rowsCleared) {
-            this.particles.addLineClearWave('row', r, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap);
-            for (let c = 0; c < 8; c++) {
-                const rect = this.renderer.getCellRect(r, c);
-                this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, shapeColor);
-            }
+            this.particles.addLineClearSweep('row', r, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap, shapeColor);
         }
         for (const c of result.colsCleared) {
-            this.particles.addLineClearWave('col', c, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap);
-            for (let r = 0; r < 8; r++) {
-                const rect = this.renderer.getCellRect(r, c);
-                this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, shapeColor);
+            this.particles.addLineClearSweep('col', c, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap, shapeColor);
+        }
+
+        // If no line clear occurred, burst gentle snap particles at placed cells
+        if (result.linesCleared === 0) {
+            for (const placed of result.placedCells) {
+                const rect = this.renderer.getCellRect(placed.row, placed.col);
+                this.particles.addBlockClearBurst(rect.x, rect.y, rect.size * 0.7, shapeColor);
             }
         }
 

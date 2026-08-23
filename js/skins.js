@@ -330,83 +330,91 @@ export const PUZZLE_SKINS = [
 export const EFFECT_SKINS = [
     {
         id: 'golden-sparks',
-        name: 'Golden Sparks',
-        desc: 'Square crystal sparks with warm golden line shockwaves',
+        name: 'Golden Sweeping Laser',
+        desc: 'Golden laser beam sweep with cascading crystal sparks',
         particleShape: 'square',
+        headShape: 'square',
         particleColors: ['#FDE68A', '#F59E0B', '#D97706', '#FFFFFF'],
         waveColor: 'rgba(254, 240, 138, 0.95)',
         floatingTextColor: '#FDE047',
-        glowColor: 'rgba(245, 158, 11, 0.65)'
+        glowColor: 'rgba(245, 158, 11, 0.85)'
     },
     {
         id: 'starburst-magic',
-        name: 'Starburst Magic',
-        desc: '5-point celestial starbursts with magical lilac lasers',
+        name: 'Celestial Starburst Beam',
+        desc: 'Lilac stardust sweep with 5-point cosmic star flares',
         particleShape: 'star',
+        headShape: 'star',
         particleColors: ['#E9D5FF', '#C084FC', '#F472B6', '#FFFFFF'],
         waveColor: 'rgba(233, 213, 255, 0.95)',
         floatingTextColor: '#E9D5FF',
-        glowColor: 'rgba(168, 85, 247, 0.7)'
+        glowColor: 'rgba(168, 85, 247, 0.85)'
     },
     {
         id: 'diamond-lasers',
-        name: 'Diamond Cyber Lasers',
-        desc: 'Sharp glowing diamond shards with high-energy cyan lasers',
+        name: 'Cyber Laser Blade',
+        desc: 'High-voltage cyan laser blade with electric diamond shards',
         particleShape: 'diamond',
+        headShape: 'diamond',
         particleColors: ['#00F0FF', '#FF007F', '#39FF14', '#FFE600'],
         waveColor: 'rgba(0, 240, 255, 0.95)',
         floatingTextColor: '#00F0FF',
-        glowColor: 'rgba(0, 240, 255, 0.7)'
+        glowColor: 'rgba(0, 240, 255, 0.85)'
     },
     {
         id: 'glowing-orbs',
-        name: 'Smooth Energy Orbs',
-        desc: 'Soft glowing spherical particle bursts with smooth shockwaves',
+        name: 'Plasma Energy Pulse',
+        desc: 'Smooth royal blue plasma sphere with radial pulse waves',
         particleShape: 'circle',
+        headShape: 'circle',
         particleColors: ['#60A5FA', '#38BDF8', '#818CF8', '#FFFFFF'],
         waveColor: 'rgba(255, 255, 255, 0.95)',
         floatingTextColor: '#60A5FA',
-        glowColor: 'rgba(59, 130, 246, 0.65)'
+        glowColor: 'rgba(59, 130, 246, 0.85)'
     },
     {
         id: 'solar-embers',
-        name: 'Solar Flare Embers',
-        desc: 'Hot fiery circular ember sparks with sunburst shockwaves',
+        name: 'Solar Fire Stream',
+        desc: 'Blazing sunburst flame sweep with hot flying embers',
         particleShape: 'circle',
+        headShape: 'circle',
         particleColors: ['#FED7AA', '#F97316', '#F59E0B', '#EF4444'],
         waveColor: 'rgba(253, 186, 116, 0.95)',
         floatingTextColor: '#FDBA74',
-        glowColor: 'rgba(249, 115, 22, 0.7)'
+        glowColor: 'rgba(249, 115, 22, 0.85)'
     },
     {
         id: 'frost-shards',
-        name: 'Frost & Blizzard Shards',
-        desc: 'Glittering diamond ice shards with frosted blizzard shockwaves',
+        name: 'Blizzard Ice Shard',
+        desc: 'Glittering arctic ice beam with frosted diamond crystals',
         particleShape: 'diamond',
+        headShape: 'diamond',
         particleColors: ['#E0F2FE', '#BAE6FD', '#38BDF8', '#FFFFFF'],
         waveColor: 'rgba(186, 230, 253, 0.95)',
         floatingTextColor: '#BAE6FD',
-        glowColor: 'rgba(56, 189, 248, 0.7)'
+        glowColor: 'rgba(56, 189, 248, 0.85)'
     },
     {
         id: 'emerald-crystals',
-        name: 'Emerald Crystals',
-        desc: 'Lush 5-point star crystal sparks with mint shockwaves',
+        name: 'Emerald Crystal Ray',
+        desc: 'Lush green jade laser ray with 5-point emerald stars',
         particleShape: 'star',
+        headShape: 'star',
         particleColors: ['#6EE7B7', '#34D399', '#FDE047', '#FFFFFF'],
         waveColor: 'rgba(110, 231, 183, 0.95)',
         floatingTextColor: '#A7F3D0',
-        glowColor: 'rgba(16, 185, 129, 0.65)'
+        glowColor: 'rgba(16, 185, 129, 0.85)'
     },
     {
         id: 'volcanic-sparks',
-        name: 'Volcanic Magma Sparks',
-        desc: 'Heavy square lava sparks with red magma shockwaves',
+        name: 'Volcanic Magma Surge',
+        desc: 'Molten lava surge sweep with heavy burning magma squares',
         particleShape: 'square',
+        headShape: 'square',
         particleColors: ['#FEF08A', '#FDBA74', '#DC2626', '#EA580C'],
         waveColor: 'rgba(254, 202, 202, 0.95)',
         floatingTextColor: '#FCA5A5',
-        glowColor: 'rgba(220, 38, 38, 0.7)'
+        glowColor: 'rgba(220, 38, 38, 0.85)'
     }
 ];
 

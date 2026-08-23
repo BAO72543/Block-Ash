@@ -1,8 +1,10 @@
 /**
- * Block Blast - Particle and Visual FX System
- * High-performance canvas particle animations, shockwaves, floating text, and confetti.
+ * Block Blast - Particle, Sweeper and Visual FX System
+ * High-performance canvas particle animations, sweeping line beams, shockwaves, floating text, and confetti.
  * Features:
- * - Color-Matched Block Destroy Particle Bursts
+ * - Dynamic Sweeping Laser Beams & Domino Ripple Line Clears
+ * - Skin-Tailored Comet Heads (Star, Diamond, Crystal Square, Plasma Orb)
+ * - Color-Matched Cascading Block Destroy Particle Bursts
  * - Scaled Dynamic Screen Shake
  * - Bold Gold Typography Score & Combo Pop-Ups ("Great!", "Perfect!", "COMBO x4!")
  * - High-FPS Confetti Fanfare
@@ -13,21 +15,30 @@ export class ParticleSystem {
         this.particles = [];
         this.floatingTexts = [];
         this.shockwaves = [];
+        this.sweepers = [];
         this.confetti = [];
         this.shakeTime = 0;
         this.shakeIntensity = 0;
         this.currentEffects = {
             particleShape: 'square',
             particleColors: ['#FDE68A', '#F59E0B', '#D97706', '#FFFFFF'],
-            waveColor: 'rgba(255, 255, 255, 0.95)',
+            waveColor: 'rgba(254, 240, 138, 0.95)',
             floatingTextColor: '#FDE047',
-            glowColor: 'rgba(245, 158, 11, 0.6)'
+            glowColor: 'rgba(245, 158, 11, 0.65)',
+            headShape: 'square'
         };
     }
 
     setSkinEffects(effects) {
         if (effects) {
-            this.currentEffects = { ...this.currentEffects, ...effects };
+            this.currentEffects = {
+                particleShape: effects.particleShape || 'square',
+                particleColors: effects.particleColors || ['#FDE68A', '#F59E0B', '#D97706', '#FFFFFF'],
+                waveColor: effects.waveColor || 'rgba(255, 255, 255, 0.95)',
+                floatingTextColor: effects.floatingTextColor || '#FDE047',
+                glowColor: effects.glowColor || 'rgba(245, 158, 11, 0.65)',
+                headShape: effects.headShape || effects.particleShape || 'square'
+            };
         }
     }
 
@@ -35,6 +46,7 @@ export class ParticleSystem {
         this.particles = [];
         this.floatingTexts = [];
         this.shockwaves = [];
+        this.sweepers = [];
         this.confetti = [];
         this.shakeTime = 0;
         this.shakeIntensity = 0;
@@ -46,6 +58,87 @@ export class ParticleSystem {
     }
 
     /**
+     * Trigger a sweeping laser beam across an entire row or column with cascading domino block pops
+     */
+    addLineClearSweep(type, index, gridX, gridY, cellSize, gap, shapeColor) {
+        const totalLength = 8 * (cellSize + gap) - gap;
+        const isRow = type === 'row';
+        const eff = this.currentEffects;
+
+        const startX = isRow ? gridX : (gridX + index * (cellSize + gap) + cellSize / 2);
+        const startY = isRow ? (gridY + index * (cellSize + gap) + cellSize / 2) : gridY;
+        const endX = isRow ? (gridX + totalLength) : startX;
+        const endY = isRow ? startY : (gridY + totalLength);
+
+        // Also add ambient background shockwave
+        this.shockwaves.push({
+            type,
+            x: isRow ? gridX : startX,
+            y: isRow ? startY : gridY,
+            width: isRow ? totalLength : cellSize * 1.6,
+            height: isRow ? cellSize * 1.6 : totalLength,
+            alpha: 0.9,
+            decay: 0.035,
+            color: eff.waveColor
+        });
+
+        this.sweepers.push({
+            type,
+            index,
+            isRow,
+            gridX,
+            gridY,
+            cellSize,
+            gap,
+            startX,
+            startY,
+            endX,
+            endY,
+            totalLength,
+            progress: 0,
+            speed: 0.065, // completes in ~15-18 frames (~280ms)
+            triggeredCells: new Array(8).fill(false),
+            shapeColor: shapeColor || { hex: '#3B82F6', light: '#93C5FD' },
+            particleShape: eff.particleShape || 'square',
+            headShape: eff.headShape || eff.particleShape || 'square',
+            waveColor: eff.waveColor || 'rgba(255, 255, 255, 0.95)',
+            glowColor: eff.glowColor || 'rgba(245, 158, 11, 0.65)',
+            particleColors: eff.particleColors || ['#FDE68A', '#F59E0B', '#FFFFFF'],
+            headRotation: 0
+        });
+    }
+
+    /**
+     * Micro-sparks shooting perpendicularly away from the sweeping comet head
+     */
+    addSweepSparks(x, y, isRow, shape, colors) {
+        const count = 4 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < count; i++) {
+            const side = Math.random() > 0.5 ? 1 : -1;
+            const vx = isRow ? (Math.random() - 0.5) * 2 : side * (3 + Math.random() * 4);
+            const vy = isRow ? side * (3 + Math.random() * 4) : (Math.random() - 0.5) * 2;
+            const color = colors[Math.floor(Math.random() * colors.length)] || '#FFFFFF';
+
+            this.particles.push({
+                x,
+                y,
+                vx,
+                vy,
+                gravity: 0.12,
+                drag: 0.92,
+                size: 4 + Math.random() * 6,
+                baseSize: 4 + Math.random() * 6,
+                color,
+                alpha: 1,
+                decay: 0.03 + Math.random() * 0.03,
+                rotation: Math.random() * Math.PI * 2,
+                vRot: (Math.random() - 0.5) * 0.4,
+                shape
+            });
+        }
+    }
+
+    /**
      * Burst of jewel / neon block particles from a destroyed cell matching its exact color & skin effect
      */
     addBlockClearBurst(x, y, size, color) {
@@ -53,11 +146,15 @@ export class ParticleSystem {
         const hex = (color && color.hex) ? color.hex : '#3B82F6';
         const light = (color && color.light) ? color.light : '#93C5FD';
         const effectShape = this.currentEffects.particleShape || 'square';
+        const pColors = this.currentEffects.particleColors || [hex, light, '#FFFFFF'];
 
         for (let i = 0; i < count; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = 2.5 + Math.random() * 6.5;
             const pSize = (size * 0.16) + Math.random() * (size * 0.22);
+            const chosenColor = Math.random() > 0.35 
+                ? (Math.random() > 0.5 ? hex : light)
+                : pColors[Math.floor(Math.random() * pColors.length)];
 
             this.particles.push({
                 x: x + size / 2,
@@ -68,44 +165,12 @@ export class ParticleSystem {
                 drag: 0.95,
                 size: pSize,
                 baseSize: pSize,
-                color: Math.random() > 0.4 ? hex : light,
+                color: chosenColor,
                 alpha: 1,
-                decay: 0.016 + Math.random() * 0.02,
+                decay: 0.018 + Math.random() * 0.022,
                 rotation: Math.random() * Math.PI * 2,
                 vRot: (Math.random() - 0.5) * 0.3,
                 shape: Math.random() > 0.2 ? effectShape : 'circle'
-            });
-        }
-    }
-
-    /**
-     * Line clear laser/shockwave effect across a row or column matching effect skin
-     */
-    addLineClearWave(type, index, gridX, gridY, cellSize, gap) {
-        const waveColor = this.currentEffects.waveColor || 'rgba(255, 255, 255, 0.95)';
-        if (type === 'row') {
-            const y = gridY + index * (cellSize + gap) + cellSize / 2;
-            this.shockwaves.push({
-                type: 'row',
-                x: gridX,
-                y,
-                width: 8 * (cellSize + gap) - gap,
-                height: cellSize * 1.5,
-                alpha: 1,
-                decay: 0.045,
-                color: waveColor
-            });
-        } else {
-            const x = gridX + index * (cellSize + gap) + cellSize / 2;
-            this.shockwaves.push({
-                type: 'col',
-                x,
-                y: gridY,
-                width: cellSize * 1.5,
-                height: 8 * (cellSize + gap) - gap,
-                alpha: 1,
-                decay: 0.045,
-                color: waveColor
             });
         }
     }
@@ -170,6 +235,42 @@ export class ParticleSystem {
             this.shakeTime -= dt;
             if (this.shakeTime <= 0) {
                 this.shakeIntensity = 0;
+            }
+        }
+
+        // Update sweeping laser waves & trigger cascading domino block explosions
+        for (let i = this.sweepers.length - 1; i >= 0; i--) {
+            const sw = this.sweepers[i];
+            sw.progress += sw.speed;
+            sw.headRotation += 0.15;
+
+            // Trigger cells sequentially as the beam passes each one
+            for (let c = 0; c < 8; c++) {
+                const threshold = (c + 0.3) / 8;
+                if (sw.progress >= threshold && !sw.triggeredCells[c]) {
+                    sw.triggeredCells[c] = true;
+
+                    const cellRow = sw.isRow ? sw.index : c;
+                    const cellCol = sw.isRow ? c : sw.index;
+                    const cellX = sw.gridX + cellCol * (sw.cellSize + sw.gap);
+                    const cellY = sw.gridY + cellRow * (sw.cellSize + sw.gap);
+
+                    // Explode block particles with domino timing
+                    this.addBlockClearBurst(cellX, cellY, sw.cellSize, sw.shapeColor);
+
+                    // Add lateral laser beam discharge sparks
+                    this.addSweepSparks(
+                        cellX + sw.cellSize / 2,
+                        cellY + sw.cellSize / 2,
+                        sw.isRow,
+                        sw.particleShape,
+                        sw.particleColors
+                    );
+                }
+            }
+
+            if (sw.progress >= 1.25) {
+                this.sweepers.splice(i, 1);
             }
         }
 
@@ -248,21 +349,21 @@ export class ParticleSystem {
     render(ctx) {
         ctx.save();
 
-        // 1. Draw Shockwaves
+        // 1. Draw Ambient Background Shockwaves
         for (const sw of this.shockwaves) {
             ctx.save();
-            ctx.globalAlpha = sw.alpha;
+            ctx.globalAlpha = Math.max(0, sw.alpha);
             if (sw.type === 'row') {
                 const gradient = ctx.createLinearGradient(sw.x, sw.y - sw.height / 2, sw.x, sw.y + sw.height / 2);
                 gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.95)');
+                gradient.addColorStop(0.5, sw.color || 'rgba(255, 255, 255, 0.95)');
                 gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(sw.x, sw.y - sw.height / 2, sw.width, sw.height);
             } else {
                 const gradient = ctx.createLinearGradient(sw.x - sw.width / 2, sw.y, sw.x + sw.width / 2, sw.y);
                 gradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.95)');
+                gradient.addColorStop(0.5, sw.color || 'rgba(255, 255, 255, 0.95)');
                 gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(sw.x - sw.width / 2, sw.y, sw.width, sw.height);
@@ -270,7 +371,103 @@ export class ParticleSystem {
             ctx.restore();
         }
 
-        // 2. Draw Particles
+        // 2. Draw Sweeping Laser Beams & Blazing Comet Heads
+        for (const sw of this.sweepers) {
+            ctx.save();
+            const clampedP = Math.min(1.0, sw.progress);
+            const headX = sw.isRow ? (sw.startX + clampedP * sw.totalLength) : sw.startX;
+            const headY = sw.isRow ? sw.startY : (sw.startY + clampedP * sw.totalLength);
+            const headAlpha = Math.max(0, 1 - Math.max(0, (sw.progress - 0.9) * 3));
+
+            ctx.globalAlpha = headAlpha;
+
+            // 2A. Trailing Energy Laser Beam
+            const beamThickness = sw.cellSize * 0.75;
+            if (sw.isRow) {
+                const beamGrad = ctx.createLinearGradient(sw.startX, headY, headX, headY);
+                beamGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                beamGrad.addColorStop(Math.max(0, clampedP - 0.4), sw.glowColor || 'rgba(255, 200, 0, 0.4)');
+                beamGrad.addColorStop(1, '#FFFFFF');
+
+                ctx.fillStyle = beamGrad;
+                ctx.fillRect(sw.startX, headY - beamThickness / 2, headX - sw.startX, beamThickness);
+
+                // Core White Centerline
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                ctx.fillRect(sw.startX, headY - 2, headX - sw.startX, 4);
+            } else {
+                const beamGrad = ctx.createLinearGradient(headX, sw.startY, headX, headY);
+                beamGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                beamGrad.addColorStop(Math.max(0, clampedP - 0.4), sw.glowColor || 'rgba(255, 200, 0, 0.4)');
+                beamGrad.addColorStop(1, '#FFFFFF');
+
+                ctx.fillStyle = beamGrad;
+                ctx.fillRect(headX - beamThickness / 2, sw.startY, beamThickness, headY - sw.startY);
+
+                // Core White Centerline
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                ctx.fillRect(headX - 2, sw.startY, 4, headY - sw.startY);
+            }
+
+            // 2B. Blazing Radial Bloom Comet Head
+            const radialGlow = ctx.createRadialGradient(headX, headY, 2, headX, headY, sw.cellSize * 1.4);
+            radialGlow.addColorStop(0, '#FFFFFF');
+            radialGlow.addColorStop(0.3, sw.glowColor || 'rgba(245, 158, 11, 0.85)');
+            radialGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+            ctx.fillStyle = radialGlow;
+            ctx.beginPath();
+            ctx.arc(headX, headY, sw.cellSize * 1.4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 2C. Skin-Specific Geometric Comet Head Flare
+            ctx.save();
+            ctx.translate(headX, headY);
+            ctx.rotate(sw.headRotation);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.shadowColor = sw.glowColor || '#FFFFFF';
+            ctx.shadowBlur = 12;
+
+            const flareSize = sw.cellSize * 0.55;
+            if (sw.headShape === 'diamond') {
+                ctx.beginPath();
+                ctx.moveTo(0, -flareSize * 1.3);
+                ctx.lineTo(flareSize * 0.7, 0);
+                ctx.lineTo(0, flareSize * 1.3);
+                ctx.lineTo(-flareSize * 0.7, 0);
+                ctx.closePath();
+                ctx.fill();
+            } else if (sw.headShape === 'star') {
+                ctx.beginPath();
+                for (let s = 0; s < 5; s++) {
+                    ctx.lineTo(Math.cos((18 + s * 72) * Math.PI / 180) * flareSize, -Math.sin((18 + s * 72) * Math.PI / 180) * flareSize);
+                    ctx.lineTo(Math.cos((54 + s * 72) * Math.PI / 180) * (flareSize * 0.45), -Math.sin((54 + s * 72) * Math.PI / 180) * (flareSize * 0.45));
+                }
+                ctx.closePath();
+                ctx.fill();
+            } else if (sw.headShape === 'square') {
+                ctx.fillRect(-flareSize / 2, -flareSize / 2, flareSize, flareSize);
+            } else {
+                ctx.beginPath();
+                ctx.arc(0, 0, flareSize / 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // 2D. Lateral Cross-Laser Spike Flares
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(headX - sw.cellSize * 0.8, headY);
+            ctx.lineTo(headX + sw.cellSize * 0.8, headY);
+            ctx.moveTo(headX, headY - sw.cellSize * 0.8);
+            ctx.lineTo(headX, headY + sw.cellSize * 0.8);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        // 3. Draw Particles (Custom Geometric Shapes with Glow & Rotation)
         for (const p of this.particles) {
             ctx.save();
             ctx.globalAlpha = Math.max(0, p.alpha);
@@ -305,7 +502,7 @@ export class ParticleSystem {
             ctx.restore();
         }
 
-        // 3. Draw Confetti
+        // 4. Draw Confetti Fanfare
         for (const c of this.confetti) {
             ctx.save();
             ctx.globalAlpha = Math.max(0, c.alpha);
@@ -316,7 +513,7 @@ export class ParticleSystem {
             ctx.restore();
         }
 
-        // 4. Draw Score Pop-Ups & Bold Gold Typography
+        // 5. Draw Score Pop-Ups & Bold Gold Typography
         for (const ft of this.floatingTexts) {
             ctx.save();
             ctx.globalAlpha = Math.max(0, ft.alpha);
