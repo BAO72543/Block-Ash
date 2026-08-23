@@ -209,7 +209,7 @@ export class BlockBlastApp {
         this.triggerHaptic('snap');
         if (this.dom.appWrapper) this.dom.appWrapper.classList.add('in-game');
         if (this.dom.homeScreen) this.dom.homeScreen.style.display = 'none';
-        if (this.dom.gameplayView) this.dom.gameplayView.style.display = 'block';
+        if (this.dom.gameplayView) this.dom.gameplayView.style.display = 'flex';
 
         this.handleResize();
         setTimeout(() => this.handleResize(), 60);

@@ -101,28 +101,28 @@ export class GameRenderer {
         const isMobile = this.width < 640;
         const aspect = this.width / Math.max(1, this.height);
 
-        // Minimum safety paddings
-        const sidePadding = isMobile ? 12 : 16;
+        // Safety paddings from outer canvas boundaries
+        const sidePadding = isMobile ? 10 : 16;
         const topPadding = isMobile ? 12 : 16;
         const bottomPadding = isMobile ? 14 : 18;
 
-        // Determine orientation:
-        // Use Side Dock if aspect ratio >= 1.05 and width is at least 500px
-        const isWide = (aspect >= 1.05 && this.width >= 500);
+        // Side Dock Mode: used when the canvas is wide enough (aspect >= 1.08 and width >= 480)
+        const isWide = (aspect >= 1.08 && this.width >= 480);
 
         if (isWide) {
             // ==========================================
             // WIDESCREEN / SIDE DOCK MODE
             // ==========================================
             const maxAvailableHeight = this.height - topPadding - bottomPadding;
-            const sideDockWidth = Math.min(200, Math.max(110, Math.round(this.width * 0.22)));
+            const sideDockWidth = Math.min(220, Math.max(120, Math.round(this.width * 0.23)));
             const maxAvailableWidthForBoard = this.width - sideDockWidth - (sidePadding * 3);
 
-            // Board must fit inside both available width and height
+            // Maximum square board size that fits in available width and height
             const maxBoardSize = Math.max(180, Math.min(maxAvailableWidthForBoard, maxAvailableHeight));
             const gap = Math.max(2, Math.min(4, Math.round(maxBoardSize / 130)));
-            const cellSize = Math.floor((maxBoardSize - (gap * 9)) / 8);
-            const actualBoardSize = cellSize * 8 + gap * 9;
+            const outerPadding = Math.round(gap * 1.5);
+            const cellSize = Math.floor((maxBoardSize - (outerPadding * 2) - (gap * 7)) / 8);
+            const actualBoardSize = cellSize * 8 + gap * 7 + outerPadding * 2;
 
             const totalUsedWidth = actualBoardSize + sidePadding + sideDockWidth;
             const boardX = Math.max(sidePadding, Math.round((this.width - totalUsedWidth) / 2));
@@ -133,7 +133,8 @@ export class GameRenderer {
                 y: boardY,
                 size: actualBoardSize,
                 cellSize,
-                gap
+                gap,
+                outerPadding
             };
 
             const dockX = boardX + actualBoardSize + sidePadding;
@@ -159,13 +160,14 @@ export class GameRenderer {
             // PORTRAIT / BOTTOM DOCK MODE
             // ==========================================
             const maxAvailableWidth = this.width - sidePadding * 2;
-            const dockHeight = Math.min(140, Math.max(80, Math.round(this.height * 0.20)));
+            const dockHeight = Math.min(145, Math.max(80, Math.round(this.height * 0.21)));
             const maxAvailableHeightForBoard = this.height - dockHeight - topPadding - bottomPadding - (isMobile ? 8 : 12);
 
             const maxBoardSize = Math.max(180, Math.min(maxAvailableWidth, maxAvailableHeightForBoard));
             const gap = Math.max(2, Math.min(4, Math.round(maxBoardSize / 130)));
-            const cellSize = Math.floor((maxBoardSize - (gap * 9)) / 8);
-            const actualBoardSize = cellSize * 8 + gap * 9;
+            const outerPadding = Math.round(gap * 1.5);
+            const cellSize = Math.floor((maxBoardSize - (outerPadding * 2) - (gap * 7)) / 8);
+            const actualBoardSize = cellSize * 8 + gap * 7 + outerPadding * 2;
 
             const boardX = Math.round((this.width - actualBoardSize) / 2);
             const boardY = topPadding + Math.max(0, Math.round((maxAvailableHeightForBoard - actualBoardSize) * 0.3));
@@ -175,10 +177,11 @@ export class GameRenderer {
                 y: boardY,
                 size: actualBoardSize,
                 cellSize,
-                gap
+                gap,
+                outerPadding
             };
 
-            const dockY = boardY + actualBoardSize + (isMobile ? 10 : 14);
+            const dockY = boardY + actualBoardSize + (isMobile ? 8 : 12);
             const dockWidth = actualBoardSize;
             const slotGap = Math.max(6, Math.round(actualBoardSize * 0.022));
             const slotWidth = Math.floor((dockWidth - slotGap * 2) / 3);
@@ -201,13 +204,18 @@ export class GameRenderer {
     }
 
     screenToGrid(x, y) {
-        const { x: bx, y: by, cellSize, gap } = this.boardMetrics;
-        if (x < bx || x > bx + this.boardMetrics.size || y < by || y > by + this.boardMetrics.size) {
+        const { x: bx, y: by, cellSize, gap, outerPadding } = this.boardMetrics;
+        const gridLeft = bx + outerPadding;
+        const gridTop = by + outerPadding;
+        const gridWidth = 8 * cellSize + 7 * gap;
+        const gridHeight = 8 * cellSize + 7 * gap;
+
+        if (x < gridLeft || x > gridLeft + gridWidth || y < gridTop || y > gridTop + gridHeight) {
             return null;
         }
 
-        const col = Math.floor((x - bx - gap) / (cellSize + gap));
-        const row = Math.floor((y - by - gap) / (cellSize + gap));
+        const col = Math.floor((x - gridLeft) / (cellSize + gap));
+        const row = Math.floor((y - gridTop) / (cellSize + gap));
 
         if (row >= 0 && row < 8 && col >= 0 && col < 8) {
             return { row, col };
@@ -216,9 +224,9 @@ export class GameRenderer {
     }
 
     getCellRect(row, col) {
-        const { x: bx, y: by, cellSize, gap } = this.boardMetrics;
-        const x = Math.round(bx + gap + col * (cellSize + gap));
-        const y = Math.round(by + gap + row * (cellSize + gap));
+        const { x: bx, y: by, cellSize, gap, outerPadding } = this.boardMetrics;
+        const x = Math.round(bx + outerPadding + col * (cellSize + gap));
+        const y = Math.round(by + outerPadding + row * (cellSize + gap));
         return { x, y, size: cellSize };
     }
 
@@ -330,7 +338,7 @@ export class GameRenderer {
     }
 
     drawBoard(theme) {
-        const { x, y, size, cellSize, gap } = this.boardMetrics;
+        const { x, y, size, cellSize, gap, outerPadding } = this.boardMetrics;
         const ctx = this.ctx;
 
         // Board outer rounded card
@@ -340,15 +348,15 @@ export class GameRenderer {
         ctx.shadowBlur = 18;
         ctx.shadowOffsetY = 6;
 
-        this.roundRect(x - gap, y - gap, size + gap * 2, size + gap * 2, 16);
+        this.roundRect(x, y, size, size, 16);
         ctx.fill();
         ctx.restore();
 
-        // Draw empty grid slot cells (Crisp 1:1 squares)
+        // Draw empty grid slot cells (Crisp 1:1 squares with symmetrical outer padding)
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
-                const cellX = Math.round(x + gap + c * (cellSize + gap));
-                const cellY = Math.round(y + gap + r * (cellSize + gap));
+                const cellX = Math.round(x + outerPadding + c * (cellSize + gap));
+                const cellY = Math.round(y + outerPadding + r * (cellSize + gap));
 
                 ctx.save();
                 ctx.fillStyle = theme.cellEmpty;
