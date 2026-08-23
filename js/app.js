@@ -383,10 +383,16 @@ export class BlockBlastApp {
             });
         }
 
-        // Close modals on clicking outside
+        // Close modals on clicking outside backdrop
         window.addEventListener('click', (e) => {
             if (e.target === this.dom.statsModal) {
                 this.closeStatsModal();
+            }
+            if (e.target === this.dom.skinsModal) {
+                this.closeSkinsModal();
+            }
+            if (e.target === this.dom.adventureMapModal) {
+                this.closeAdventureMap();
             }
         });
     }
@@ -807,7 +813,10 @@ export class BlockBlastApp {
             this.particles.addConfettiBurst(this.renderer.width, this.renderer.height, 80);
         }
 
-        this.dom.gameOverModal.classList.add('active');
+        if (this.dom.gameOverModal) {
+            this.dom.gameOverModal.style.display = 'flex';
+            this.dom.gameOverModal.classList.add('active');
+        }
     }
 
     /* ==========================================================================
@@ -932,7 +941,10 @@ export class BlockBlastApp {
         this.renderer.cancelSnapBack();
 
         // Dismiss all modals immediately
-        this.dom.gameOverModal.classList.remove('active');
+        if (this.dom.gameOverModal) {
+            this.dom.gameOverModal.classList.remove('active');
+            this.dom.gameOverModal.style.display = 'none';
+        }
         if (this.dom.rewardedAdModal) this.dom.rewardedAdModal.style.display = 'none';
         if (this.dom.interstitialAdModal) this.dom.interstitialAdModal.style.display = 'none';
 
@@ -1292,11 +1304,17 @@ export class BlockBlastApp {
         this.dom.statLines.textContent = stats.totalLinesCleared || 0;
         this.dom.statAllClears.textContent = stats.allClearsCount || 0;
 
-        this.dom.statsModal.classList.add('active');
+        if (this.dom.statsModal) {
+            this.dom.statsModal.style.display = 'flex';
+            this.dom.statsModal.classList.add('active');
+        }
     }
 
     closeStatsModal() {
-        this.dom.statsModal.classList.remove('active');
+        if (this.dom.statsModal) {
+            this.dom.statsModal.classList.remove('active');
+            this.dom.statsModal.style.display = 'none';
+        }
     }
 
     updateScoreDisplays() {

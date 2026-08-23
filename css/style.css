@@ -1334,7 +1334,7 @@ kbd {
     color: #F8FAFC;
 }
 
-/* Modals: Game Over & Stats */
+/* Modals: Game Over, Stats, Skins, Ads */
 .modal-backdrop {
     position: fixed;
     top: 0;
@@ -1344,17 +1344,18 @@ kbd {
     background: var(--modal-overlay);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.25s ease;
     padding: 20px;
 }
 
 .modal-backdrop.active {
+    display: flex !important;
     opacity: 1;
     pointer-events: auto;
 }
