@@ -14,6 +14,18 @@ export const SHAPE_COLORS = [
     { name: 'pink',   hex: '#EC4899', light: '#F472B6', dark: '#DB2777', rgb: [236, 72, 153] }
 ];
 
+export let activeColorPalette = SHAPE_COLORS;
+
+export function setActiveColorPalette(palette) {
+    if (palette && Array.isArray(palette) && palette.length > 0) {
+        activeColorPalette = palette;
+    }
+}
+
+export function getActiveColorPalette() {
+    return activeColorPalette;
+}
+
 export const FORMS = [
     // 0: 2x2 square (Class 1)
     [
@@ -121,36 +133,32 @@ export const SHAPE_CLASSES = {
 };
 
 export class Shape {
-    constructor(formData = null, color = null) {
+    constructor(formIndex = null, color = null) {
         this.id = Math.random().toString(36).substring(2, 9);
-        if (formData === -1 || formData === null) {
+        this.formIndex = formIndex;
+        this.variantIndex = 0;
+
+        if (Array.isArray(formIndex)) {
+            const [fIdx, vIdx] = formIndex;
+            this.formIndex = fIdx;
+            this.variantIndex = vIdx;
+            this.form = FORMS[fIdx][vIdx];
+        } else if (formIndex === -1) {
+            // Single 1x1 dot
             this.form = [[1]];
-            this.formIndex = -1;
-            this.variantIndex = 0;
-        } else if (Array.isArray(formData)) {
-            const [formIdx, varIdx] = formData;
-            if (formIdx === -1) {
-                this.form = [[1]];
-                this.formIndex = -1;
-                this.variantIndex = 0;
-            } else if (FORMS[formIdx] && FORMS[formIdx][varIdx !== undefined ? varIdx : 0]) {
-                const actualVar = varIdx !== undefined ? varIdx : 0;
-                this.form = FORMS[formIdx][actualVar].map(row => [...row]);
-                this.formIndex = formIdx;
-                this.variantIndex = actualVar;
-            } else {
-                this.form = [[1]];
-                this.formIndex = -1;
-                this.variantIndex = 0;
-            }
+        } else if (typeof formIndex === 'number' && FORMS[formIndex]) {
+            const variants = FORMS[formIndex];
+            this.variantIndex = Math.floor(Math.random() * variants.length);
+            this.form = variants[this.variantIndex];
+        } else if (Array.isArray(formIndex) && Array.isArray(formIndex[0])) {
+            this.form = formIndex;
         } else {
             this.form = [[1]];
-            this.formIndex = -1;
-            this.variantIndex = 0;
         }
 
-        // Varied, vibrant random colors
-        this.color = color || SHAPE_COLORS[Math.floor(Math.random() * SHAPE_COLORS.length)];
+        // Varied block color matching active skin palette
+        const palette = activeColorPalette && activeColorPalette.length > 0 ? activeColorPalette : SHAPE_COLORS;
+        this.color = color || palette[Math.floor(Math.random() * palette.length)];
         this.rows = this.form.length;
         this.cols = this.form[0].length;
         this.cellCount = this.form.reduce((acc, row) => acc + row.reduce((r, c) => r + c, 0), 0);

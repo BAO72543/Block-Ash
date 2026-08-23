@@ -7,6 +7,8 @@
  * - Elastic Return Snap-Back Animation on cancel / invalid drop locations
  */
 
+import { SkinManager } from './skins.js';
+
 export class GameRenderer {
     constructor(canvas, gameState, particleSystem) {
         this.canvas = canvas;
@@ -28,57 +30,7 @@ export class GameRenderer {
         this.snapBack = null; // { shapeIdx, shape, startX, startY, targetX, targetY, startTime, duration }
 
         // Theme configuration
-        this.currentTheme = 'neon-dark';
-        this.themes = {
-            'neon-dark': {
-                name: 'Dark Classic (Default)',
-                bg: '#0F172A',
-                boardBg: '#1E293B',
-                cellEmpty: '#334155',
-                dockBg: '#1E293B',
-                dockBorder: '#334155',
-                gridLines: '#0F172A',
-                hintGlow: '#F59E0B',
-                validGhost: 'rgba(255, 255, 255, 0.45)',
-                invalidGhost: 'rgba(239, 68, 68, 0.45)'
-            },
-            'cyber-midnight': {
-                name: 'Cyber Midnight',
-                bg: '#090D16',
-                boardBg: '#111827',
-                cellEmpty: '#1F2937',
-                dockBg: '#111827',
-                dockBorder: '#374151',
-                gridLines: '#0B0F19',
-                hintGlow: '#10B981',
-                validGhost: 'rgba(59, 130, 246, 0.45)',
-                invalidGhost: 'rgba(244, 63, 94, 0.45)'
-            },
-            'classic-pastel': {
-                name: 'Classic Light',
-                bg: '#F1F5F9',
-                boardBg: '#FFFFFF',
-                cellEmpty: '#E2E8F0',
-                dockBg: '#FFFFFF',
-                dockBorder: '#E2E8F0',
-                gridLines: '#CBD5E1',
-                hintGlow: '#D97706',
-                validGhost: 'rgba(59, 130, 246, 0.4)',
-                invalidGhost: 'rgba(239, 68, 68, 0.4)'
-            },
-            'sunset-blast': {
-                name: 'Sunset Blast',
-                bg: '#181028',
-                boardBg: '#2D1B4E',
-                cellEmpty: '#442C6F',
-                dockBg: '#2D1B4E',
-                dockBorder: '#5B3B92',
-                gridLines: '#181028',
-                hintGlow: '#EC4899',
-                validGhost: 'rgba(236, 72, 153, 0.45)',
-                invalidGhost: 'rgba(239, 68, 68, 0.45)'
-            }
-        };
+        this.currentTheme = SkinManager.loadSelectedSkinId();
 
         this.width = 0;
         this.height = 0;
@@ -98,13 +50,27 @@ export class GameRenderer {
     }
 
     setTheme(themeName) {
-        if (this.themes[themeName]) {
-            this.currentTheme = themeName;
+        const skin = SkinManager.getSkin(themeName);
+        this.currentTheme = skin.id;
+        if (this.particles && skin.effects) {
+            this.particles.setSkinEffects(skin.effects);
         }
     }
 
     getTheme() {
-        return this.themes[this.currentTheme] || this.themes['neon-dark'];
+        const skin = SkinManager.getSkin(this.currentTheme);
+        return {
+            name: skin.name,
+            bg: skin.bg,
+            boardBg: skin.boardBg,
+            cellEmpty: skin.cellEmpty,
+            dockBg: skin.dockBg,
+            dockBorder: skin.dockBorder,
+            gridLines: skin.boardBg,
+            hintGlow: skin.diamondColor,
+            validGhost: 'rgba(255, 255, 255, 0.45)',
+            invalidGhost: 'rgba(239, 68, 68, 0.45)'
+        };
     }
 
     resize(containerWidth, containerHeight) {

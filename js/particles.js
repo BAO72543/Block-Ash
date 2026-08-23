@@ -16,6 +16,19 @@ export class ParticleSystem {
         this.confetti = [];
         this.shakeTime = 0;
         this.shakeIntensity = 0;
+        this.currentEffects = {
+            particleShape: 'square',
+            particleColors: ['#FDE68A', '#F59E0B', '#D97706', '#FFFFFF'],
+            waveColor: 'rgba(255, 255, 255, 0.95)',
+            floatingTextColor: '#FDE047',
+            glowColor: 'rgba(245, 158, 11, 0.6)'
+        };
+    }
+
+    setSkinEffects(effects) {
+        if (effects) {
+            this.currentEffects = { ...this.currentEffects, ...effects };
+        }
     }
 
     reset() {
@@ -33,12 +46,13 @@ export class ParticleSystem {
     }
 
     /**
-     * Burst of jewel / neon block particles from a destroyed cell matching its exact color
+     * Burst of jewel / neon block particles from a destroyed cell matching its exact color & skin effect
      */
     addBlockClearBurst(x, y, size, color) {
         const count = 12 + Math.floor(Math.random() * 6);
         const hex = (color && color.hex) ? color.hex : '#3B82F6';
         const light = (color && color.light) ? color.light : '#93C5FD';
+        const effectShape = this.currentEffects.particleShape || 'square';
 
         for (let i = 0; i < count; i++) {
             const angle = Math.random() * Math.PI * 2;
@@ -59,15 +73,16 @@ export class ParticleSystem {
                 decay: 0.016 + Math.random() * 0.02,
                 rotation: Math.random() * Math.PI * 2,
                 vRot: (Math.random() - 0.5) * 0.3,
-                shape: Math.random() > 0.3 ? 'square' : 'circle'
+                shape: Math.random() > 0.2 ? effectShape : 'circle'
             });
         }
     }
 
     /**
-     * Line clear laser/shockwave effect across a row or column
+     * Line clear laser/shockwave effect across a row or column matching effect skin
      */
     addLineClearWave(type, index, gridX, gridY, cellSize, gap) {
+        const waveColor = this.currentEffects.waveColor || 'rgba(255, 255, 255, 0.95)';
         if (type === 'row') {
             const y = gridY + index * (cellSize + gap) + cellSize / 2;
             this.shockwaves.push({
@@ -78,7 +93,7 @@ export class ParticleSystem {
                 height: cellSize * 1.5,
                 alpha: 1,
                 decay: 0.045,
-                color: 'rgba(255, 255, 255, 0.95)'
+                color: waveColor
             });
         } else {
             const x = gridX + index * (cellSize + gap) + cellSize / 2;
@@ -90,7 +105,7 @@ export class ParticleSystem {
                 height: 8 * (cellSize + gap) - gap,
                 alpha: 1,
                 decay: 0.045,
-                color: 'rgba(255, 255, 255, 0.95)'
+                color: waveColor
             });
         }
     }
@@ -265,6 +280,23 @@ export class ParticleSystem {
 
             if (p.shape === 'square') {
                 ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+            } else if (p.shape === 'diamond') {
+                ctx.beginPath();
+                ctx.moveTo(0, -p.size / 2);
+                ctx.lineTo(p.size / 2, 0);
+                ctx.lineTo(0, p.size / 2);
+                ctx.lineTo(-p.size / 2, 0);
+                ctx.closePath();
+                ctx.fill();
+            } else if (p.shape === 'star') {
+                ctx.beginPath();
+                const r = p.size / 2;
+                for (let s = 0; s < 5; s++) {
+                    ctx.lineTo(Math.cos((18 + s * 72) * Math.PI / 180) * r, -Math.sin((18 + s * 72) * Math.PI / 180) * r);
+                    ctx.lineTo(Math.cos((54 + s * 72) * Math.PI / 180) * (r * 0.45), -Math.sin((54 + s * 72) * Math.PI / 180) * (r * 0.45));
+                }
+                ctx.closePath();
+                ctx.fill();
             } else {
                 ctx.beginPath();
                 ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);

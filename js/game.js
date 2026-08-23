@@ -5,8 +5,9 @@
  * and Turn-based Combo Streak tracking.
  */
 
-import { Shape, canPlaceShapeOnGrid, generateValidShapes } from './shapes.js';
+import { Shape, canPlaceShapeOnGrid, generateValidShapes, setActiveColorPalette } from './shapes.js';
 import { GAME_MODES, ModeManager, DailyChallengeManager } from './modes.js';
+import { SkinManager } from './skins.js';
 
 export class BlockGameState {
     constructor() {
@@ -40,7 +41,39 @@ export class BlockGameState {
         this.highestScore = this.loadHighScore();
         this.stats = this.loadStats();
 
+        // Initialize skin palette
+        const initialSkinId = SkinManager.loadSelectedSkinId();
+        const initialSkin = SkinManager.getSkin(initialSkinId);
+        if (initialSkin && initialSkin.palette) {
+            setActiveColorPalette(initialSkin.palette);
+        }
+
         this.reset();
+    }
+
+    applySkin(skinId) {
+        const skin = SkinManager.getSkin(skinId);
+        if (!skin) return;
+
+        setActiveColorPalette(skin.palette);
+
+        // Update currently held shapes in tray with palette
+        if (this.currentShapes) {
+            this.currentShapes.forEach(shape => {
+                if (shape && skin.palette.length > 0) {
+                    shape.color = skin.palette[Math.floor(Math.random() * skin.palette.length)];
+                }
+            });
+        }
+
+        // Update placed blocks on grid
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                if (this.grid && this.grid[r] && this.grid[r][c] !== 0) {
+                    this.grid[r][c] = skin.palette[Math.floor(Math.random() * skin.palette.length)];
+                }
+            }
+        }
     }
 
     reset() {

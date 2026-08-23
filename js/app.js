@@ -11,6 +11,7 @@ import { SoundFX } from './audio.js';
 import { InputHandler } from './input.js';
 import { BlockBlastAI } from './ai.js';
 import { GAME_MODES, ModeManager, DailyChallengeManager, ADVENTURE_STAGES } from './modes.js';
+import { SkinManager, SKINS } from './skins.js';
 
 export class BlockBlastApp {
     constructor() {
@@ -100,7 +101,14 @@ export class BlockBlastApp {
             statLines: document.getElementById('stat-lines'),
             statAllClears: document.getElementById('stat-all-clears'),
             themeSelector: document.getElementById('theme-selector'),
-            autoplaySpeedSelect: document.getElementById('autoplay-speed-select')
+            autoplaySpeedSelect: document.getElementById('autoplay-speed-select'),
+            homeBtnSkins: document.getElementById('home-btn-skins'),
+            homeActiveSkinName: document.getElementById('home-active-skin-name'),
+            homeActiveSwatch: document.getElementById('home-active-swatch'),
+            btnSkins: document.getElementById('btn-skins'),
+            skinsModal: document.getElementById('skins-modal'),
+            btnCloseSkins: document.getElementById('btn-close-skins'),
+            skinsGalleryGrid: document.getElementById('skins-gallery-grid')
         };
 
         this.input = new InputHandler(
@@ -122,6 +130,7 @@ export class BlockBlastApp {
     init() {
         this.setupEventListeners();
         this.updateAudioButtonState();
+        this.initSkinsGallery();
         this.showHomeScreen();
 
         // Handle resize
@@ -228,17 +237,24 @@ export class BlockBlastApp {
             });
         }
 
-        // Theme Quick Selector Pills on Home Screen
-        const themePills = document.querySelectorAll('.theme-pill');
-        themePills.forEach(pill => {
-            pill.addEventListener('click', () => {
+        if (this.dom.homeBtnSkins) {
+            this.dom.homeBtnSkins.addEventListener('click', () => {
                 this.audio.playPop();
-                const themeVal = pill.getAttribute('data-theme-val');
-                themePills.forEach(p => p.classList.remove('active'));
-                pill.classList.add('active');
-                this.changeTheme(themeVal);
+                this.openSkinsModal();
             });
-        });
+        }
+        if (this.dom.btnSkins) {
+            this.dom.btnSkins.addEventListener('click', () => {
+                this.audio.playButton();
+                this.openSkinsModal();
+            });
+        }
+        if (this.dom.btnCloseSkins) {
+            this.dom.btnCloseSkins.addEventListener('click', () => {
+                this.audio.playButton();
+                this.closeSkinsModal();
+            });
+        }
 
         // Mode Tabs
         if (this.dom.tabModeClassic) {
@@ -1012,9 +1028,106 @@ export class BlockBlastApp {
         }
     }
 
+    initSkinsGallery() {
+        const activeSkinId = SkinManager.loadSelectedSkinId();
+        this.applySkin(activeSkinId, false);
+        this.renderSkinsGallery();
+    }
+
+    renderSkinsGallery() {
+        if (!this.dom.skinsGalleryGrid) return;
+        const currentSkinId = SkinManager.loadSelectedSkinId();
+        const allSkins = SkinManager.getAllSkins();
+
+        this.dom.skinsGalleryGrid.innerHTML = '';
+        allSkins.forEach(skin => {
+            const isEquipped = skin.id === currentSkinId;
+            const card = document.createElement('div');
+            card.className = `skin-card ${isEquipped ? 'active' : ''}`;
+            card.setAttribute('data-skin-id', skin.id);
+
+            // 5 color swatch dots
+            const swatchesHtml = skin.palette.slice(0, 5).map(c => 
+                `<span class="skin-dot" style="background: ${c.hex}; box-shadow: 0 0 8px ${c.hex}88;"></span>`
+            ).join('');
+
+            card.innerHTML = `
+                <div class="skin-card-header">
+                    <div class="skin-preview-chip" style="background: ${skin.bg}; border: 1.5px solid ${skin.dockBorder};">
+                        <div class="skin-mini-shape" style="background: ${skin.palette[0].hex};"></div>
+                    </div>
+                    <div class="skin-card-info">
+                        <div class="skin-card-name">${skin.name}</div>
+                        <div class="skin-card-desc">${skin.description}</div>
+                    </div>
+                </div>
+                <div class="skin-card-footer">
+                    <div class="skin-swatches-row">
+                        ${swatchesHtml}
+                    </div>
+                    <button class="btn-skin-action ${isEquipped ? 'equipped' : ''}">
+                        ${isEquipped ? 'EQUIPPED' : 'SELECT'}
+                    </button>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                this.audio.playPop();
+                this.applySkin(skin.id);
+            });
+
+            this.dom.skinsGalleryGrid.appendChild(card);
+        });
+    }
+
+    openSkinsModal() {
+        this.renderSkinsGallery();
+        if (this.dom.skinsModal) {
+            this.dom.skinsModal.style.display = 'flex';
+            this.dom.skinsModal.classList.add('active');
+        }
+    }
+
+    closeSkinsModal() {
+        if (this.dom.skinsModal) {
+            this.dom.skinsModal.classList.remove('active');
+            this.dom.skinsModal.style.display = 'none';
+        }
+    }
+
+    applySkin(skinId, playSound = true) {
+        const skin = SkinManager.getSkin(skinId);
+        if (!skin) return;
+
+        SkinManager.saveSelectedSkinId(skin.id);
+        this.renderer.setTheme(skin.id);
+        this.gameState.applySkin(skin.id);
+
+        // Apply solid atmospheric background and CSS variables
+        document.documentElement.style.setProperty('--bg-color', skin.bg);
+        document.documentElement.style.setProperty('--card-bg', skin.boardBg);
+        document.documentElement.style.setProperty('--score-color', skin.scoreColor);
+        document.documentElement.style.setProperty('--diamond-color', skin.diamondColor);
+        document.body.style.backgroundColor = skin.bg;
+
+        // Update home screen display
+        if (this.dom.homeActiveSkinName) {
+            this.dom.homeActiveSkinName.textContent = skin.name;
+        }
+        if (this.dom.homeActiveSwatch) {
+            const dots = this.dom.homeActiveSwatch.querySelectorAll('.swatch-dot');
+            if (dots.length >= 3 && skin.palette.length >= 3) {
+                dots[0].style.backgroundColor = skin.palette[0].hex;
+                dots[1].style.backgroundColor = skin.palette[1].hex;
+                dots[2].style.backgroundColor = skin.palette[2].hex;
+            }
+        }
+
+        this.renderSkinsGallery();
+    }
+
     changeTheme(themeKey) {
-        this.renderer.setTheme(themeKey);
-        document.documentElement.setAttribute('data-theme', themeKey);
+        this.applySkin(themeKey);
     }
 
     openStatsModal() {

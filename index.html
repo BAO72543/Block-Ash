@@ -126,15 +126,22 @@
                     <div class="card-play-pill pill-gold"><span class="play-icon">▶</span> PLAY</div>
                 </button>
 
-                <!-- THEME QUICK SELECTOR STRIP -->
-                <div class="home-themes-strip">
-                    <span class="themes-strip-label">THEME</span>
-                    <div class="theme-pills-row">
-                        <button class="theme-pill active" data-theme-val="neon-dark" title="Neon Dark">Neon</button>
-                        <button class="theme-pill" data-theme-val="cyber-midnight" title="Cyber">Cyber</button>
-                        <button class="theme-pill" data-theme-val="sunset-blast" title="Sunset">Sunset</button>
-                        <button class="theme-pill" data-theme-val="classic-pastel" title="Pastel">Pastel</button>
-                    </div>
+                <!-- SKINS & THEMES GALLERY BUTTON -->
+                <div class="home-skins-strip">
+                    <button class="btn-home-skins" id="home-btn-skins" title="Change block colors, solid background, and effects">
+                        <div class="btn-skins-content">
+                            <span class="icon">🎨</span>
+                            <div class="skins-text-col">
+                                <span class="skins-title">SKINS & THEMES</span>
+                                <span class="skins-subtitle" id="home-active-skin-name">Classic Crimson</span>
+                            </div>
+                        </div>
+                        <div class="skins-swatch-mini" id="home-active-swatch">
+                            <span class="swatch-dot dot-1"></span>
+                            <span class="swatch-dot dot-2"></span>
+                            <span class="swatch-dot dot-3"></span>
+                        </div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -217,6 +224,10 @@
                             <span class="icon">📊</span>
                             <span class="btn-text">Stats</span>
                         </button>
+                        <button class="btn btn-wing" id="btn-skins" title="Select visual skins & themes">
+                            <span class="icon">🎨</span>
+                            <span class="btn-text">Skins</span>
+                        </button>
                         <button class="btn btn-wing" id="btn-force-lose" title="Trigger Game Over screen (O)" style="border-color: rgba(239, 68, 68, 0.4); color: #FCA5A5;">
                             <span class="icon">💀</span>
                             <span class="btn-text">Lose</span>
@@ -236,14 +247,6 @@
                 </div>
             </aside>
         </main>
-
-        <!-- Footer -->
-        <footer class="app-footer">
-            <span>Block Blast &copy; 2026 &bull; High-Performance HTML5 Canvas Game</span>
-            <div class="footer-links">
-                <span>Solvable Engine &bull; Zero Lag Web Audio</span>
-            </div>
-        </footer>
         </div> <!-- End of gameplay-view -->
     </div>
 
@@ -352,6 +355,23 @@
             <button class="btn" id="btn-close-stats" style="width: 100%; padding: 12px; font-size: 14px; border-radius: var(--radius-sm);">
                 <span>Close</span>
             </button>
+        </div>
+    </div>
+
+    <!-- Skins & Visual Themes Gallery Modal -->
+    <div class="modal-backdrop" id="skins-modal" style="display: none;">
+        <div class="modal-card skins-modal-card">
+            <div class="skins-modal-header">
+                <div>
+                    <h2 class="modal-title" style="margin-bottom: 2px;">🎨 SKINS & THEMES</h2>
+                    <p class="skins-modal-subtitle">Customize shape colors, solid background, and particle effects</p>
+                </div>
+                <button class="btn-skins-close" id="btn-close-skins" title="Close Skins Gallery">&times;</button>
+            </div>
+
+            <div class="skins-gallery-grid" id="skins-gallery-grid">
+                <!-- Dynamically populated 10 rich visual skin cards -->
+            </div>
         </div>
     </div>
 
