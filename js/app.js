@@ -32,8 +32,11 @@ export class BlockBlastApp {
 
         // Cache DOM Elements with robust fallbacks
         this.dom = {
+            appWrapper: document.querySelector('.app-wrapper'),
             homeScreen: document.getElementById('home-screen'),
             gameplayView: document.getElementById('gameplay-view'),
+            btnToggleSidebar: document.getElementById('btn-toggle-sidebar'),
+            sidebar: document.getElementById('game-sidebar'),
             btnPlayClassic: document.getElementById('btn-play-classic'),
             btnPlayAdventure: document.getElementById('btn-play-adventure'),
             btnPlayDrop: document.getElementById('btn-play-drop'),
@@ -132,6 +135,7 @@ export class BlockBlastApp {
             this.stopAutoplay();
         }
 
+        if (this.dom.appWrapper) this.dom.appWrapper.classList.remove('in-game');
         if (this.dom.homeScreen) this.dom.homeScreen.style.display = 'flex';
         if (this.dom.gameplayView) this.dom.gameplayView.style.display = 'none';
 
@@ -163,21 +167,33 @@ export class BlockBlastApp {
     enterGameWithMode(mode) {
         this.audio.playPop();
         this.triggerHaptic('snap');
+        if (this.dom.appWrapper) this.dom.appWrapper.classList.add('in-game');
         if (this.dom.homeScreen) this.dom.homeScreen.style.display = 'none';
         if (this.dom.gameplayView) this.dom.gameplayView.style.display = 'block';
 
         this.handleResize();
+        setTimeout(() => this.handleResize(), 60);
         this.switchMode(mode);
     }
 
     setupEventListeners() {
         // Tactile Hover Audio for 3D Arcade Cards and Buttons
-        const hoverElements = document.querySelectorAll('.hero-mode-card, .secondary-mode-card, .daily-challenge-card, .btn-3d-circle, .btn-3d, .theme-pill');
+        const hoverElements = document.querySelectorAll('.hero-mode-card, .secondary-mode-card, .daily-challenge-card, .btn-3d-circle, .btn-3d, .theme-pill, .btn-hud-icon');
         hoverElements.forEach(el => {
             el.addEventListener('mouseenter', () => {
                 this.audio.playHover();
             });
         });
+
+        // Sidebar Toggle Button
+        if (this.dom.btnToggleSidebar) {
+            this.dom.btnToggleSidebar.addEventListener('click', () => {
+                this.audio.playPop();
+                if (this.dom.sidebar) {
+                    this.dom.sidebar.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        }
 
         // Home Screen Mode Buttons
         if (this.dom.btnPlayClassic) {

@@ -142,50 +142,51 @@
         <!-- 2. Active Gameplay View (Initially Hidden until mode is selected) -->
         <div class="gameplay-view" id="gameplay-view" style="display: none; width: 100%;">
             <!-- In-Game Header -->
-            <header class="app-header">
-                <div class="brand-section">
-                    <button class="btn btn-sm" id="btn-return-home" style="padding: 6px 12px; font-size: 13px; font-weight: 700; border-color: rgba(255,255,255,0.2);">
-                        <span>🏠 Menu</span>
-                    </button>
-                    <div class="logo-badge" style="width: 36px; height: 36px; font-size: 18px;">⚡</div>
-                    <div>
-                        <h1 class="brand-title" style="font-size: 20px;">BLOCK BLAST</h1>
-                    </div>
+            <!-- In-Game HUD: Top Bar with High Score Crown on Left, Mode Switcher in Center, Menu on Right -->
+            <header class="game-hud-top-bar">
+                <div class="hud-left-best">
+                    <span class="crown-icon">👑</span>
+                    <span class="best-score-val" id="high-score">0</span>
                 </div>
 
                 <!-- In-Game Mode Switcher Tabs -->
                 <div class="mode-tabs" id="mode-tabs">
                     <button class="mode-tab active" data-mode="classic" id="tab-mode-classic">Classic</button>
                     <button class="mode-tab" data-mode="adventure" id="tab-mode-adventure">Adventure</button>
-                    <button class="mode-tab" data-mode="drop" id="tab-mode-drop">Drop Mode</button>
+                    <button class="mode-tab" data-mode="drop" id="tab-mode-drop">Drop</button>
                 </div>
 
-                <div class="score-board">
-                    <div class="combo-pill" id="combo-badge">
-                        <span id="combo-flame" style="display: none;">🔥</span>
-                        <span>COMBO <span id="combo-count">0</span></span>
-                    </div>
-
-                    <div class="score-card primary">
-                        <span class="label">Score</span>
-                        <span class="value" id="current-score">0</span>
-                    </div>
-
-                    <div class="score-card">
-                        <span class="label">Best</span>
-                        <span class="value" id="high-score">0</span>
-                    </div>
+                <div class="hud-right-actions">
+                    <button class="btn-hud-icon" id="btn-return-home" title="Return to Home Menu">
+                        <span>🏠</span>
+                    </button>
+                    <button class="btn-hud-icon" id="btn-toggle-sidebar" title="Toggle Quick Actions">
+                        <span>⚙️</span>
+                    </button>
                 </div>
             </header>
 
+            <!-- Giant Hero Score Area (Matching Block Blast Reference) -->
+            <div class="hero-score-zone">
+                <div class="score-diamond-emblem">
+                    <div class="diamond-shape"></div>
+                    <span class="giant-score-val" id="current-score">0</span>
+                </div>
+                <!-- Combo Streak Badge -->
+                <div class="combo-pill" id="combo-badge" style="display: none;">
+                    <span id="combo-flame" style="display: none;">🔥</span>
+                    <span>COMBO <span id="combo-count">0</span></span>
+                </div>
+            </div>
+
             <!-- Mode Objectives / Status HUD Bar -->
-            <div class="mode-status-bar" id="mode-status-bar" style="display: none; margin-top: 12px;">
+            <div class="mode-status-bar" id="mode-status-bar" style="display: none; margin-top: 6px;">
                 <div class="status-content" id="mode-status-content">
                     <span class="status-badge" id="mode-stage-badge">Stage 1</span>
                     <span class="status-goal" id="mode-goal-text">Goals: Collect 4 Gems</span>
                     <span class="status-moves" id="mode-moves-text">Moves Left: 16</span>
                 </div>
-                <button class="btn btn-sm" id="btn-open-stage-map" style="padding: 6px 12px; font-size: 12px;">Stage Map</button>
+                <button class="btn btn-sm" id="btn-open-stage-map" style="padding: 4px 10px; font-size: 11px;">Stage Map</button>
             </div>
 
         <!-- Main Content -->
@@ -196,7 +197,7 @@
             </section>
 
             <!-- Sidebar Dashboard -->
-            <aside class="sidebar-panel">
+            <aside class="sidebar-panel" id="game-sidebar">
                 <!-- Action Controls -->
                 <div class="panel-card">
                     <h2 class="panel-title">⚡ Quick Actions</h2>
