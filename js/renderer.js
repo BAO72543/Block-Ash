@@ -386,54 +386,239 @@ export class GameRenderer {
         const ctx = this.ctx;
         const cx = x + size / 2;
         const cy = y + size / 2;
-        const r = size * 0.3;
+        const r = size * 0.32;
+        const pulse = 0.85 + Math.sin(this.pulsePhase * 3) * 0.15;
 
         ctx.save();
+
         if (itemType === 'gem') {
-            // Shiny Diamond / Gem
-            ctx.fillStyle = '#FFFFFF';
-            ctx.shadowColor = '#38BDF8';
-            ctx.shadowBlur = 10;
+            // -- Premium Multi-Facet Diamond Gem --
+
+            // Outer glow aura
+            ctx.shadowColor = 'rgba(56, 189, 248, 0.8)';
+            ctx.shadowBlur = 14 * pulse;
+
+            // Main diamond silhouette (rotated square)
+            const outerR = r * 1.05;
             ctx.beginPath();
-            ctx.moveTo(cx, cy - r);
-            ctx.lineTo(cx + r, cy);
-            ctx.lineTo(cx, cy + r);
-            ctx.lineTo(cx - r, cy);
+            ctx.moveTo(cx, cy - outerR);
+            ctx.lineTo(cx + outerR, cy);
+            ctx.lineTo(cx, cy + outerR);
+            ctx.lineTo(cx - outerR, cy);
             ctx.closePath();
+
+            // Gradient fill: deep sapphire to sky
+            const gemGrad = ctx.createLinearGradient(cx - outerR, cy - outerR, cx + outerR, cy + outerR);
+            gemGrad.addColorStop(0, '#E0F2FE');
+            gemGrad.addColorStop(0.3, '#7DD3FC');
+            gemGrad.addColorStop(0.6, '#38BDF8');
+            gemGrad.addColorStop(1, '#0284C7');
+            ctx.fillStyle = gemGrad;
             ctx.fill();
 
-            // Inner facet
-            ctx.fillStyle = 'rgba(14, 165, 233, 0.75)';
+            // Crisp diamond border
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.lineWidth = Math.max(1, size * 0.025);
+            ctx.stroke();
+
+            // Inner facets: top-left bright triangle
             ctx.beginPath();
-            ctx.moveTo(cx, cy - r * 0.5);
-            ctx.lineTo(cx + r * 0.5, cy);
-            ctx.lineTo(cx, cy + r * 0.5);
-            ctx.lineTo(cx - r * 0.5, cy);
+            ctx.moveTo(cx, cy - outerR);
+            ctx.lineTo(cx - outerR, cy);
+            ctx.lineTo(cx, cy);
             ctx.closePath();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.30)';
             ctx.fill();
+
+            // Inner facets: top-right subtle highlight
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerR);
+            ctx.lineTo(cx + outerR, cy);
+            ctx.lineTo(cx, cy);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.fill();
+
+            // Bottom-right shadow facet for depth
+            ctx.beginPath();
+            ctx.moveTo(cx + outerR, cy);
+            ctx.lineTo(cx, cy + outerR);
+            ctx.lineTo(cx, cy);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(0, 40, 80, 0.18)';
+            ctx.fill();
+
+            // Center cross-line facet edges
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.lineWidth = Math.max(0.5, size * 0.015);
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerR);
+            ctx.lineTo(cx, cy + outerR);
+            ctx.moveTo(cx - outerR, cy);
+            ctx.lineTo(cx + outerR, cy);
+            ctx.stroke();
+
+            // Top-left specular highlight dot
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            ctx.beginPath();
+            ctx.arc(cx - r * 0.28, cy - r * 0.32, r * 0.15, 0, Math.PI * 2);
+            ctx.fill();
+
         } else if (itemType === 'puzzle') {
-            // Puzzle Piece
-            ctx.fillStyle = '#FFFFFF';
-            ctx.shadowColor = '#C084FC';
-            ctx.shadowBlur = 8;
-            ctx.fillRect(cx - r * 0.65, cy - r * 0.65, r * 1.3, r * 1.3);
+            // -- Premium Puzzle Piece with Connector Tabs --
+
+            ctx.shadowColor = 'rgba(192, 132, 252, 0.75)';
+            ctx.shadowBlur = 12 * pulse;
+
+            const bodyW = r * 1.2;
+            const bodyH = r * 1.2;
+            const tabR = r * 0.28;
+            const notchR = r * 0.24;
+            const cornerR = Math.max(2, r * 0.18);
+
+            // Draw body + tab (top) + tab (right) - notch (bottom) - notch (left)
             ctx.beginPath();
-            ctx.arc(cx, cy - r * 0.65, r * 0.35, 0, Math.PI * 2);
-            ctx.arc(cx + r * 0.65, cy, r * 0.35, 0, Math.PI * 2);
+
+            // Start top-left, going clockwise
+            // Top edge with outward tab
+            ctx.moveTo(cx - bodyW / 2 + cornerR, cy - bodyH / 2);
+            ctx.lineTo(cx - tabR, cy - bodyH / 2);
+            ctx.arc(cx, cy - bodyH / 2 - tabR * 0.6, tabR, Math.PI * 0.85, Math.PI * 0.15, false);
+            ctx.lineTo(cx + bodyW / 2 - cornerR, cy - bodyH / 2);
+
+            // Top-right corner
+            ctx.quadraticCurveTo(cx + bodyW / 2, cy - bodyH / 2, cx + bodyW / 2, cy - bodyH / 2 + cornerR);
+
+            // Right edge with outward tab
+            ctx.lineTo(cx + bodyW / 2, cy - tabR);
+            ctx.arc(cx + bodyW / 2 + tabR * 0.6, cy, tabR, -Math.PI * 0.35, Math.PI * 0.35, false);
+            ctx.lineTo(cx + bodyW / 2, cy + bodyH / 2 - cornerR);
+
+            // Bottom-right corner
+            ctx.quadraticCurveTo(cx + bodyW / 2, cy + bodyH / 2, cx + bodyW / 2 - cornerR, cy + bodyH / 2);
+
+            // Bottom edge with inward notch
+            ctx.lineTo(cx + notchR, cy + bodyH / 2);
+            ctx.arc(cx, cy + bodyH / 2 - notchR * 0.3, notchR, Math.PI * 0.15, Math.PI * 0.85, false);
+            ctx.lineTo(cx - bodyW / 2 + cornerR, cy + bodyH / 2);
+
+            // Bottom-left corner
+            ctx.quadraticCurveTo(cx - bodyW / 2, cy + bodyH / 2, cx - bodyW / 2, cy + bodyH / 2 - cornerR);
+
+            // Left edge with inward notch
+            ctx.lineTo(cx - bodyW / 2, cy + notchR);
+            ctx.arc(cx - bodyW / 2 + notchR * 0.3, cy, notchR, Math.PI * 0.35, -Math.PI * 0.35, false);
+            ctx.lineTo(cx - bodyW / 2, cy - bodyH / 2 + cornerR);
+
+            // Top-left corner
+            ctx.quadraticCurveTo(cx - bodyW / 2, cy - bodyH / 2, cx - bodyW / 2 + cornerR, cy - bodyH / 2);
+
+            ctx.closePath();
+
+            // Fill with rich purple gradient
+            const puzzleGrad = ctx.createLinearGradient(cx - bodyW, cy - bodyH, cx + bodyW, cy + bodyH);
+            puzzleGrad.addColorStop(0, '#E9D5FF');
+            puzzleGrad.addColorStop(0.35, '#C084FC');
+            puzzleGrad.addColorStop(0.7, '#A855F7');
+            puzzleGrad.addColorStop(1, '#7C3AED');
+            ctx.fillStyle = puzzleGrad;
             ctx.fill();
-        } else if (itemType === 'star') {
-            // 5-Point Star
-            ctx.fillStyle = '#FDE047';
-            ctx.shadowColor = '#EAB308';
-            ctx.shadowBlur = 12;
+
+            // Crisp border
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+            ctx.lineWidth = Math.max(1, size * 0.022);
+            ctx.stroke();
+
+            // Inner body highlight
+            ctx.shadowBlur = 0;
+            const innerGrad = ctx.createLinearGradient(cx, cy - bodyH / 2, cx, cy + bodyH / 2);
+            innerGrad.addColorStop(0, 'rgba(255, 255, 255, 0.30)');
+            innerGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
+            innerGrad.addColorStop(1, 'rgba(0, 0, 0, 0.10)');
+            ctx.fillStyle = innerGrad;
+            ctx.fill();
+
+            // Specular highlight
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
             ctx.beginPath();
-            for (let i = 0; i < 5; i++) {
-                ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * r + cx, -Math.sin((18 + i * 72) * Math.PI / 180) * r + cy);
-                ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * (r * 0.5) + cx, -Math.sin((54 + i * 72) * Math.PI / 180) * (r * 0.5) + cy);
+            ctx.arc(cx - r * 0.18, cy - r * 0.22, r * 0.12, 0, Math.PI * 2);
+            ctx.fill();
+
+        } else if (itemType === 'star') {
+            // -- Premium 5-Point Golden Star --
+
+            ctx.shadowColor = 'rgba(234, 179, 8, 0.85)';
+            ctx.shadowBlur = 14 * pulse;
+
+            const outerR = r * 1.08;
+            const innerR = outerR * 0.42;
+            const points = 5;
+            const angleOffset = -Math.PI / 2; // Point upward
+
+            // Main star path
+            ctx.beginPath();
+            for (let i = 0; i < points * 2; i++) {
+                const isOuter = i % 2 === 0;
+                const currentR = isOuter ? outerR : innerR;
+                const angle = angleOffset + (i * Math.PI) / points;
+                const px = cx + Math.cos(angle) * currentR;
+                const py = cy + Math.sin(angle) * currentR;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
             }
             ctx.closePath();
+
+            // Rich golden gradient
+            const starGrad = ctx.createRadialGradient(cx - outerR * 0.2, cy - outerR * 0.2, 0, cx, cy, outerR * 1.1);
+            starGrad.addColorStop(0, '#FEF9C3');
+            starGrad.addColorStop(0.3, '#FDE047');
+            starGrad.addColorStop(0.65, '#FACC15');
+            starGrad.addColorStop(1, '#CA8A04');
+            ctx.fillStyle = starGrad;
+            ctx.fill();
+
+            // Crisp golden border
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = Math.max(1, size * 0.02);
+            ctx.stroke();
+
+            // Top-left directional highlight for 3D illusion
+            ctx.shadowBlur = 0;
+            ctx.beginPath();
+            for (let i = 0; i < points * 2; i++) {
+                const isOuter = i % 2 === 0;
+                const currentR = isOuter ? outerR : innerR;
+                const angle = angleOffset + (i * Math.PI) / points;
+                const px = cx + Math.cos(angle) * currentR;
+                const py = cy + Math.sin(angle) * currentR;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            const highlightGrad = ctx.createLinearGradient(cx - outerR, cy - outerR, cx + outerR * 0.5, cy + outerR * 0.5);
+            highlightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.40)');
+            highlightGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.08)');
+            highlightGrad.addColorStop(1, 'rgba(0, 0, 0, 0.12)');
+            ctx.fillStyle = highlightGrad;
+            ctx.fill();
+
+            // Bright center core glow
+            const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, innerR * 0.9);
+            coreGrad.addColorStop(0, 'rgba(255, 255, 240, 0.65)');
+            coreGrad.addColorStop(1, 'rgba(255, 255, 240, 0)');
+            ctx.fillStyle = coreGrad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, innerR * 0.9, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Specular highlight dot
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            ctx.beginPath();
+            ctx.arc(cx - r * 0.15, cy - r * 0.28, r * 0.11, 0, Math.PI * 2);
             ctx.fill();
         }
+
         ctx.restore();
     }
 
