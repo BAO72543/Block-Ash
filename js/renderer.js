@@ -101,25 +101,25 @@ export class GameRenderer {
         const isMobile = this.width < 640;
         const aspect = this.width / Math.max(1, this.height);
 
-        // Safety paddings from outer canvas boundaries to guarantee shadow and glow bloom
-        const sidePadding = isMobile ? 14 : 22;
-        const topPadding = isMobile ? 14 : 20;
-        const bottomPadding = isMobile ? 16 : 22;
+        // Responsive safety paddings
+        const sidePadding = isMobile ? Math.max(8, Math.round(this.width * 0.03)) : 20;
+        const topPadding = isMobile ? Math.max(8, Math.round(this.height * 0.02)) : 16;
+        const bottomPadding = isMobile ? Math.max(8, Math.round(this.height * 0.025)) : 18;
 
-        // Side Dock Mode: used when the canvas is wide enough (aspect >= 1.08 and width >= 480)
-        const isWide = (aspect >= 1.08 && this.width >= 480);
+        // Side Dock Mode: triggered on landscape ratios or low-height wide screens
+        const isWide = (aspect >= 1.05 && this.width >= 460) || (aspect >= 1.25 && this.width >= 400) || (this.height <= 520 && this.width >= 480);
 
         if (isWide) {
             // ==========================================
             // WIDESCREEN / SIDE DOCK MODE
             // ==========================================
-            const maxAvailableHeight = this.height - topPadding - bottomPadding;
-            const sideDockWidth = Math.min(220, Math.max(120, Math.round(this.width * 0.23)));
-            const maxAvailableWidthForBoard = this.width - sideDockWidth - (sidePadding * 3);
+            const maxAvailableHeight = Math.max(150, this.height - topPadding - bottomPadding);
+            const sideDockWidth = Math.min(260, Math.max(105, Math.round(this.width * 0.24)));
+            const maxAvailableWidthForBoard = Math.max(150, this.width - sideDockWidth - (sidePadding * 3));
 
             // Maximum square board size that fits in available width and height
-            const maxBoardSize = Math.max(180, Math.min(maxAvailableWidthForBoard, maxAvailableHeight));
-            const gap = Math.max(2, Math.min(4, Math.round(maxBoardSize / 130)));
+            const maxBoardSize = Math.max(150, Math.min(maxAvailableWidthForBoard, maxAvailableHeight));
+            const gap = Math.max(2, Math.min(5, Math.round(maxBoardSize / 120)));
             const outerPadding = Math.round(gap * 1.5);
             const cellSize = Math.floor((maxBoardSize - (outerPadding * 2) - (gap * 7)) / 8);
             const actualBoardSize = cellSize * 8 + gap * 7 + outerPadding * 2;
@@ -139,7 +139,7 @@ export class GameRenderer {
 
             const dockX = boardX + actualBoardSize + sidePadding;
             const dockY = boardY;
-            const slotGap = Math.max(6, Math.round((actualBoardSize - 30) * 0.035));
+            const slotGap = Math.max(4, Math.min(12, Math.round((actualBoardSize - 20) * 0.03)));
             const slotWidth = Math.min(sideDockWidth, this.width - dockX - sidePadding);
             const slotHeight = Math.floor((actualBoardSize - slotGap * 2) / 3);
 
@@ -159,18 +159,20 @@ export class GameRenderer {
             // ==========================================
             // PORTRAIT / BOTTOM DOCK MODE
             // ==========================================
-            const maxAvailableWidth = this.width - sidePadding * 2;
-            const dockHeight = Math.min(145, Math.max(80, Math.round(this.height * 0.21)));
-            const maxAvailableHeightForBoard = this.height - dockHeight - topPadding - bottomPadding - (isMobile ? 8 : 12);
+            const maxAvailableWidth = Math.max(150, this.width - sidePadding * 2);
+            const dockHeight = Math.min(150, Math.max(72, Math.round(this.height * (this.height > 820 ? 0.18 : 0.22))));
+            const minGapBetween = isMobile ? 8 : 12;
+            const maxAvailableHeightForBoard = Math.max(150, this.height - dockHeight - topPadding - bottomPadding - minGapBetween);
 
-            const maxBoardSize = Math.max(180, Math.min(maxAvailableWidth, maxAvailableHeightForBoard));
-            const gap = Math.max(2, Math.min(4, Math.round(maxBoardSize / 130)));
+            const maxBoardSize = Math.max(150, Math.min(maxAvailableWidth, maxAvailableHeightForBoard));
+            const gap = Math.max(2, Math.min(5, Math.round(maxBoardSize / 120)));
             const outerPadding = Math.round(gap * 1.5);
             const cellSize = Math.floor((maxBoardSize - (outerPadding * 2) - (gap * 7)) / 8);
             const actualBoardSize = cellSize * 8 + gap * 7 + outerPadding * 2;
 
+            const extraVerticalSpace = Math.max(0, this.height - actualBoardSize - dockHeight - topPadding - bottomPadding - minGapBetween);
             const boardX = Math.round((this.width - actualBoardSize) / 2);
-            const boardY = topPadding + Math.max(0, Math.round((maxAvailableHeightForBoard - actualBoardSize) * 0.3));
+            const boardY = topPadding + Math.round(extraVerticalSpace * 0.28);
 
             this.boardMetrics = {
                 x: boardX,
@@ -181,11 +183,11 @@ export class GameRenderer {
                 outerPadding
             };
 
-            const dockY = boardY + actualBoardSize + (isMobile ? 8 : 12);
+            const dockY = boardY + actualBoardSize + minGapBetween + Math.round(extraVerticalSpace * 0.45);
             const dockWidth = actualBoardSize;
-            const slotGap = Math.max(6, Math.round(actualBoardSize * 0.022));
+            const slotGap = Math.max(4, Math.min(12, Math.round(actualBoardSize * 0.022)));
             const slotWidth = Math.floor((dockWidth - slotGap * 2) / 3);
-            const availableDockHeight = Math.max(60, this.height - dockY - bottomPadding);
+            const availableDockHeight = Math.max(54, this.height - dockY - bottomPadding);
             const slotHeight = Math.min(dockHeight, availableDockHeight);
 
             this.dockMetrics.slots = [];
@@ -253,8 +255,10 @@ export class GameRenderer {
         this.selectedShapeIdx = shapeIdx;
         this.dragPointer = pointer;
         this.isTouchDrag = isTouch;
-        // Y-axis drag offset (54px for touch, 36px for mouse) to prevent thumb/finger occlusion
-        this.dragOffset = { x: 0, y: isTouch ? 54 : 36 };
+        
+        // Fluid responsive Y-axis lift offset matching grid cell size to prevent thumb occlusion
+        const responsiveLift = Math.round(Math.min(68, Math.max(36, this.boardMetrics.cellSize * 1.18)));
+        this.dragOffset = { x: 0, y: isTouch ? responsiveLift : Math.round(responsiveLift * 0.55) };
         this.snapBack = null;
     }
 
@@ -1025,18 +1029,20 @@ export class GameRenderer {
                 }
 
                 const maxDim = Math.max(shape.rows, shape.cols, 3);
-                const miniBlockSize = Math.round(Math.min((slot.width - 24) / maxDim, (slot.height - 24) / maxDim, this.boardMetrics.cellSize * 0.60));
-                const shapePixelW = shape.cols * (miniBlockSize + 2) - 2;
-                const shapePixelH = shape.rows * (miniBlockSize + 2) - 2;
+                const pad = Math.max(12, Math.min(24, Math.round(slot.width * 0.12)));
+                const miniBlockSize = Math.round(Math.min((slot.width - pad) / maxDim, (slot.height - pad) / maxDim, this.boardMetrics.cellSize * 0.72));
+                const pieceGap = Math.max(1, Math.min(3, Math.round(miniBlockSize * 0.08)));
+                const shapePixelW = shape.cols * (miniBlockSize + pieceGap) - pieceGap;
+                const shapePixelH = shape.rows * (miniBlockSize + pieceGap) - pieceGap;
 
                 const startX = Math.round(slot.x + (slot.width - shapePixelW) / 2);
-                const startY = Math.round(slot.y + (slot.height - shapePixelH) / 2 + 2);
+                const startY = Math.round(slot.y + (slot.height - shapePixelH) / 2 + 1);
 
                 for (let r = 0; r < shape.rows; r++) {
                     for (let c = 0; c < shape.cols; c++) {
                         if (shape.form[r][c]) {
-                            const bx = startX + c * (miniBlockSize + 2);
-                            const by = startY + r * (miniBlockSize + 2);
+                            const bx = startX + c * (miniBlockSize + pieceGap);
+                            const by = startY + r * (miniBlockSize + pieceGap);
                             this.drawBeveledBlock(bx, by, miniBlockSize, shape.color);
                         }
                     }

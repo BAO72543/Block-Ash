@@ -569,12 +569,15 @@ export class BlockBlastApp {
         if (!container) return;
 
         const rect = container.getBoundingClientRect();
-        const mainEl = document.querySelector('.main-content-wide');
-        const mainRect = mainEl ? mainEl.getBoundingClientRect() : null;
+        const hudEl = document.getElementById('game-hud-top-bar');
+        const hudHeight = hudEl ? hudEl.offsetHeight : 52;
+        const adWrapper = document.getElementById('ad-bottom-banner');
+        const adHeight = (adWrapper && adWrapper.style.display !== 'none') ? adWrapper.offsetHeight : 0;
 
-        const w = Math.round((rect && rect.width > 50) ? rect.width : (mainRect && mainRect.width > 50 ? mainRect.width : (window.innerWidth > 50 ? Math.min(window.innerWidth - 32, 1040) : 420)));
-        const h = Math.round((rect && rect.height > 50) ? rect.height : (mainRect && mainRect.height > 50 ? mainRect.height : (window.innerHeight > 150 ? window.innerHeight - 140 : 540)));
-        this.renderer.resize(w, h);
+        const availableW = Math.max(150, Math.floor((rect && rect.width > 50) ? rect.width : (window.innerWidth > 50 ? Math.min(window.innerWidth - 24, 1100) : 420)));
+        const availableH = Math.max(150, Math.floor((rect && rect.height > 50) ? rect.height : (window.innerHeight > 150 ? window.innerHeight - hudHeight - adHeight - 20 : 540)));
+
+        this.renderer.resize(availableW, availableH);
     }
 
     triggerHaptic(type = 'snap') {

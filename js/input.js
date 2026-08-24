@@ -28,9 +28,11 @@ export class InputHandler {
         const rect = this.canvas.getBoundingClientRect();
         const clientX = e.clientX ?? (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
         const clientY = e.clientY ?? (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+        const scaleX = rect.width > 0 ? (this.renderer.width / rect.width) : 1;
+        const scaleY = rect.height > 0 ? (this.renderer.height / rect.height) : 1;
         return {
-            x: clientX - rect.left,
-            y: clientY - rect.top
+            x: (clientX - rect.left) * scaleX,
+            y: (clientY - rect.top) * scaleY
         };
     }
 
