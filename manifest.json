@@ -1,6 +1,6 @@
 {
-  "name": "Block Blast - HTML5 Edition",
-  "short_name": "Block Blast",
+  "name": "Block Ash - HTML5 Edition",
+  "short_name": "Block Ash",
   "description": "High-Performance HTML5 Canvas Block Puzzle with AI Lookahead and Pure Offline Play",
   "start_url": "./",
   "display": "standalone",

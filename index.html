@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Block Blast - HTML5 Puzzle Game & AI Solver</title>
+    <title>Block Ash - HTML5 Puzzle Game & AI Solver</title>
     <meta name="description" content="Play the addictive 8x8 block placement puzzle game with combo multipliers, rich visual effects, sound synthesis, and built-in AI solver.">
     <meta name="theme-color" content="#0F172A">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,7 +19,7 @@
     <div class="app-wrapper">
         <!-- 1. Home Menu Title Screen (Mobile-First Arcade Interface) -->
         <div class="home-screen" id="home-screen">
-            <!-- Top HUD Bar: Sound Button + Compact 3D Logo + Stats Button -->
+            <!-- Level 1: Top Action Row with Volume & Stats Buttons stuck to the top -->
             <div class="home-top-bar">
                 <button class="btn-3d-circle" id="home-btn-sound" title="Toggle Sound">
                     <svg class="ui-icon icon-vol-sound" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -28,15 +28,6 @@
                         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
                     </svg>
                 </button>
-                <div class="home-logo-compact">
-                    <div class="home-logo-blocks-mini">
-                        <span class="mini-block b-red"></span>
-                        <span class="mini-block b-blue"></span>
-                        <span class="mini-block b-yellow"></span>
-                        <span class="mini-block b-green"></span>
-                    </div>
-                    <h1 class="home-arcade-title-compact">BLOCK <span class="title-highlight">BLAST!</span></h1>
-                </div>
                 <button class="btn-3d-circle" id="home-btn-stats" title="Game Statistics">
                     <svg class="ui-icon icon-stats-chart" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="13" width="4" height="8" rx="1.5" fill="currentColor" fill-opacity="0.3"></rect>
@@ -46,6 +37,17 @@
                         <circle cx="21" cy="2" r="1.5" fill="currentColor"></circle>
                     </svg>
                 </button>
+            </div>
+
+            <!-- Level 2: Grand Central Logo Hero (Enlarged Arcade Title) -->
+            <div class="home-logo-hero">
+                <div class="home-logo-blocks-grand">
+                    <span class="mini-block b-red"></span>
+                    <span class="mini-block b-blue"></span>
+                    <span class="mini-block b-yellow"></span>
+                    <span class="mini-block b-green"></span>
+                </div>
+                <h1 class="home-arcade-title">BLOCK <span class="title-highlight">ASH!</span></h1>
             </div>
 
             <!-- Mode Selection Menu: Primary Hero Card + Secondary 2-Tile Grid + Daily Banner -->

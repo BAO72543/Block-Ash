@@ -1,7 +1,7 @@
 {
-  "name": "blockblast-html5",
+  "name": "blockash-html5",
   "version": "1.0.0",
-  "description": "Block Blast - Modern HTML5 Puzzle Game & AI Solver",
+  "description": "Block Ash - Modern HTML5 Puzzle Game & AI Solver",
   "main": "server.js",
   "type": "module",
   "scripts": {

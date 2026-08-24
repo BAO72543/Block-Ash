@@ -1,11 +1,11 @@
 /**
- * Block Blast - Service Worker (PWA)
+ * Block Ash - Service Worker (PWA)
  * Implements Network-First strategy with Offline Fallback.
  * Ensures normal F5 reloads ALWAYS fetch the latest live code immediately,
  * while still supporting 100% offline play when disconnected from network.
  */
 
-const CACHE_NAME = 'blockblast-v33';
+const CACHE_NAME = 'blockash-v34';
 const STATIC_ASSETS = [
     './',
     './index.html',

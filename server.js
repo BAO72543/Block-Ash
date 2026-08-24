@@ -72,7 +72,7 @@ function startServer(port, maxAttempts = 10) {
     });
 
     server.listen(port, () => {
-        console.log(`\n⚡ Block Blast HTML5 Game Server running at:`);
+        console.log(`\n⚡ Block Ash HTML5 Game Server running at:`);
         console.log(`👉 http://localhost:${port}/\n`);
     });
 }

@@ -300,15 +300,11 @@ function canPlacePermutation(currentGrid, pieces, perm, step) {
     return false;
 }
 
-export function generateValidShapes(grid, comboStreak = 0, mode = 'classic') {
+export function generateValidShapes(grid, comboStreak = 0) {
     let filledCells = 0;
-    let highestRow = 8;
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
-            if (grid[r][c] !== 0) {
-                filledCells++;
-                if (r < highestRow) highestRow = r;
-            }
+            if (grid[r][c] !== 0) filledCells++;
         }
     }
     const fillRatio = filledCells / 64.0;
@@ -317,16 +313,7 @@ export function generateValidShapes(grid, comboStreak = 0, mode = 'classic') {
     let w2 = 5;
     let w3 = 3;
 
-    if (mode === 'drop') {
-        // Drop mode: gravity stack requires compact gap-filling shapes and line-sweeping shapes
-        if (highestRow <= 2) {
-            w1 = 30; w2 = 6; w3 = 0; // Emergency ceiling clearance
-        } else if (highestRow <= 4) {
-            w1 = 20; w2 = 8; w3 = 1;
-        } else {
-            w1 = 14; w2 = 9; w3 = 2;
-        }
-    } else if (fillRatio > 0.75 || highestRow <= 2) {
+    if (fillRatio > 0.75) {
         w1 = 28;
         w2 = 6;
         w3 = 1;
@@ -334,26 +321,19 @@ export function generateValidShapes(grid, comboStreak = 0, mode = 'classic') {
         w1 = 6;
         w2 = 7;
         w3 = 8;
-    } else if (fillRatio > 0.55 || highestRow <= 4) {
+    } else if (fillRatio > 0.55) {
         w1 = 16;
         w2 = 6;
         w3 = 2;
     }
 
-    const MAX_ATTEMPTS = 50;
+    const MAX_ATTEMPTS = 40;
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
         const candidatePieces = [
             sampleWeightedShape(w1, w2, w3),
             sampleWeightedShape(w1, w2, w3),
             sampleWeightedShape(w1, w2, w3)
         ];
-
-        // In Drop mode when ceiling is high, don't generate shapes taller than the open headroom
-        if (mode === 'drop' && highestRow <= 3) {
-            if (candidatePieces.some(p => p.rows > highestRow)) {
-                continue;
-            }
-        }
 
         if (verifySolvability(grid, candidatePieces)) {
             return candidatePieces;
@@ -365,7 +345,7 @@ export function generateValidShapes(grid, comboStreak = 0, mode = 'classic') {
 
     for (let i = 0; i < 3; i++) {
         let placed = false;
-        for (let t = 0; t < 20; t++) {
+        for (let t = 0; t < 15; t++) {
             const piece = sampleFromClass('CLASS_1');
             for (let r = 0; r <= 8 - piece.rows; r++) {
                 for (let c = 0; c <= 8 - piece.cols; c++) {
