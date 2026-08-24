@@ -81,6 +81,7 @@ export class BlockBlastApp {
             btnStageMapAfterWin: document.getElementById('btn-stage-map-after-win'),
             btnNextStage: document.getElementById('btn-next-stage'),
             btnHint: document.getElementById('btn-hint'),
+            quickActionsCard: document.getElementById('quick-actions-card'),
             btnAutoplay: document.getElementById('btn-autoplay'),
             aiSpeedContainer: document.getElementById('ai-speed-container'),
             btnSound: document.getElementById('btn-sound'),
@@ -740,14 +741,18 @@ export class BlockBlastApp {
     }
 
     updateModeStatusBar() {
+        const isClassic = (this.gameState.mode === GAME_MODES.CLASSIC);
+        if (this.dom.quickActionsCard) {
+            this.dom.quickActionsCard.style.display = isClassic ? 'block' : 'none';
+        }
+
         // Show/Hide AI controls based on game mode:
         // AI option is completely disabled & removed in Adventure and Drop Mode
-        const isAiSupportedMode = (this.gameState.mode === GAME_MODES.CLASSIC);
-        if (this.dom.btnHint) this.dom.btnHint.style.display = isAiSupportedMode ? 'flex' : 'none';
-        if (this.dom.btnAutoplay) this.dom.btnAutoplay.style.display = isAiSupportedMode ? 'flex' : 'none';
-        if (this.dom.aiSpeedContainer) this.dom.aiSpeedContainer.style.display = isAiSupportedMode ? 'block' : 'none';
+        if (this.dom.btnHint) this.dom.btnHint.style.display = isClassic ? 'flex' : 'none';
+        if (this.dom.btnAutoplay) this.dom.btnAutoplay.style.display = isClassic ? 'flex' : 'none';
+        if (this.dom.aiSpeedContainer) this.dom.aiSpeedContainer.style.display = isClassic ? 'block' : 'none';
 
-        if (!isAiSupportedMode) {
+        if (!isClassic) {
             if (this.isAutoplayActive) this.stopAutoplay();
             this.renderer.aiHint = null;
         }
