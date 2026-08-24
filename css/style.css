@@ -2036,3 +2036,115 @@ kbd {
     letter-spacing: 1px;
     color: var(--accent-cyan);
 }
+
+/* ==========================================================================
+   Modern Vector UI Icons & Neon Micro-Accents (No Emojis)
+   ========================================================================== */
+.ui-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+    transition: transform 0.15s ease, filter 0.15s ease, stroke 0.15s ease, color 0.15s ease;
+}
+
+/* Sound Icon Styling & States */
+.icon-vol-sound {
+    color: #38BDF8;
+    filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.65));
+}
+
+.btn-3d-circle.muted .icon-vol-sound,
+.btn-wing.muted .icon-vol-sound {
+    color: #F87171 !important;
+    filter: drop-shadow(0 0 5px rgba(248, 113, 113, 0.65)) !important;
+}
+
+.btn-3d-circle.muted {
+    border-color: rgba(239, 68, 68, 0.4);
+    box-shadow: 0 3px 0 #7F1D1D, 0 4px 8px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.15);
+}
+
+.btn-wing.muted {
+    border-color: rgba(239, 68, 68, 0.45);
+    color: #FCA5A5;
+}
+
+/* Statistics Icon Styling */
+.icon-stats-chart {
+    color: #C084FC;
+    filter: drop-shadow(0 0 5px rgba(192, 132, 252, 0.65));
+}
+
+.btn-3d-circle:hover .icon-stats-chart {
+    transform: scale(1.1);
+    color: #D8B4FE;
+    filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.9));
+}
+
+.btn-3d-circle:hover .icon-vol-sound {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.9));
+}
+
+/* Adventure, Drop, Skins Icon Styling */
+.icon-adventure-gem {
+    color: #34D399;
+    filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.7));
+}
+
+.icon-drop-bolt {
+    color: #FB923C;
+    filter: drop-shadow(0 0 6px rgba(251, 146, 60, 0.7));
+}
+
+.icon-skins-palette {
+    color: #FBBF24;
+    filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.7));
+}
+
+.badge-crown-icon {
+    color: #FBBF24;
+    filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.7));
+}
+
+.badge-star-icon {
+    color: #34D399;
+    filter: drop-shadow(0 0 4px rgba(52, 211, 153, 0.7));
+}
+
+.btn-skins-content .ui-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.skins-tab-btn .ui-icon {
+    width: 17px;
+    height: 17px;
+    margin-right: 6px;
+}
+
+.btn-wing .ui-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 2px;
+}
+
+.btn-hud-icon .ui-icon {
+    width: 20px;
+    height: 20px;
+    color: #94A3B8;
+}
+
+.btn-hud-icon:hover .ui-icon {
+    color: #FFFFFF;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
+}

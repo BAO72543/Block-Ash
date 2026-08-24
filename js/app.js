@@ -770,7 +770,7 @@ export class BlockBlastApp {
             
             const starsText = isUnlocked && stageScoreInfo.stars > 0 
                 ? '★'.repeat(stageScoreInfo.stars) + '☆'.repeat(3 - stageScoreInfo.stars)
-                : (isUnlocked ? '☆☆☆' : '🔒 Locked');
+                : (isUnlocked ? '☆☆☆' : 'Locked');
 
             node.innerHTML = `
                 <div class="stage-node-title">Stage ${i}</div>
@@ -870,10 +870,10 @@ export class BlockBlastApp {
         if (this.dom.btnModalRevive) {
             if (this.gameState.hasUsedRevive) {
                 this.dom.btnModalRevive.disabled = true;
-                this.dom.btnModalRevive.innerHTML = '<span>🚫 Revive Used (1/session limit)</span>';
+                this.dom.btnModalRevive.innerHTML = '<span>Revive Used (1/session limit)</span>';
             } else {
                 this.dom.btnModalRevive.disabled = false;
-                this.dom.btnModalRevive.innerHTML = '<span>📺 Watch Ad to Revive (Clear 4×4 Center)</span>';
+                this.dom.btnModalRevive.innerHTML = '<span>Watch Ad to Revive (Clear 4×4 Center)</span>';
             }
         }
 
@@ -918,7 +918,7 @@ export class BlockBlastApp {
                 this.dom.rewardedTimerText.textContent = `Reward unlocking in ${currentSec}s...`;
             } else {
                 clearInterval(timer);
-                this.dom.rewardedTimerText.textContent = '🎉 Video Complete! Reward Ready.';
+                this.dom.rewardedTimerText.textContent = 'Video Complete! Reward Ready.';
                 this.dom.btnClaimReward.style.display = 'inline-block';
             }
         }, interval);
@@ -1031,12 +1031,41 @@ export class BlockBlastApp {
     }
 
     updateAudioButtonState() {
+        const soundOnSvg = `
+            <svg class="ui-icon icon-vol-sound" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" fill-opacity="0.25"></polygon>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+        `;
+        const soundOffSvg = `
+            <svg class="ui-icon icon-vol-sound icon-muted" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" fill-opacity="0.25"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+        `;
+
         if (this.audio.isMuted) {
-            this.dom.btnSound.innerHTML = '<span class="icon">🔇</span><span class="btn-text">Muted</span>';
-            this.dom.btnSound.classList.add('muted');
+            if (this.dom.btnSound) {
+                this.dom.btnSound.innerHTML = `${soundOffSvg}<span class="btn-text">Muted</span>`;
+                this.dom.btnSound.classList.add('muted');
+            }
+            if (this.dom.homeBtnSound) {
+                this.dom.homeBtnSound.innerHTML = soundOffSvg;
+                this.dom.homeBtnSound.classList.add('muted');
+                this.dom.homeBtnSound.title = 'Unmute Sound';
+            }
         } else {
-            this.dom.btnSound.innerHTML = '<span class="icon">🔊</span><span class="btn-text">Sound</span>';
-            this.dom.btnSound.classList.remove('muted');
+            if (this.dom.btnSound) {
+                this.dom.btnSound.innerHTML = `${soundOnSvg}<span class="btn-text">Sound</span>`;
+                this.dom.btnSound.classList.remove('muted');
+            }
+            if (this.dom.homeBtnSound) {
+                this.dom.homeBtnSound.innerHTML = soundOnSvg;
+                this.dom.homeBtnSound.classList.remove('muted');
+                this.dom.homeBtnSound.title = 'Mute Sound';
+            }
         }
     }
 
@@ -1081,7 +1110,12 @@ export class BlockBlastApp {
         this.isAutoplayActive = true;
         this.renderer.aiThinking = true;
         this.dom.btnAutoplay.classList.add('active');
-        this.dom.btnAutoplay.innerHTML = '<span class="icon">⏹️</span><span class="btn-text">Stop AI</span>';
+        this.dom.btnAutoplay.innerHTML = `
+            <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none">
+                <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+            </svg>
+            <span class="btn-text">Stop AI</span>
+        `;
         this.scheduleNextAutoplayStep();
     }
 
@@ -1093,7 +1127,15 @@ export class BlockBlastApp {
             this.autoplayTimer = null;
         }
         this.dom.btnAutoplay.classList.remove('active');
-        this.dom.btnAutoplay.innerHTML = '<span class="icon">🤖</span><span class="btn-text">AI Autoplay</span>';
+        this.dom.btnAutoplay.innerHTML = `
+            <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="4" width="16" height="16" rx="3"></rect>
+                <circle cx="9" cy="10" r="1.5" fill="currentColor"></circle>
+                <circle cx="15" cy="10" r="1.5" fill="currentColor"></circle>
+                <path d="M9 15h6"></path>
+            </svg>
+            <span class="btn-text">AI Play</span>
+        `;
     }
 
     scheduleNextAutoplayStep() {
@@ -1258,9 +1300,13 @@ export class BlockBlastApp {
             card.className = `skin-card ${isEquipped ? 'active' : ''}`;
             card.setAttribute('data-effect-id', eff.id);
 
-            const shapeIcon = eff.particleShape === 'star' ? '⭐' :
-                              eff.particleShape === 'diamond' ? '🔷' :
-                              eff.particleShape === 'circle' ? '⚪' : '◼️';
+            const shapeIcon = eff.particleShape === 'star' ?
+                '<svg viewBox="0 0 24 24" width="16" height="16" fill="#FBBF24" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' :
+                eff.particleShape === 'diamond' ?
+                '<svg viewBox="0 0 24 24" width="16" height="16" fill="#38BDF8" stroke="none"><polygon points="12 2 22 12 12 22 2 12 12 2"/></svg>' :
+                eff.particleShape === 'circle' ?
+                '<svg viewBox="0 0 24 24" width="16" height="16" fill="#C084FC" stroke="none"><circle cx="12" cy="12" r="8"/></svg>' :
+                '<svg viewBox="0 0 24 24" width="16" height="16" fill="#60A5FA" stroke="none"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>';
 
             const swatchesHtml = eff.particleColors.slice(0, 4).map(c => 
                 `<span class="skin-dot" style="background: ${c}; box-shadow: 0 0 6px ${c}88;"></span>`

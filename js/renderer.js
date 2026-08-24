@@ -1263,7 +1263,7 @@ export class GameRenderer {
         ctx.textBaseline = 'middle';
 
         const dots = '.'.repeat((Math.floor(this.pulsePhase * 3) % 4));
-        ctx.fillText(`🤖 AI Thinking${dots}`, this.width / 2, y + bannerH / 2);
+        ctx.fillText(`AI Thinking${dots}`, this.width / 2, y + bannerH / 2);
         ctx.restore();
     }
 
