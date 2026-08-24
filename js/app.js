@@ -80,13 +80,13 @@ export class BlockBlastApp {
             stageClearMovesLeft: document.getElementById('stage-clear-moves-left'),
             btnStageMapAfterWin: document.getElementById('btn-stage-map-after-win'),
             btnNextStage: document.getElementById('btn-next-stage'),
+            stageContainer: document.getElementById('stage-container'),
             btnHint: document.getElementById('btn-hint'),
             quickActionsCard: document.getElementById('quick-actions-card'),
             btnAutoplay: document.getElementById('btn-autoplay'),
             aiSpeedContainer: document.getElementById('ai-speed-container'),
             btnSound: document.getElementById('btn-sound'),
             btnRestart: document.getElementById('btn-restart'),
-            btnStats: document.getElementById('btn-stats'),
             btnForceLose: document.getElementById('btn-force-lose'),
             gameOverModal: document.getElementById('game-over-modal'),
             modalFinalScore: document.getElementById('modal-final-score'),
@@ -362,33 +362,43 @@ export class BlockBlastApp {
         }
 
         // Audio Toggle
-        this.dom.btnSound.addEventListener('click', () => {
-            this.toggleAudio();
-        });
+        if (this.dom.btnSound) {
+            this.dom.btnSound.addEventListener('click', () => {
+                this.toggleAudio();
+            });
+        }
 
         // Hint Button
-        this.dom.btnHint.addEventListener('click', () => {
-            this.audio.playButton();
-            this.toggleHint();
-        });
+        if (this.dom.btnHint) {
+            this.dom.btnHint.addEventListener('click', () => {
+                this.audio.playButton();
+                this.toggleHint();
+            });
+        }
 
         // Autoplay Button
-        this.dom.btnAutoplay.addEventListener('click', () => {
-            this.audio.playButton();
-            this.toggleAutoplay();
-        });
+        if (this.dom.btnAutoplay) {
+            this.dom.btnAutoplay.addEventListener('click', () => {
+                this.audio.playButton();
+                this.toggleAutoplay();
+            });
+        }
 
         // Restart Button
-        this.dom.btnRestart.addEventListener('click', () => {
-            this.audio.playButton();
-            this.restartGame();
-        });
+        if (this.dom.btnRestart) {
+            this.dom.btnRestart.addEventListener('click', () => {
+                this.audio.playButton();
+                this.restartGame();
+            });
+        }
 
         // Modal Restart Button
-        this.dom.btnModalRestart.addEventListener('click', () => {
-            this.audio.playButton();
-            this.restartGame();
-        });
+        if (this.dom.btnModalRestart) {
+            this.dom.btnModalRestart.addEventListener('click', () => {
+                this.audio.playButton();
+                this.restartGame();
+            });
+        }
 
         // Debug Force Lose Button
         if (this.dom.btnForceLose) {
@@ -421,15 +431,12 @@ export class BlockBlastApp {
         }
 
         // Stats Modal
-        this.dom.btnStats.addEventListener('click', () => {
-            this.audio.playButton();
-            this.openStatsModal();
-        });
-
-        this.dom.btnCloseStats.addEventListener('click', () => {
-            this.audio.playButton();
-            this.closeStatsModal();
-        });
+        if (this.dom.btnCloseStats) {
+            this.dom.btnCloseStats.addEventListener('click', () => {
+                this.audio.playButton();
+                this.closeStatsModal();
+            });
+        }
 
         // Theme Selection
         if (this.dom.themeSelector) {
@@ -459,12 +466,15 @@ export class BlockBlastApp {
 
     handleResize() {
         if (!this.canvas) return;
-        const container = this.canvas.parentElement;
+        const container = this.canvas.parentElement || document.getElementById('stage-container');
         if (!container) return;
 
         const rect = container.getBoundingClientRect();
-        const w = Math.round((rect && rect.width > 50) ? rect.width : (container.clientWidth > 50 ? container.clientWidth : 420));
-        const h = Math.round((rect && rect.height > 50) ? rect.height : (container.clientHeight > 50 ? container.clientHeight : 540));
+        const mainEl = document.querySelector('.main-content-wide');
+        const mainRect = mainEl ? mainEl.getBoundingClientRect() : null;
+
+        const w = Math.round((rect && rect.width > 50) ? rect.width : (mainRect && mainRect.width > 50 ? mainRect.width : (window.innerWidth > 50 ? Math.min(window.innerWidth - 32, 1040) : 420)));
+        const h = Math.round((rect && rect.height > 50) ? rect.height : (mainRect && mainRect.height > 50 ? mainRect.height : (window.innerHeight > 150 ? window.innerHeight - 140 : 540)));
         this.renderer.resize(w, h);
     }
 
@@ -743,7 +753,7 @@ export class BlockBlastApp {
     updateModeStatusBar() {
         const isClassic = (this.gameState.mode === GAME_MODES.CLASSIC);
         if (this.dom.quickActionsCard) {
-            this.dom.quickActionsCard.style.display = isClassic ? 'block' : 'none';
+            this.dom.quickActionsCard.style.display = isClassic ? 'flex' : 'none';
         }
 
         // Show/Hide AI controls based on game mode:
@@ -1191,7 +1201,6 @@ export class BlockBlastApp {
     }
 
     toggleAutoplay() {
-        // AI option is disabled in Adventure and Drop Mode
         if (this.gameState.mode !== GAME_MODES.CLASSIC) {
             this.stopAutoplay();
             return;
@@ -1205,18 +1214,22 @@ export class BlockBlastApp {
     }
 
     startAutoplay() {
+        if (this.gameState.mode !== GAME_MODES.CLASSIC) return;
+
         if (this.gameState.gameOver) {
             this.restartGame();
         }
         this.isAutoplayActive = true;
         this.renderer.aiThinking = true;
-        this.dom.btnAutoplay.classList.add('active');
-        this.dom.btnAutoplay.innerHTML = `
-            <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none">
-                <rect x="6" y="6" width="12" height="12" rx="2"></rect>
-            </svg>
-            <span class="btn-text">Stop AI</span>
-        `;
+        if (this.dom.btnAutoplay) {
+            this.dom.btnAutoplay.classList.add('active');
+            this.dom.btnAutoplay.innerHTML = `
+                <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" stroke="none">
+                    <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+                </svg>
+                <span class="btn-text">Stop AI</span>
+            `;
+        }
         this.scheduleNextAutoplayStep();
     }
 
@@ -1227,16 +1240,18 @@ export class BlockBlastApp {
             clearTimeout(this.autoplayTimer);
             this.autoplayTimer = null;
         }
-        this.dom.btnAutoplay.classList.remove('active');
-        this.dom.btnAutoplay.innerHTML = `
-            <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="4" y="4" width="16" height="16" rx="3"></rect>
-                <circle cx="9" cy="10" r="1.5" fill="currentColor"></circle>
-                <circle cx="15" cy="10" r="1.5" fill="currentColor"></circle>
-                <path d="M9 15h6"></path>
-            </svg>
-            <span class="btn-text">AI Play</span>
-        `;
+        if (this.dom.btnAutoplay) {
+            this.dom.btnAutoplay.classList.remove('active');
+            this.dom.btnAutoplay.innerHTML = `
+                <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="4" width="16" height="16" rx="3"></rect>
+                    <circle cx="9" cy="10" r="1.5" fill="currentColor"></circle>
+                    <circle cx="15" cy="10" r="1.5" fill="currentColor"></circle>
+                    <path d="M9 15h6"></path>
+                </svg>
+                <span class="btn-text">AI Play</span>
+            `;
+        }
     }
 
     scheduleNextAutoplayStep() {

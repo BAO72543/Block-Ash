@@ -5,7 +5,7 @@
  * while still supporting 100% offline play when disconnected from network.
  */
 
-const CACHE_NAME = 'blockash-v39';
+const CACHE_NAME = 'blockash-v42';
 const STATIC_ASSETS = [
     './',
     './index.html',

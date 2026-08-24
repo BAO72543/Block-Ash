@@ -239,11 +239,8 @@
                 </div>
             </header>
 
-        <!-- Main Clean Gameplay Layout (Centered Board Hero + Side Quick Actions) -->
+        <!-- Main Clean Gameplay Layout (Centered Board Hero + Subtle Floating Quick Actions) -->
         <main class="main-content-wide">
-            <!-- Left Wing Spacer for true symmetrical center alignment on wide displays -->
-            <div class="game-wing-left-spacer" aria-hidden="true"></div>
-
             <!-- Center Column: Primary 8x8 Board & 3-Piece Dock -->
             <section class="game-center-column">
                 <div class="game-stage-container" id="stage-container">
@@ -251,69 +248,31 @@
                 </div>
             </section>
 
-            <!-- Flanking Side: Mode Objectives & Quick Actions -->
-            <aside class="game-wing-right">
-                <div class="panel-card wing-card" id="quick-actions-card">
-                    <h2 class="panel-title">Quick Actions</h2>
-                    <div class="controls-grid-wing">
-                        <button class="btn btn-accent btn-wing" id="btn-hint" title="Get AI recommended move (H)">
-                            <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path>
-                            </svg>
-                            <span class="btn-text">Hint</span>
-                        </button>
-                        <button class="btn btn-primary btn-wing" id="btn-autoplay" title="Let AI play automatically (A)">
-                            <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="4" y="4" width="16" height="16" rx="3"></rect>
-                                <circle cx="9" cy="10" r="1.5" fill="currentColor"></circle>
-                                <circle cx="15" cy="10" r="1.5" fill="currentColor"></circle>
-                                <path d="M9 15h6"></path>
-                            </svg>
-                            <span class="btn-text">AI Play</span>
-                        </button>
-                        <button class="btn btn-wing" id="btn-sound" title="Toggle audio (M)">
-                            <svg class="ui-icon icon-vol-sound" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" fill-opacity="0.25"></polygon>
-                                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-                            </svg>
-                            <span class="btn-text">Sound</span>
-                        </button>
-                        <button class="btn btn-wing" id="btn-restart" title="Start new game (R)">
-                            <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 12a9 9 0 0 1 15.55-6.36L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.55 6.36L3 16M3 21v-5h5"></path>
-                            </svg>
-                            <span class="btn-text">Restart</span>
-                        </button>
-                        <button class="btn btn-wing" id="btn-stats" title="View gameplay statistics">
-                            <svg class="ui-icon icon-stats-chart" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="13" width="4" height="8" rx="1.5" fill="currentColor" fill-opacity="0.3"></rect>
-                                <rect x="10" y="7" width="4" height="14" rx="1.5" fill="currentColor" fill-opacity="0.6"></rect>
-                                <rect x="17" y="3" width="4" height="18" rx="1.5" fill="currentColor" fill-opacity="0.4"></rect>
-                                <path d="M4 11l6-5 7-2 4-2" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
-                            </svg>
-                            <span class="btn-text">Stats</span>
-                        </button>
-                        <button class="btn btn-wing" id="btn-force-lose" title="Trigger Game Over screen (O)" style="border-color: rgba(239, 68, 68, 0.4); color: #FCA5A5;">
-                            <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="9" cy="10" r="1.5" fill="currentColor"></circle>
-                                <circle cx="15" cy="10" r="1.5" fill="currentColor"></circle>
-                                <path d="M9 16h6M12 2a9 9 0 0 0-9 9c0 3.87 2.45 7.17 5.92 8.44L9 22h6l.08-2.56C18.55 18.17 21 14.87 21 11a9 9 0 0 0-9-9z"></path>
-                            </svg>
-                            <span class="btn-text">Lose</span>
-                        </button>
-                    </div>
-
-                    <!-- AI Speed Option (Classic Mode Only) -->
-                    <div id="ai-speed-container" style="margin-top: 10px;">
-                        <label for="autoplay-speed-select" class="panel-title" style="margin-bottom: 2px; font-size: 11px;">AI Speed</label>
-                        <select id="autoplay-speed-select" class="select-input">
-                            <option value="slow">Slow</option>
-                            <option value="normal" selected>Normal</option>
-                            <option value="fast">Fast</option>
-                            <option value="turbo">Turbo</option>
-                        </select>
-                    </div>
+            <!-- Subtle Floating Sidebar: Classic Mode Quick Actions (Hint & AI Play) -->
+            <aside class="quick-actions-sidebar" id="quick-actions-card">
+                <button class="btn-quick-action" id="btn-hint" title="Get AI recommended move (H)">
+                    <svg class="ui-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"></path>
+                    </svg>
+                    <span class="btn-text">Hint</span>
+                </button>
+                <button class="btn-quick-action" id="btn-autoplay" title="Let AI play automatically (A)">
+                    <svg class="ui-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="4" width="16" height="16" rx="3"></rect>
+                        <circle cx="9" cy="10" r="1.5" fill="currentColor"></circle>
+                        <circle cx="15" cy="10" r="1.5" fill="currentColor"></circle>
+                        <path d="M9 15h6"></path>
+                    </svg>
+                    <span class="btn-text">AI Play</span>
+                </button>
+                <div id="ai-speed-container" class="quick-speed-wrap">
+                    <label for="autoplay-speed-select" class="quick-speed-label">SPEED</label>
+                    <select id="autoplay-speed-select" class="quick-speed-select">
+                        <option value="slow">Slow</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="fast">Fast</option>
+                        <option value="turbo">Turbo</option>
+                    </select>
                 </div>
             </aside>
         </main>
