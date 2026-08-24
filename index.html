@@ -85,7 +85,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card-play-pill pill-blue"><span class="play-icon">▶</span> PLAY</div>
                 </button>
 
                 <!-- SECONDARY ROW: Adventure & Drop Mode -->
@@ -106,7 +105,6 @@
                             </svg>
                             <span id="home-adventure-stage">Stage 1</span>
                         </div>
-                        <div class="card-play-pill pill-green"><span class="play-icon">▶</span> PLAY</div>
                     </button>
 
                     <!-- Drop Mode Tile (Whole Card is 3D Button) -->
@@ -120,7 +118,6 @@
                         <div class="badge-tag">
                             <span>RISING</span>
                         </div>
-                        <div class="card-play-pill pill-orange"><span class="play-icon">▶</span> PLAY</div>
                     </button>
                 </div>
 
@@ -141,7 +138,6 @@
                             <div class="daily-reward-tag">+100 Gems Reward</div>
                         </div>
                     </div>
-                    <div class="card-play-pill pill-gold"><span class="play-icon">▶</span> PLAY</div>
                 </button>
 
                 <!-- SKINS & THEMES GALLERY BUTTON -->
@@ -172,16 +168,41 @@
 
         <!-- 2. Active Gameplay View (Initially Hidden until mode is selected) -->
         <div class="gameplay-view" id="gameplay-view" style="display: none; width: 100%;">
-            <!-- Top In-Game Header: Crown on Left, Giant Score in Center, Home on Right -->
-            <header class="game-hud-top-bar">
-                <div class="hud-left-best" title="Best High Score">
-                    <svg class="ui-icon crown-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" stroke="none">
-                        <path d="M2 19h20v2H2zM4 16l3-8 5 5 5-5 3 8H4z"/>
-                    </svg>
-                    <span class="best-score-val" id="high-score">0</span>
+            <!-- Top In-Game Header: Clean Integrated Mode Indicators & Giant Score -->
+            <header class="game-hud-top-bar" id="game-hud-top-bar">
+                <!-- Left Header Zone: Best Score in Classic, or Stage Badge + Map + Goal Pill in Adventure/Drop/Daily -->
+                <div class="hud-top-left">
+                    <!-- Classic Mode High Score Crown Pill -->
+                    <div class="hud-left-best" id="hud-classic-best" title="Best High Score">
+                        <svg class="ui-icon crown-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" stroke="none">
+                            <path d="M2 19h20v2H2zM4 16l3-8 5 5 5-5 3 8H4z"/>
+                        </svg>
+                        <span class="best-score-val" id="high-score">0</span>
+                    </div>
+
+                    <!-- Adventure / Drop / Daily Mode Left HUD Cluster -->
+                    <div class="hud-mode-left-cluster" id="hud-mode-left" style="display: none;">
+                        <span class="topbar-stage-badge" id="mode-stage-badge">Stage 1</span>
+                        <button class="btn-topbar-map" id="btn-open-stage-map" title="Open Stage Map">
+                            <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                                <line x1="8" y1="2" x2="8" y2="18"></line>
+                                <line x1="16" y1="6" x2="16" y2="22"></line>
+                            </svg>
+                        </button>
+                        <!-- Goal Progress Compact Pill -->
+                        <div class="topbar-goal-pill" id="mode-goal-pill">
+                            <span class="topbar-pill-icon" id="mode-goal-svg">
+                                <svg class="ui-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#34D399" stroke-width="2">
+                                    <polygon points="6 3 18 3 22 9 12 21 2 9 6 3" fill="#34D399" fill-opacity="0.35"></polygon>
+                                </svg>
+                            </span>
+                            <span class="topbar-pill-val" id="mode-goal-text">0/4</span>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Centered Giant Score Counter (Pushed directly to top!) -->
+                <!-- Centered Giant Score Counter -->
                 <div class="hud-center-score-zone">
                     <div class="score-diamond-emblem">
                         <div class="diamond-shape"></div>
@@ -196,7 +217,19 @@
                     </div>
                 </div>
 
-                <div class="hud-right-actions">
+                <!-- Right Header Zone: Moves Left / Next Rise + Return Home Button -->
+                <div class="hud-top-right">
+                    <!-- Moves Remaining / Next Rise Compact Pill -->
+                    <div class="topbar-moves-pill" id="mode-moves-capsule" style="display: none;">
+                        <span class="topbar-pill-icon" id="mode-moves-svg">
+                            <svg class="ui-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="9" stroke="currentColor"></circle>
+                                <polyline points="12 6 12 12 16 14" stroke="currentColor"></polyline>
+                            </svg>
+                        </span>
+                        <span class="topbar-pill-val" id="mode-moves-text">16</span>
+                    </div>
+
                     <button class="btn-hud-icon" id="btn-return-home" title="Return to Home Menu">
                         <svg class="ui-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -220,29 +253,6 @@
 
             <!-- Flanking Side: Mode Objectives & Quick Actions -->
             <aside class="game-wing-right">
-                <!-- Mode Objectives / Status HUD Card (Adventure, Drop Mode, Daily) moved to Side -->
-                <div class="panel-card wing-mode-card" id="mode-status-bar" style="display: none;">
-                    <div class="wing-mode-header">
-                        <span class="status-badge" id="mode-stage-badge">Stage 1</span>
-                        <button class="btn btn-sm" id="btn-open-stage-map" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
-                            <svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-                                <line x1="8" y1="2" x2="8" y2="18"></line>
-                                <line x1="16" y1="6" x2="16" y2="22"></line>
-                            </svg>
-                            <span>Map</span>
-                        </button>
-                    </div>
-                    <div class="wing-mode-details">
-                        <div class="status-goal-row">
-                            <span class="status-goal" id="mode-goal-text">Goals: Collect 4 Gems</span>
-                        </div>
-                        <div class="status-moves-row">
-                            <span class="status-moves" id="mode-moves-text">Moves: 16</span>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="panel-card wing-card">
                     <h2 class="panel-title">Quick Actions</h2>
                     <div class="controls-grid-wing">

@@ -101,6 +101,8 @@ export class BlockGameState {
             this.initAdventureStage(this.stageId);
         } else if (this.mode === GAME_MODES.DROP) {
             this.initDropMode();
+        } else if (this.mode === GAME_MODES.DAILY) {
+            this.initDailyChallenge();
         } else {
             // Generate 3 initial solvable pieces with DDA
             this.currentShapes = generateValidShapes(this.grid, this.comboCount);

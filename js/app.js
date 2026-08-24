@@ -60,9 +60,14 @@ export class BlockBlastApp {
             tabModeClassic: document.getElementById('tab-mode-classic'),
             tabModeAdventure: document.getElementById('tab-mode-adventure'),
             tabModeDrop: document.getElementById('tab-mode-drop'),
-            modeStatusBar: document.getElementById('mode-status-bar'),
+            hudClassicBest: document.getElementById('hud-classic-best'),
+            hudModeLeft: document.getElementById('hud-mode-left'),
             modeStageBadge: document.getElementById('mode-stage-badge'),
+            modeGoalPill: document.getElementById('mode-goal-pill'),
+            modeGoalSvg: document.getElementById('mode-goal-svg'),
             modeGoalText: document.getElementById('mode-goal-text'),
+            modeMovesCapsule: document.getElementById('mode-moves-capsule'),
+            modeMovesSvg: document.getElementById('mode-moves-svg'),
             modeMovesText: document.getElementById('mode-moves-text'),
             btnOpenStageMap: document.getElementById('btn-open-stage-map'),
             adventureMapModal: document.getElementById('adventure-map-modal'),
@@ -703,8 +708,6 @@ export class BlockBlastApp {
     }
 
     updateModeStatusBar() {
-        if (!this.dom.modeStatusBar) return;
-
         // Show/Hide AI controls based on game mode:
         // AI option is completely disabled & removed in Adventure and Drop Mode
         const isAiSupportedMode = (this.gameState.mode === GAME_MODES.CLASSIC);
@@ -718,39 +721,99 @@ export class BlockBlastApp {
         }
 
         if (this.gameState.mode === GAME_MODES.ADVENTURE) {
-            this.dom.modeStatusBar.style.display = 'flex';
-            if (this.dom.modeStageBadge) this.dom.modeStageBadge.textContent = `Stage ${this.gameState.stageId}`;
+            if (this.dom.hudClassicBest) this.dom.hudClassicBest.style.display = 'none';
+            if (this.dom.hudModeLeft) this.dom.hudModeLeft.style.display = 'flex';
+            if (this.dom.modeMovesCapsule) this.dom.modeMovesCapsule.style.display = 'flex';
+            if (this.dom.modeGoalPill) this.dom.modeGoalPill.style.display = 'flex';
+
+            if (this.dom.modeStageBadge) {
+                this.dom.modeStageBadge.textContent = `Stage ${this.gameState.stageId}`;
+                this.dom.modeStageBadge.className = 'topbar-stage-badge badge-adventure';
+            }
+            if (this.dom.btnOpenStageMap) this.dom.btnOpenStageMap.style.display = 'flex';
+
+            const g = this.gameState.stageGoals;
+            const goalType = (g && g.type) ? g.type.toLowerCase() : 'gems';
+            const collected = g ? g.collected : 0;
+            const target = (g && g.target) ? g.target : 4;
+
             if (this.dom.modeGoalText) {
-                const g = this.gameState.stageGoals;
-                this.dom.modeGoalText.textContent = `Goal: ${g.collected}/${g.target} ${g.type.toUpperCase()}`;
+                this.dom.modeGoalText.textContent = `${collected}/${target}`;
             }
-            if (this.dom.modeMovesText) {
-                this.dom.modeMovesText.textContent = `Moves Left: ${this.gameState.movesRemaining}`;
+            if (this.dom.modeGoalSvg) {
+                if (goalType === 'puzzles' || goalType === 'puzzle') {
+                    this.dom.modeGoalSvg.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#C084FC" stroke-width="1.8"><path d="M4 4h4v2a2 2 0 0 0 4 0V4h4v4h-2a2 2 0 0 0 0 4h2v4h-4v-2a2 2 0 0 0-4 0v2H4v-4h2a2 2 0 0 0 0-4H4V4z" fill="#C084FC" fill-opacity="0.3"></path></svg>';
+                } else if (goalType === 'stars' || goalType === 'star') {
+                    this.dom.modeGoalSvg.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" width="15" height="15" fill="#FBBF24" stroke="#F59E0B" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+                } else {
+                    this.dom.modeGoalSvg.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#34D399" stroke-width="1.8"><polygon points="6 3 18 3 22 9 12 21 2 9 6 3" fill="#34D399" fill-opacity="0.35"></polygon><line x1="2" y1="9" x2="22" y2="9"></line><polyline points="10 3 7 9 12 21 17 9 14 3"></polyline></svg>';
+                }
             }
-            if (this.dom.btnOpenStageMap) this.dom.btnOpenStageMap.style.display = 'inline-block';
+
+            const moves = this.gameState.movesRemaining;
+            if (this.dom.modeMovesText) this.dom.modeMovesText.textContent = `${moves}`;
+            if (this.dom.modeMovesCapsule) {
+                this.dom.modeMovesCapsule.className = `topbar-moves-pill ${moves <= 3 ? 'state-danger' : moves <= 5 ? 'state-warning' : 'state-normal'}`;
+            }
+            if (this.dom.modeMovesSvg) {
+                this.dom.modeMovesSvg.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
+            }
+
         } else if (this.gameState.mode === GAME_MODES.DROP) {
-            this.dom.modeStatusBar.style.display = 'flex';
-            if (this.dom.modeStageBadge) this.dom.modeStageBadge.textContent = 'DROP MODE';
-            if (this.dom.modeGoalText) {
-                this.dom.modeGoalText.textContent = `Survive Rising Stacks`;
-            }
-            if (this.dom.modeMovesText) {
-                this.dom.modeMovesText.textContent = `Next Rise in: ${this.gameState.movesUntilDrop} moves`;
-            }
+            if (this.dom.hudClassicBest) this.dom.hudClassicBest.style.display = 'none';
+            if (this.dom.hudModeLeft) this.dom.hudModeLeft.style.display = 'flex';
+            if (this.dom.modeMovesCapsule) this.dom.modeMovesCapsule.style.display = 'flex';
+            if (this.dom.modeGoalPill) this.dom.modeGoalPill.style.display = 'none';
             if (this.dom.btnOpenStageMap) this.dom.btnOpenStageMap.style.display = 'none';
+
+            if (this.dom.modeStageBadge) {
+                this.dom.modeStageBadge.textContent = '🔥 DROP';
+                this.dom.modeStageBadge.className = 'topbar-stage-badge badge-drop';
+            }
+
+            const dropIn = this.gameState.movesUntilDrop;
+            if (this.dom.modeMovesText) this.dom.modeMovesText.textContent = `${dropIn}`;
+            if (this.dom.modeMovesCapsule) {
+                this.dom.modeMovesCapsule.className = `topbar-moves-pill ${dropIn === 1 ? 'state-danger' : dropIn === 2 ? 'state-warning' : 'state-normal'}`;
+            }
+            if (this.dom.modeMovesSvg) {
+                this.dom.modeMovesSvg.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" fill-opacity="0.3"></polygon></svg>';
+            }
+
         } else if (this.gameState.mode === GAME_MODES.DAILY) {
-            this.dom.modeStatusBar.style.display = 'flex';
-            if (this.dom.modeStageBadge) this.dom.modeStageBadge.textContent = 'DAILY PUZZLE';
-            if (this.dom.modeGoalText) {
-                const g = this.gameState.stageGoals;
-                this.dom.modeGoalText.textContent = `Goal: ${g.collected}/${g.target} GEMS`;
-            }
-            if (this.dom.modeMovesText) {
-                this.dom.modeMovesText.textContent = `Moves Left: ${this.gameState.movesRemaining}`;
-            }
+            if (this.dom.hudClassicBest) this.dom.hudClassicBest.style.display = 'none';
+            if (this.dom.hudModeLeft) this.dom.hudModeLeft.style.display = 'flex';
+            if (this.dom.modeMovesCapsule) this.dom.modeMovesCapsule.style.display = 'flex';
+            if (this.dom.modeGoalPill) this.dom.modeGoalPill.style.display = 'flex';
             if (this.dom.btnOpenStageMap) this.dom.btnOpenStageMap.style.display = 'none';
+
+            if (this.dom.modeStageBadge) {
+                this.dom.modeStageBadge.textContent = '⭐ DAILY';
+                this.dom.modeStageBadge.className = 'topbar-stage-badge badge-daily';
+            }
+
+            const g = this.gameState.stageGoals;
+            const collected = g ? g.collected : 0;
+            const target = (g && g.target) ? g.target : 4;
+
+            if (this.dom.modeGoalText) this.dom.modeGoalText.textContent = `${collected}/${target}`;
+            if (this.dom.modeGoalSvg) {
+                this.dom.modeGoalSvg.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#FBBF24" stroke-width="1.8"><polygon points="6 3 18 3 22 9 12 21 2 9 6 3" fill="#FBBF24" fill-opacity="0.35"></polygon><line x1="2" y1="9" x2="22" y2="9"></line><polyline points="10 3 7 9 12 21 17 9 14 3"></polyline></svg>';
+            }
+
+            const moves = this.gameState.movesRemaining;
+            if (this.dom.modeMovesText) this.dom.modeMovesText.textContent = `${moves}`;
+            if (this.dom.modeMovesCapsule) {
+                this.dom.modeMovesCapsule.className = `topbar-moves-pill ${moves <= 3 ? 'state-danger' : moves <= 5 ? 'state-warning' : 'state-normal'}`;
+            }
+            if (this.dom.modeMovesSvg) {
+                this.dom.modeMovesSvg.innerHTML = '<svg class="ui-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
+            }
+
         } else {
-            this.dom.modeStatusBar.style.display = 'none';
+            if (this.dom.hudClassicBest) this.dom.hudClassicBest.style.display = 'flex';
+            if (this.dom.hudModeLeft) this.dom.hudModeLeft.style.display = 'none';
+            if (this.dom.modeMovesCapsule) this.dom.modeMovesCapsule.style.display = 'none';
         }
     }
 
@@ -1018,6 +1081,7 @@ export class BlockBlastApp {
 
         this.updateScoreDisplays();
         this.updateComboFeed();
+        this.updateModeStatusBar();
 
         if (this.isAutoplayActive) {
             this.scheduleNextAutoplayStep();
