@@ -799,7 +799,7 @@ export class BlockBlastApp {
             if (this.dom.btnOpenStageMap) this.dom.btnOpenStageMap.style.display = 'none';
 
             if (this.dom.modeStageBadge) {
-                this.dom.modeStageBadge.textContent = '🔥 DROP';
+                this.dom.modeStageBadge.textContent = 'DROP';
                 this.dom.modeStageBadge.className = 'topbar-stage-badge badge-drop';
             }
 
@@ -820,7 +820,7 @@ export class BlockBlastApp {
             if (this.dom.btnOpenStageMap) this.dom.btnOpenStageMap.style.display = 'none';
 
             if (this.dom.modeStageBadge) {
-                this.dom.modeStageBadge.textContent = '⭐ DAILY';
+                this.dom.modeStageBadge.textContent = 'DAILY';
                 this.dom.modeStageBadge.className = 'topbar-stage-badge badge-daily';
             }
 
@@ -1427,7 +1427,7 @@ export class BlockBlastApp {
             // 7. Floating celebratory score banner
             const centerX = m.x + m.size / 2;
             const centerY = m.y + m.size / 2;
-            this.studioParticles.addFloatingText('+120 ✨', centerX, centerY - 10, {
+            this.studioParticles.addFloatingText('+120', centerX, centerY - 10, {
                 isGold: true,
                 fontSize: 26,
                 color: effect.floatingTextColor || '#FDE047'
@@ -1795,7 +1795,7 @@ export class BlockBlastApp {
         else if (type === 'bg') this.selectBackgroundSkin(id);
         else if (type === 'effect') this.selectEffectSkin(id);
 
-        this.showSkinToast(`✨ Unlocked ${name}!`);
+        this.showSkinToast(`Unlocked ${name}!`);
         this.renderSkinsStudio();
     }
 

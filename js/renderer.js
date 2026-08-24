@@ -329,11 +329,6 @@ export class GameRenderer {
         // 8. Draw Elastic Snap-Back Return Animation if active
         this.drawSnapBackShape(theme);
 
-        // 9. Draw AI Thinking Overlay if active
-        if (this.aiThinking) {
-            this.drawAiThinkingBanner(theme);
-        }
-
         this.ctx.restore();
     }
 
@@ -1239,33 +1234,7 @@ export class GameRenderer {
         ctx.restore();
     }
 
-    drawAiThinkingBanner(theme) {
-        const ctx = this.ctx;
-        const bannerW = 220;
-        const bannerH = 38;
-        const x = (this.width - bannerW) / 2;
-        const y = 8;
 
-        ctx.save();
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-        ctx.strokeStyle = '#3B82F6';
-        ctx.lineWidth = 1.5;
-        ctx.shadowColor = 'rgba(59, 130, 246, 0.5)';
-        ctx.shadowBlur = 10;
-
-        this.roundRect(x, y, bannerW, bannerH, 19);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.font = '600 13px Outfit, Inter, sans-serif';
-        ctx.fillStyle = '#60A5FA';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        const dots = '.'.repeat((Math.floor(this.pulsePhase * 3) % 4));
-        ctx.fillText(`AI Thinking${dots}`, this.width / 2, y + bannerH / 2);
-        ctx.restore();
-    }
 
     roundRect(x, y, width, height, radius, targetCtx = null) {
         const ctx = targetCtx || this.ctx;
