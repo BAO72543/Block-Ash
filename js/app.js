@@ -111,21 +111,27 @@ export class BlockBlastApp {
             homeBtnSkins: document.getElementById('home-btn-skins'),
             homeActiveSkinName: document.getElementById('home-active-skin-name'),
             homeActiveSwatch: document.getElementById('home-active-swatch'),
-            btnSkins: document.getElementById('btn-skins'),
-            skinsModal: document.getElementById('skins-modal'),
-            btnCloseSkins: document.getElementById('btn-close-skins'),
-            tabSkinBg: document.getElementById('tab-skin-bg'),
-            tabSkinPuzzle: document.getElementById('tab-skin-puzzle'),
-            tabSkinEffect: document.getElementById('tab-skin-effect'),
-            panelSkinBg: document.getElementById('panel-skin-bg'),
-            panelSkinPuzzle: document.getElementById('panel-skin-puzzle'),
-            panelSkinEffect: document.getElementById('panel-skin-effect'),
-            gridSkinBg: document.getElementById('grid-skin-bg'),
-            gridSkinPuzzle: document.getElementById('grid-skin-puzzle'),
-            gridSkinEffect: document.getElementById('grid-skin-effect'),
-            summaryBgName: document.getElementById('summary-bg-name'),
-            summaryPuzzleName: document.getElementById('summary-puzzle-name'),
-            summaryEffectName: document.getElementById('summary-effect-name')
+            skinsView: document.getElementById('skins-view'),
+            btnSkinsReturnHome: document.getElementById('btn-skins-return-home'),
+            stageSampleBoardCard: document.getElementById('stage-sample-board-card'),
+            stageSampleCanvas: document.getElementById('stage-sample-canvas'),
+            stageDockPreview: document.getElementById('stage-dock-preview'),
+            previewDockBlocks: document.getElementById('preview-dock-blocks'),
+            loadoutPuzzleIconWrap: document.getElementById('loadout-puzzle-icon-wrap'),
+            loadoutBgIconWrap: document.getElementById('loadout-bg-icon-wrap'),
+            loadoutEffectIconWrap: document.getElementById('loadout-effect-icon-wrap'),
+            loadoutPuzzleName: document.getElementById('loadout-puzzle-name'),
+            loadoutBgName: document.getElementById('loadout-bg-name'),
+            loadoutEffectName: document.getElementById('loadout-effect-name'),
+            catTabPuzzle: document.getElementById('cat-tab-puzzle'),
+            catTabBg: document.getElementById('cat-tab-bg'),
+            catTabEffect: document.getElementById('cat-tab-effect'),
+            panelCatPuzzle: document.getElementById('panel-category-puzzle'),
+            panelCatBg: document.getElementById('panel-category-bg'),
+            panelCatEffect: document.getElementById('panel-category-effect'),
+            gridCatPuzzle: document.getElementById('grid-category-puzzle'),
+            gridCatBg: document.getElementById('grid-category-bg'),
+            gridCatEffect: document.getElementById('grid-category-effect')
         };
 
         this.input = new InputHandler(
@@ -149,6 +155,19 @@ export class BlockBlastApp {
         this.particles.setCellTriggerCallback((stepIdx, combo) => {
             this.audio.playSequentialCellPop(stepIdx, combo);
         });
+
+        // Theme Studio sample board particle system & canvas state
+        this.studioParticles = new ParticleSystem();
+        this.studioCanvas = document.getElementById('stage-sample-canvas');
+        this.studioCtx = this.studioCanvas ? this.studioCanvas.getContext('2d') : null;
+        this.studioBoardMetrics = { x: 8, y: 8, size: 208, cellSize: 45, gap: 5, outerPadding: 8 };
+        this.studioGrid = Array.from({ length: 4 }, () => Array(4).fill(0));
+        this.studioSweepTimer = null;
+
+        this.studioParticles.setCellTriggerCallback((stepIdx, combo) => {
+            this.audio.playSequentialCellPop(stepIdx, combo);
+        });
+
         this.init();
     }
 
@@ -277,27 +296,41 @@ export class BlockBlastApp {
             });
         }
 
+        // Skins & Theme Studio Handlers (Accessible from Main Menu)
         if (this.dom.homeBtnSkins) {
             this.dom.homeBtnSkins.addEventListener('click', () => {
-                this.audio.playPop();
-                this.openSkinsModal();
+                this.openSkinsStudio();
             });
         }
-        if (this.dom.btnSkins) {
-            this.dom.btnSkins.addEventListener('click', () => {
-                this.audio.playButton();
-                this.openSkinsModal();
+        if (this.dom.btnSkinsReturnHome) {
+            this.dom.btnSkinsReturnHome.addEventListener('click', () => {
+                this.closeSkinsStudio();
             });
         }
-        if (this.dom.btnCloseSkins) {
-            this.dom.btnCloseSkins.addEventListener('click', () => {
-                this.audio.playButton();
-                this.closeSkinsModal();
+        if (this.dom.catTabPuzzle) {
+            this.dom.catTabPuzzle.addEventListener('click', () => this.switchStudioCategory('puzzle'));
+        }
+        if (this.dom.catTabBg) {
+            this.dom.catTabBg.addEventListener('click', () => this.switchStudioCategory('bg'));
+        }
+        if (this.dom.catTabEffect) {
+            this.dom.catTabEffect.addEventListener('click', () => this.switchStudioCategory('effect'));
+        }
+        if (this.dom.stageDockPreview) {
+            this.dom.stageDockPreview.addEventListener('click', () => {
+                this.testStudioEffect();
             });
         }
-        if (this.dom.tabSkinBg) this.dom.tabSkinBg.addEventListener('click', () => this.switchSkinsTab('bg'));
-        if (this.dom.tabSkinPuzzle) this.dom.tabSkinPuzzle.addEventListener('click', () => this.switchSkinsTab('puzzle'));
-        if (this.dom.tabSkinEffect) this.dom.tabSkinEffect.addEventListener('click', () => this.switchSkinsTab('effect'));
+        if (this.dom.stageSampleBoardCard) {
+            this.dom.stageSampleBoardCard.addEventListener('click', () => {
+                this.testStudioEffect();
+            });
+        }
+        if (this.dom.stageSampleCanvas) {
+            this.dom.stageSampleCanvas.addEventListener('click', () => {
+                this.testStudioEffect();
+            });
+        }
 
         // Mode Tabs
         if (this.dom.tabModeClassic) {
@@ -417,9 +450,6 @@ export class BlockBlastApp {
             if (e.target === this.dom.statsModal) {
                 this.closeStatsModal();
             }
-            if (e.target === this.dom.skinsModal) {
-                this.closeSkinsModal();
-            }
             if (e.target === this.dom.adventureMapModal) {
                 this.closeAdventureMap();
             }
@@ -497,10 +527,12 @@ export class BlockBlastApp {
         const shapeColor = result.shapePlaced.color;
 
         for (const r of result.rowsCleared) {
-            this.particles.addLineClearSweep('row', r, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap, shapeColor, result.comboCount);
+            const rowCells = result.clearedRowData ? result.clearedRowData[r] : null;
+            this.particles.addLineClearSweep('row', r, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap, shapeColor, result.comboCount, rowCells);
         }
         for (const c of result.colsCleared) {
-            this.particles.addLineClearSweep('col', c, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap, shapeColor, result.comboCount);
+            const colCells = result.clearedColData ? result.clearedColData[c] : null;
+            this.particles.addLineClearSweep('col', c, this.renderer.boardMetrics.x, this.renderer.boardMetrics.y, cellSize, gap, shapeColor, result.comboCount, colCells);
         }
 
         // Multi-line cross intersections
@@ -1003,7 +1035,7 @@ export class BlockBlastApp {
 
         // Animate all 16 center cells (rows 2-5, cols 2-5)
         for (let r = 2; r <= 5; r++) {
-            this.particles.addLineClearWave('row', r, bx, by, cellSize, gap);
+            this.particles.addLineClearSweep('row', r, bx, by, cellSize, gap, { hex: '#38BDF8', light: '#BAE6FD' }, 0);
             for (let c = 2; c <= 5; c++) {
                 const rect = this.renderer.getCellRect(r, c);
                 this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, { hex: '#38BDF8', light: '#BAE6FD' });
@@ -1238,131 +1270,448 @@ export class BlockBlastApp {
 
     initSkinsGallery() {
         const config = SkinManager.loadConfig();
+        const puzzle = SkinManager.getPuzzle(config.puzzle);
+        const effect = SkinManager.getEffect(config.effect);
+
+        this.initStudioGrid(puzzle);
+        if (this.studioParticles) {
+            this.studioParticles.setSkinEffects(effect);
+        }
+
         this.selectBackgroundSkin(config.bg, false);
         this.selectPuzzleSkin(config.puzzle, false);
         this.selectEffectSkin(config.effect, false);
-        this.renderSkinsGallery();
+        this.renderSkinsStudio();
     }
 
-    switchSkinsTab(tabKey) {
+    openSkinsStudio() {
+        this.audio.playPop();
+        this.triggerHaptic('snap');
+        if (this.dom.homeScreen) this.dom.homeScreen.style.display = 'none';
+        if (this.dom.gameplayView) this.dom.gameplayView.style.display = 'none';
+        if (this.dom.skinsView) this.dom.skinsView.style.display = 'flex';
+        if (this.dom.appWrapper) this.dom.appWrapper.classList.add('in-skins');
+
+        this.renderSkinsStudio();
+        this.switchStudioCategory('puzzle');
+    }
+
+    closeSkinsStudio() {
+        this.audio.playPop();
+        this.triggerHaptic('snap');
+        if (this.dom.skinsView) this.dom.skinsView.style.display = 'none';
+        if (this.dom.homeScreen) this.dom.homeScreen.style.display = 'flex';
+        if (this.dom.appWrapper) this.dom.appWrapper.classList.remove('in-skins');
+
+        this.updateSkinsSummary();
+    }
+
+    switchStudioCategory(catKey) {
         this.audio.playHover();
-        const tabs = [
-            { key: 'bg', btn: this.dom.tabSkinBg, panel: this.dom.panelSkinBg },
-            { key: 'puzzle', btn: this.dom.tabSkinPuzzle, panel: this.dom.panelSkinPuzzle },
-            { key: 'effect', btn: this.dom.tabSkinEffect, panel: this.dom.panelSkinEffect }
+        const categories = [
+            { key: 'puzzle', tab: this.dom.catTabPuzzle, panel: this.dom.panelCatPuzzle },
+            { key: 'bg', tab: this.dom.catTabBg, panel: this.dom.panelCatBg },
+            { key: 'effect', tab: this.dom.catTabEffect, panel: this.dom.panelCatEffect }
         ];
 
-        tabs.forEach(t => {
-            if (t.btn) t.btn.classList.toggle('active', t.key === tabKey);
-            if (t.panel) {
-                t.panel.style.display = t.key === tabKey ? 'block' : 'none';
-                t.panel.classList.toggle('active', t.key === tabKey);
+        categories.forEach(c => {
+            const isActive = c.key === catKey;
+            if (c.tab) c.tab.classList.toggle('active', isActive);
+            if (c.panel) {
+                c.panel.style.display = isActive ? 'block' : 'none';
+                c.panel.classList.toggle('active', isActive);
             }
         });
     }
 
-    renderSkinsGallery() {
-        this.renderBackgroundTab();
-        this.renderPuzzleTab();
-        this.renderEffectTab();
+    renderSkinsStudio() {
+        this.renderStudioPreview();
+        this.renderPuzzleCards();
+        this.renderBackgroundCards();
+        this.renderEffectCards();
         this.updateSkinsSummary();
     }
 
-    renderBackgroundTab() {
-        if (!this.dom.gridSkinBg) return;
-        const config = SkinManager.loadConfig();
-        const backgrounds = SkinManager.getAllBackgrounds();
+    initStudioGrid(puzzle) {
+        const pal = (puzzle && puzzle.palette && puzzle.palette.length > 0)
+            ? puzzle.palette
+            : [{ hex: '#F59E0B', light: '#FEF08A', dark: '#D97706' }];
 
-        this.dom.gridSkinBg.innerHTML = '';
-        backgrounds.forEach(bg => {
-            const isEquipped = bg.id === config.bg;
-            const card = document.createElement('div');
-            card.className = `skin-card ${isEquipped ? 'active' : ''}`;
-            card.setAttribute('data-bg-id', bg.id);
-
-            card.innerHTML = `
-                <div class="skin-card-header">
-                    <div class="skin-preview-chip" style="background: ${bg.bg}; border: 1.5px solid ${bg.dockBorder};">
-                        <div class="skin-mini-shape" style="background: ${bg.boardBg}; border: 1px solid rgba(255,255,255,0.2);"></div>
-                    </div>
-                    <div class="skin-card-info">
-                        <div class="skin-card-name">${bg.name}</div>
-                        <div class="skin-card-desc">${bg.desc}</div>
-                    </div>
-                </div>
-                <div class="skin-card-footer">
-                    <span class="skin-chip-tag" style="background: ${bg.bg.includes('gradient') ? (bg.solidFallback || '#1E293B') : bg.bg}; color: #FFFFFF;">${bg.bg.includes('gradient') ? 'SPECTRUM' : bg.bg}</span>
-                    <button class="btn-skin-action ${isEquipped ? 'equipped' : ''}">
-                        ${isEquipped ? 'EQUIPPED' : 'SELECT'}
-                    </button>
-                </div>
-            `;
-
-            card.addEventListener('click', () => {
-                this.audio.playPop();
-                this.selectBackgroundSkin(bg.id);
-            });
-
-            this.dom.gridSkinBg.appendChild(card);
-        });
+        this.studioGrid = [
+            [0, pal[0 % pal.length], pal[1 % pal.length], 0],
+            [pal[2 % pal.length] || pal[0], pal[3 % pal.length] || pal[1], pal[0 % pal.length], pal[1 % pal.length]], // Full 4-block clearing line
+            [pal[4 % pal.length] || pal[0], pal[1 % pal.length], 0, pal[2 % pal.length] || pal[0]],
+            [0, pal[3 % pal.length] || pal[1], pal[4 % pal.length] || pal[2], 0]
+        ];
     }
 
-    renderPuzzleTab() {
-        if (!this.dom.gridSkinPuzzle) return;
+    renderStudioPreview(animatePop = false) {
+        const config = SkinManager.loadConfig();
+        const puzzle = SkinManager.getPuzzle(config.puzzle);
+        const effect = SkinManager.getEffect(config.effect);
+
+        this.updateSkinsSummary();
+        this.initStudioGrid(puzzle);
+        if (this.studioParticles) {
+            this.studioParticles.setSkinEffects(effect);
+        }
+
+        // Render Test Dock Sample Piece
+        if (this.dom.previewDockBlocks) {
+            this.dom.previewDockBlocks.innerHTML = '';
+            const samplePieceCols = [puzzle.palette[0], puzzle.palette[1], puzzle.palette[2]];
+            samplePieceCols.forEach(c => {
+                if (!c) return;
+                const b = document.createElement('div');
+                b.className = 'dock-sample-block';
+                b.style.background = `linear-gradient(135deg, ${c.light} 0%, ${c.hex} 55%, ${c.dark} 100%)`;
+                b.style.boxShadow = `inset 1px 1px 0 rgba(255,255,255,0.6), inset -1px -1px 0 rgba(0,0,0,0.35), 0 3px 6px rgba(0,0,0,0.4)`;
+                this.dom.previewDockBlocks.appendChild(b);
+            });
+        }
+    }
+
+    testStudioEffect() {
+        if (this.studioSweepTimer) {
+            clearTimeout(this.studioSweepTimer);
+        }
+
+        const config = SkinManager.loadConfig();
+        const puzzle = SkinManager.getPuzzle(config.puzzle);
+        const effect = SkinManager.getEffect(config.effect);
+
+        // 1. Audio and Haptic feedback
+        this.audio.playClear(2);
+        this.triggerHaptic('snap');
+
+        // 2. Pulse test dock button & emit sparks around it
+        if (this.dom.stageDockPreview) {
+            this.spawnStudioSparkleBurst(this.dom.stageDockPreview, effect);
+            this.dom.stageDockPreview.classList.remove('pulse-test');
+            void this.dom.stageDockPreview.offsetWidth;
+            this.dom.stageDockPreview.classList.add('pulse-test');
+        }
+
+        // 3. Reset studio particles & apply effect
+        if (this.studioParticles) {
+            this.studioParticles.reset();
+            this.studioParticles.setSkinEffects(effect);
+        }
+
+        // 4. Ensure studio grid has blocks
+        this.initStudioGrid(puzzle);
+
+        // 5. Capture snapshot of Row 1 and clear from base grid
+        const row1Snapshot = this.studioGrid[1].map(col => col ? { color: col } : { color: puzzle.palette[0] });
+        this.studioGrid[1] = [0, 0, 0, 0];
+
+        // 6. Launch sweeping rolling star laser beam across Row 1 scaled for 4x4 sample board!
+        const m = this.studioBoardMetrics;
+        const gridX = m.x + m.outerPadding;
+        const gridY = m.y + m.outerPadding;
+
+        if (this.studioParticles) {
+            this.studioParticles.addLineClearSweep(
+                'row',
+                1,
+                gridX,
+                gridY,
+                m.cellSize,
+                m.gap,
+                row1Snapshot[0]?.color,
+                2,
+                row1Snapshot,
+                4
+            );
+
+            // 7. Floating celebratory score banner
+            const centerX = m.x + m.size / 2;
+            const centerY = m.y + m.size / 2;
+            this.studioParticles.addFloatingText('+120 ✨', centerX, centerY - 10, {
+                isGold: true,
+                fontSize: 26,
+                color: effect.floatingTextColor || '#FDE047'
+            });
+        }
+
+        // 8. Instant spring reset of Row 1 blocks after sweep finishes
+        this.studioSweepTimer = setTimeout(() => {
+            this.initStudioGrid(puzzle);
+        }, 440);
+    }
+
+    renderStudioCanvas(dt) {
+        if (!this.studioCanvas) {
+            this.studioCanvas = document.getElementById('stage-sample-canvas');
+            if (this.studioCanvas) {
+                this.studioCtx = this.studioCanvas.getContext('2d');
+            }
+        }
+        if (!this.studioCtx || !this.studioCanvas) return;
+
+        const ctx = this.studioCtx;
+        const config = SkinManager.loadConfig();
+        const bg = SkinManager.getBackground(config.bg);
+
+        const dpr = window.devicePixelRatio || 1;
+        const displayW = 224;
+        const displayH = 224;
+
+        if (this.studioCanvas.width !== Math.round(displayW * dpr) || this.studioCanvas.height !== Math.round(displayH * dpr)) {
+            this.studioCanvas.width = Math.round(displayW * dpr);
+            this.studioCanvas.height = Math.round(displayH * dpr);
+        }
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, displayW, displayH);
+
+        const m = this.studioBoardMetrics;
+        const x = m.x;
+        const y = m.y;
+        const size = m.size;
+        const cellSize = m.cellSize;
+        const gap = m.gap;
+        const outerPadding = m.outerPadding;
+
+        // 1. Draw 4x4 Board Background Card
+        ctx.save();
+        ctx.fillStyle = bg.boardBg;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+        ctx.shadowBlur = 14;
+        ctx.shadowOffsetY = 4;
+        this.renderer.roundRect(x, y, size, size, 16, ctx);
+        ctx.fill();
+        ctx.restore();
+
+        // 2. Draw Empty Grid Cell Slots
+        for (let r = 0; r < 4; r++) {
+            for (let c = 0; c < 4; c++) {
+                const cx = x + outerPadding + c * (cellSize + gap);
+                const cy = y + outerPadding + r * (cellSize + gap);
+                ctx.save();
+                ctx.fillStyle = bg.cellEmpty;
+                this.renderer.roundRect(cx, cy, cellSize, cellSize, Math.max(3, Math.round(cellSize * 0.14)), ctx);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // 3. Draw Filled Grid Blocks
+        for (let r = 0; r < 4; r++) {
+            for (let c = 0; c < 4; c++) {
+                const cellColor = this.studioGrid[r] ? this.studioGrid[r][c] : null;
+                if (cellColor) {
+                    const cx = x + outerPadding + c * (cellSize + gap);
+                    const cy = y + outerPadding + r * (cellSize + gap);
+                    this.renderer.drawBeveledBlock(cx, cy, cellSize, cellColor, false, null, ctx);
+                }
+            }
+        }
+
+        // 4. Render Studio Particles & Sweeper Animation on Top!
+        if (this.studioParticles) {
+            this.studioParticles.render(ctx);
+        }
+
+        ctx.restore();
+    }
+
+    spawnStudioSparkleBurst(container, effect) {
+        if (!container) return;
+        const colors = effect.particleColors || ['#FDE047', '#F59E0B', '#FFFFFF'];
+        const count = 14;
+
+        for (let i = 0; i < count; i++) {
+            const spark = document.createElement('div');
+            spark.className = 'studio-sparkle';
+            const color = colors[i % colors.length];
+            const angle = (i / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+            const dist = 35 + Math.random() * 45;
+            const tx = Math.cos(angle) * dist;
+            const ty = Math.sin(angle) * dist;
+            const size = 6 + Math.random() * 8;
+
+            spark.style.setProperty('--tx', `${tx}px`);
+            spark.style.setProperty('--ty', `${ty}px`);
+            spark.style.backgroundColor = color;
+            spark.style.boxShadow = `0 0 10px ${color}`;
+            spark.style.width = `${size}px`;
+            spark.style.height = `${size}px`;
+            if (effect.particleShape === 'circle') {
+                spark.style.borderRadius = '50%';
+            } else if (effect.particleShape === 'diamond') {
+                spark.style.transform = 'rotate(45deg)';
+            } else if (effect.particleShape === 'star') {
+                spark.style.clipPath = 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)';
+            } else {
+                spark.style.borderRadius = '2px';
+            }
+
+            container.appendChild(spark);
+            setTimeout(() => {
+                if (spark.parentElement) spark.remove();
+            }, 600);
+        }
+    }
+
+    renderPuzzleCards() {
+        if (!this.dom.gridCatPuzzle) return;
         const config = SkinManager.loadConfig();
         const puzzles = SkinManager.getAllPuzzles();
 
-        this.dom.gridSkinPuzzle.innerHTML = '';
+        this.dom.gridCatPuzzle.innerHTML = '';
         puzzles.forEach(p => {
             const isEquipped = p.id === config.puzzle;
+            const isUnlocked = SkinManager.isUnlocked('puzzle', p.id);
             const card = document.createElement('div');
-            card.className = `skin-card ${isEquipped ? 'active' : ''}`;
-            card.setAttribute('data-puzzle-id', p.id);
+            card.className = `modern-skin-card ${isEquipped ? 'equipped' : ''} ${!isUnlocked ? 'locked' : ''}`;
 
-            const swatchesHtml = p.palette.slice(0, 5).map(c => 
+            const swatchesHtml = p.palette.slice(0, 5).map(c =>
                 `<span class="skin-dot" style="background: ${c.hex}; box-shadow: 0 0 6px ${c.hex}88;"></span>`
             ).join('');
 
+            const rarityClass = `rarity-${p.rarity.toLowerCase()}`;
+
+            let buttonHtml = '';
+            if (isEquipped) {
+                buttonHtml = `<button type="button" class="btn-skin-action btn-skin-equipped"><span class="check-icon">✓</span> EQUIPPED</button>`;
+            } else if (isUnlocked) {
+                buttonHtml = `<button type="button" class="btn-skin-action btn-skin-equip">EQUIP</button>`;
+            } else {
+                buttonHtml = `
+                    <button type="button" class="btn-skin-action btn-skin-unlock">
+                        <svg class="ui-icon icon-ad-film" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="20" rx="3"></rect>
+                            <line x1="7" y1="2" x2="7" y2="22"></line>
+                            <line x1="17" y1="2" x2="17" y2="22"></line>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                        </svg>
+                        <span>UNLOCK (AD)</span>
+                    </button>
+                `;
+            }
+
             card.innerHTML = `
-                <div class="skin-card-header">
-                    <div class="skin-preview-chip" style="background: #111827; border: 1.5px solid rgba(255,255,255,0.15);">
-                        <div class="skin-mini-shape" style="background: ${p.palette[0].hex}; box-shadow: inset 1px 1px 0 rgba(255,255,255,0.4);"></div>
+                <div class="skin-card-top">
+                    <div class="skin-mini-shape-wrap">
+                        <div class="skin-preview-block" style="background: linear-gradient(135deg, ${p.palette[0].light} 0%, ${p.palette[0].hex} 60%, ${p.palette[0].dark} 100%);"></div>
                     </div>
-                    <div class="skin-card-info">
-                        <div class="skin-card-name">${p.name}</div>
-                        <div class="skin-card-desc">${p.desc}</div>
+                    <div class="skin-meta">
+                        <div class="skin-title-row">
+                            <span class="skin-card-name">${p.name}</span>
+                            <span class="skin-rarity-badge ${rarityClass}">${p.rarity}</span>
+                        </div>
+                        <p class="skin-card-desc">${p.desc}</p>
                     </div>
                 </div>
-                <div class="skin-card-footer">
-                    <div class="skin-swatches-row">
-                        ${swatchesHtml}
-                    </div>
-                    <button class="btn-skin-action ${isEquipped ? 'equipped' : ''}">
-                        ${isEquipped ? 'EQUIPPED' : 'SELECT'}
-                    </button>
+                <div class="skin-card-bot">
+                    <div class="skin-swatches-cluster">${swatchesHtml}</div>
+                    <div class="skin-action-wrap">${buttonHtml}</div>
                 </div>
             `;
 
-            card.addEventListener('click', () => {
-                this.audio.playPop();
-                this.selectPuzzleSkin(p.id);
-            });
+            const triggerAction = (e) => {
+                if (e) e.stopPropagation();
+                if (!isUnlocked) {
+                    this.handleSkinUnlock('puzzle', p.id, p.name);
+                } else {
+                    this.audio.playPop();
+                    this.selectPuzzleSkin(p.id);
+                }
+            };
 
-            this.dom.gridSkinPuzzle.appendChild(card);
+            const actionBtn = card.querySelector('.btn-skin-action');
+            if (actionBtn) actionBtn.addEventListener('click', triggerAction);
+            card.addEventListener('click', triggerAction);
+
+            this.dom.gridCatPuzzle.appendChild(card);
         });
     }
 
-    renderEffectTab() {
-        if (!this.dom.gridSkinEffect) return;
+    renderBackgroundCards() {
+        if (!this.dom.gridCatBg) return;
+        const config = SkinManager.loadConfig();
+        const backgrounds = SkinManager.getAllBackgrounds();
+
+        this.dom.gridCatBg.innerHTML = '';
+        backgrounds.forEach(bg => {
+            const isEquipped = bg.id === config.bg;
+            const isUnlocked = SkinManager.isUnlocked('bg', bg.id);
+            const card = document.createElement('div');
+            card.className = `modern-skin-card ${isEquipped ? 'equipped' : ''} ${!isUnlocked ? 'locked' : ''}`;
+
+            const rarityClass = `rarity-${bg.rarity.toLowerCase()}`;
+
+            let buttonHtml = '';
+            if (isEquipped) {
+                buttonHtml = `<button type="button" class="btn-skin-action btn-skin-equipped"><span class="check-icon">✓</span> EQUIPPED</button>`;
+            } else if (isUnlocked) {
+                buttonHtml = `<button type="button" class="btn-skin-action btn-skin-equip">EQUIP</button>`;
+            } else {
+                buttonHtml = `
+                    <button type="button" class="btn-skin-action btn-skin-unlock">
+                        <svg class="ui-icon icon-ad-film" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="20" rx="3"></rect>
+                            <line x1="7" y1="2" x2="7" y2="22"></line>
+                            <line x1="17" y1="2" x2="17" y2="22"></line>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                        </svg>
+                        <span>UNLOCK (AD)</span>
+                    </button>
+                `;
+            }
+
+            card.innerHTML = `
+                <div class="skin-card-top">
+                    <div class="skin-mini-shape-wrap">
+                        <div class="skin-preview-bg-tile" style="background: ${bg.bg}; border: 1.5px solid ${bg.dockBorder || 'rgba(255,255,255,0.2)'};">
+                            <div class="skin-tile-inner" style="background: ${bg.boardBg};"></div>
+                        </div>
+                    </div>
+                    <div class="skin-meta">
+                        <div class="skin-title-row">
+                            <span class="skin-card-name">${bg.name}</span>
+                            <span class="skin-rarity-badge ${rarityClass}">${bg.rarity}</span>
+                        </div>
+                        <p class="skin-card-desc">${bg.desc}</p>
+                    </div>
+                </div>
+                <div class="skin-card-bot">
+                    <span class="skin-chip-tag" style="background: ${bg.bg.includes('gradient') ? (bg.solidFallback || '#1E293B') : bg.bg}; color: #FFFFFF;">${bg.bg.includes('gradient') ? 'SPECTRUM' : 'SOLID'}</span>
+                    <div class="skin-action-wrap">${buttonHtml}</div>
+                </div>
+            `;
+
+            const triggerAction = (e) => {
+                if (e) e.stopPropagation();
+                if (!isUnlocked) {
+                    this.handleSkinUnlock('bg', bg.id, bg.name);
+                } else {
+                    this.audio.playPop();
+                    this.selectBackgroundSkin(bg.id);
+                }
+            };
+
+            const actionBtn = card.querySelector('.btn-skin-action');
+            if (actionBtn) actionBtn.addEventListener('click', triggerAction);
+            card.addEventListener('click', triggerAction);
+
+            this.dom.gridCatBg.appendChild(card);
+        });
+    }
+
+    renderEffectCards() {
+        if (!this.dom.gridCatEffect) return;
         const config = SkinManager.loadConfig();
         const effects = SkinManager.getAllEffects();
 
-        this.dom.gridSkinEffect.innerHTML = '';
+        this.dom.gridCatEffect.innerHTML = '';
         effects.forEach(eff => {
             const isEquipped = eff.id === config.effect;
+            const isUnlocked = SkinManager.isUnlocked('effect', eff.id);
             const card = document.createElement('div');
-            card.className = `skin-card ${isEquipped ? 'active' : ''}`;
-            card.setAttribute('data-effect-id', eff.id);
+            card.className = `modern-skin-card ${isEquipped ? 'equipped' : ''} ${!isUnlocked ? 'locked' : ''}`;
 
             const shapeIcon = eff.particleShape === 'star' ?
                 '<svg viewBox="0 0 24 24" width="16" height="16" fill="#FBBF24" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' :
@@ -1372,37 +1721,102 @@ export class BlockBlastApp {
                 '<svg viewBox="0 0 24 24" width="16" height="16" fill="#C084FC" stroke="none"><circle cx="12" cy="12" r="8"/></svg>' :
                 '<svg viewBox="0 0 24 24" width="16" height="16" fill="#60A5FA" stroke="none"><rect x="4" y="4" width="16" height="16" rx="3"/></svg>';
 
-            const swatchesHtml = eff.particleColors.slice(0, 4).map(c => 
+            const swatchesHtml = eff.particleColors.slice(0, 4).map(c =>
                 `<span class="skin-dot" style="background: ${c}; box-shadow: 0 0 6px ${c}88;"></span>`
             ).join('');
 
+            const rarityClass = `rarity-${eff.rarity.toLowerCase()}`;
+
+            let buttonHtml = '';
+            if (isEquipped) {
+                buttonHtml = `<button type="button" class="btn-skin-action btn-skin-equipped"><span class="check-icon">✓</span> EQUIPPED</button>`;
+            } else if (isUnlocked) {
+                buttonHtml = `<button type="button" class="btn-skin-action btn-skin-equip">EQUIP</button>`;
+            } else {
+                buttonHtml = `
+                    <button type="button" class="btn-skin-action btn-skin-unlock">
+                        <svg class="ui-icon icon-ad-film" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="20" rx="3"></rect>
+                            <line x1="7" y1="2" x2="7" y2="22"></line>
+                            <line x1="17" y1="2" x2="17" y2="22"></line>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                        </svg>
+                        <span>UNLOCK (AD)</span>
+                    </button>
+                `;
+            }
+
             card.innerHTML = `
-                <div class="skin-card-header">
-                    <div class="skin-preview-chip" style="background: #111827; border: 1.5px solid rgba(255,255,255,0.15);">
-                        <span style="font-size: 16px;">${shapeIcon}</span>
+                <div class="skin-card-top">
+                    <div class="skin-mini-shape-wrap">
+                        <div class="skin-preview-eff-tile" style="background: #111827; border: 1.5px solid rgba(255,255,255,0.2);">
+                            <span style="font-size: 16px;">${shapeIcon}</span>
+                        </div>
                     </div>
-                    <div class="skin-card-info">
-                        <div class="skin-card-name">${eff.name}</div>
-                        <div class="skin-card-desc">${eff.desc}</div>
+                    <div class="skin-meta">
+                        <div class="skin-title-row">
+                            <span class="skin-card-name">${eff.name}</span>
+                            <span class="skin-rarity-badge ${rarityClass}">${eff.rarity}</span>
+                        </div>
+                        <p class="skin-card-desc">${eff.desc}</p>
                     </div>
                 </div>
-                <div class="skin-card-footer">
-                    <div class="skin-swatches-row">
-                        ${swatchesHtml}
-                    </div>
-                    <button class="btn-skin-action ${isEquipped ? 'equipped' : ''}">
-                        ${isEquipped ? 'EQUIPPED' : 'SELECT'}
-                    </button>
+                <div class="skin-card-bot">
+                    <div class="skin-swatches-cluster">${swatchesHtml}</div>
+                    <div class="skin-action-wrap">${buttonHtml}</div>
                 </div>
             `;
 
-            card.addEventListener('click', () => {
-                this.audio.playPop();
-                this.selectEffectSkin(eff.id);
-            });
+            const triggerAction = (e) => {
+                if (e) e.stopPropagation();
+                if (!isUnlocked) {
+                    this.handleSkinUnlock('effect', eff.id, eff.name);
+                } else {
+                    this.audio.playPop();
+                    this.selectEffectSkin(eff.id);
+                }
+            };
 
-            this.dom.gridSkinEffect.appendChild(card);
+            const actionBtn = card.querySelector('.btn-skin-action');
+            if (actionBtn) actionBtn.addEventListener('click', triggerAction);
+            card.addEventListener('click', triggerAction);
+
+            this.dom.gridCatEffect.appendChild(card);
         });
+    }
+
+    handleSkinUnlock(type, id, name) {
+        this.audio.playLevelUp();
+        this.triggerHaptic('snap');
+        SkinManager.unlockSkin(type, id);
+
+        // Automatically equip newly unlocked item
+        if (type === 'puzzle') this.selectPuzzleSkin(id);
+        else if (type === 'bg') this.selectBackgroundSkin(id);
+        else if (type === 'effect') this.selectEffectSkin(id);
+
+        this.showSkinToast(`✨ Unlocked ${name}!`);
+        this.renderSkinsStudio();
+    }
+
+    showSkinToast(msg) {
+        const toast = document.getElementById('skin-unlock-toast');
+        const msgEl = document.getElementById('skin-toast-msg');
+        if (!toast || !msgEl) return;
+
+        msgEl.textContent = msg;
+        toast.style.display = 'inline-flex';
+        toast.classList.remove('toast-active');
+        void toast.offsetWidth;
+        toast.classList.add('toast-active');
+
+        if (this.skinToastTimer) clearTimeout(this.skinToastTimer);
+        this.skinToastTimer = setTimeout(() => {
+            if (toast) {
+                toast.classList.remove('toast-active');
+                setTimeout(() => { toast.style.display = 'none'; }, 300);
+            }
+        }, 2200);
     }
 
     selectBackgroundSkin(bgId, save = true) {
@@ -1420,7 +1834,8 @@ export class BlockBlastApp {
         document.body.style.background = bg.bg;
         document.body.style.backgroundColor = bg.solidFallback || bg.bg;
 
-        this.renderBackgroundTab();
+        this.renderStudioPreview();
+        this.renderBackgroundCards();
         this.updateSkinsSummary();
     }
 
@@ -1441,7 +1856,8 @@ export class BlockBlastApp {
             }
         }
 
-        this.renderPuzzleTab();
+        this.renderStudioPreview();
+        this.renderPuzzleCards();
         this.updateSkinsSummary();
     }
 
@@ -1451,9 +1867,18 @@ export class BlockBlastApp {
 
         if (save) SkinManager.saveConfig('effect', effect.id);
         this.particles.setSkinEffects(effect);
+        if (this.studioParticles) {
+            this.studioParticles.setSkinEffects(effect);
+        }
 
-        this.renderEffectTab();
+        this.renderStudioPreview();
+        this.renderEffectCards();
         this.updateSkinsSummary();
+
+        // Auto-play the test effect when selecting an effect card
+        if (this.dom.skinsView && this.dom.skinsView.style.display !== 'none') {
+            this.testStudioEffect();
+        }
     }
 
     updateSkinsSummary() {
@@ -1462,24 +1887,40 @@ export class BlockBlastApp {
         const puzzle = SkinManager.getPuzzle(config.puzzle);
         const effect = SkinManager.getEffect(config.effect);
 
-        if (this.dom.summaryBgName) this.dom.summaryBgName.textContent = bg.name;
-        if (this.dom.summaryPuzzleName) this.dom.summaryPuzzleName.textContent = puzzle.name;
-        if (this.dom.summaryEffectName) this.dom.summaryEffectName.textContent = effect.name;
+        if (this.dom.loadoutBgName) this.dom.loadoutBgName.textContent = bg.name;
+        if (this.dom.loadoutPuzzleName) this.dom.loadoutPuzzleName.textContent = puzzle.name;
+        if (this.dom.loadoutEffectName) this.dom.loadoutEffectName.textContent = effect.name;
         if (this.dom.homeActiveSkinName) this.dom.homeActiveSkinName.textContent = `${bg.name} + ${puzzle.name}`;
-    }
 
-    openSkinsModal() {
-        this.renderSkinsGallery();
-        if (this.dom.skinsModal) {
-            this.dom.skinsModal.style.display = 'flex';
-            this.dom.skinsModal.classList.add('active');
+        // Render true matching selection icons (NO EMOJIS)
+        if (this.dom.loadoutPuzzleIconWrap && puzzle.palette && puzzle.palette.length > 0) {
+            const p0 = puzzle.palette[0];
+            this.dom.loadoutPuzzleIconWrap.innerHTML = `
+                <span class="chip-puzzle-swatch" style="background: linear-gradient(135deg, ${p0.light} 0%, ${p0.hex} 60%, ${p0.dark} 100%);"></span>
+            `;
         }
-    }
 
-    closeSkinsModal() {
-        if (this.dom.skinsModal) {
-            this.dom.skinsModal.classList.remove('active');
-            this.dom.skinsModal.style.display = 'none';
+        if (this.dom.loadoutBgIconWrap) {
+            this.dom.loadoutBgIconWrap.innerHTML = `
+                <span class="chip-bg-swatch" style="background: ${bg.bg}; border: 1px solid ${bg.dockBorder || 'rgba(255,255,255,0.3)'};">
+                    <span class="chip-bg-inner" style="background: ${bg.boardBg};"></span>
+                </span>
+            `;
+        }
+
+        if (this.dom.loadoutEffectIconWrap && effect.particleColors) {
+            const pColor = effect.particleColors[0] || '#FDE047';
+            const shapeIcon = effect.particleShape === 'star' ?
+                `<svg viewBox="0 0 24 24" width="12" height="12" fill="${pColor}" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>` :
+                effect.particleShape === 'diamond' ?
+                `<svg viewBox="0 0 24 24" width="12" height="12" fill="${pColor}" stroke="none"><polygon points="12 2 22 12 12 22 2 12 12 2"/></svg>` :
+                effect.particleShape === 'circle' ?
+                `<svg viewBox="0 0 24 24" width="12" height="12" fill="${pColor}" stroke="none"><circle cx="12" cy="12" r="8"/></svg>` :
+                `<svg viewBox="0 0 24 24" width="12" height="12" fill="${pColor}" stroke="none"><rect x="4" y="4" width="16" height="16" rx="2.5"/></svg>`;
+
+            this.dom.loadoutEffectIconWrap.innerHTML = `
+                <span class="chip-fx-icon" style="filter: drop-shadow(0 0 4px ${pColor});">${shapeIcon}</span>
+            `;
         }
     }
 
@@ -1612,6 +2053,14 @@ export class BlockBlastApp {
 
         this.particles.update(dt);
         this.renderer.render(dt);
+
+        // Update & Render Theme Studio sample board canvas if visible
+        if (this.dom.skinsView && this.dom.skinsView.style.display !== 'none') {
+            if (this.studioParticles) {
+                this.studioParticles.update(dt);
+            }
+            this.renderStudioCanvas(dt);
+        }
 
         requestAnimationFrame((t) => this.gameLoop(t));
     }

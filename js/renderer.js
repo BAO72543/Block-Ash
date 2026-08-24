@@ -1150,8 +1150,8 @@ export class GameRenderer {
     /**
      * Classic 3D Beveled Glossy Block Tile (Guaranteed 1:1 True Square)
      */
-    drawBeveledBlock(x, y, size, color, isGhost = false, itemType = null) {
-        const ctx = this.ctx;
+    drawBeveledBlock(x, y, size, color, isGhost = false, itemType = null, targetCtx = null) {
+        const ctx = targetCtx || this.ctx;
         const squareSize = Math.round(size);
         const radius = Math.max(3, Math.round(squareSize * 0.14));
 
@@ -1179,7 +1179,7 @@ export class GameRenderer {
         bgGrad.addColorStop(1, dark);
 
         ctx.fillStyle = bgGrad;
-        this.roundRect(x, y, squareSize, squareSize, radius);
+        this.roundRect(x, y, squareSize, squareSize, radius, ctx);
         ctx.fill();
 
         // 2. Beveled top/left highlight
@@ -1217,13 +1217,13 @@ export class GameRenderer {
                 bedGrad.addColorStop(1, 'rgba(2, 44, 75, 0.8)');
             }
             ctx.fillStyle = bedGrad;
-            this.roundRect(x + innerMargin, y + innerMargin, innerSize, innerSize, innerRadius);
+            this.roundRect(x + innerMargin, y + innerMargin, innerSize, innerSize, innerRadius, ctx);
             ctx.fill();
 
             // Inlaid rim line
             ctx.strokeStyle = itemType === 'puzzle' ? 'rgba(192, 132, 252, 0.45)' : (itemType === 'star' ? 'rgba(250, 204, 21, 0.45)' : 'rgba(125, 211, 252, 0.45)');
             ctx.lineWidth = 1;
-            this.roundRect(x + innerMargin, y + innerMargin, innerSize, innerSize, innerRadius);
+            this.roundRect(x + innerMargin, y + innerMargin, innerSize, innerSize, innerRadius, ctx);
             ctx.stroke();
         } else {
             const innerGrad = ctx.createLinearGradient(x + innerMargin, y + innerMargin, x + innerMargin, y + innerMargin + innerSize);
@@ -1232,7 +1232,7 @@ export class GameRenderer {
             innerGrad.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
 
             ctx.fillStyle = innerGrad;
-            this.roundRect(x + innerMargin, y + innerMargin, innerSize, innerSize, innerRadius);
+            this.roundRect(x + innerMargin, y + innerMargin, innerSize, innerSize, innerRadius, ctx);
             ctx.fill();
         }
 
@@ -1267,8 +1267,8 @@ export class GameRenderer {
         ctx.restore();
     }
 
-    roundRect(x, y, width, height, radius) {
-        const ctx = this.ctx;
+    roundRect(x, y, width, height, radius, targetCtx = null) {
+        const ctx = targetCtx || this.ctx;
         radius = Math.min(radius, width / 2, height / 2);
         ctx.beginPath();
         ctx.moveTo(x + radius, y);

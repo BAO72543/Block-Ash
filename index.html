@@ -294,16 +294,6 @@
                             </svg>
                             <span class="btn-text">Stats</span>
                         </button>
-                        <button class="btn btn-wing" id="btn-skins" title="Select visual skins & themes">
-                            <svg class="ui-icon icon-skins-palette" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 2C6.48 2 2 6.48 2 12c0 3.86 2.76 7.12 6.5 7.86.5.1.9-.3.9-.8v-.5c0-.83.67-1.5 1.5-1.5h1.6c4.14 0 7.5-3.36 7.5-7.5 0-5.25-4.25-9.5-8.5-9.5z" fill="currentColor" fill-opacity="0.25"></path>
-                                <circle cx="7.5" cy="9.5" r="1.5" fill="#EF4444" stroke="none"></circle>
-                                <circle cx="12" cy="6.5" r="1.5" fill="#3B82F6" stroke="none"></circle>
-                                <circle cx="16.5" cy="9.5" r="1.5" fill="#10B981" stroke="none"></circle>
-                                <circle cx="14" cy="14" r="1.5" fill="#F59E0B" stroke="none"></circle>
-                            </svg>
-                            <span class="btn-text">Skins</span>
-                        </button>
                         <button class="btn btn-wing" id="btn-force-lose" title="Trigger Game Over screen (O)" style="border-color: rgba(239, 68, 68, 0.4); color: #FCA5A5;">
                             <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="9" cy="10" r="1.5" fill="currentColor"></circle>
@@ -328,6 +318,123 @@
             </aside>
         </main>
         </div> <!-- End of gameplay-view -->
+
+        <!-- 3. Dedicated Skins & Themes Studio View (Exclusively accessible from Main Menu) -->
+        <div class="skins-view" id="skins-view" style="display: none;">
+            <!-- Top Navigation Header -->
+            <header class="skins-view-header">
+                <button class="btn-skins-back" id="btn-skins-return-home" title="Return to Main Menu">
+                    <svg class="ui-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                    <span>HOME</span>
+                </button>
+
+                <div class="skins-view-title-wrap">
+                    <h1 class="skins-view-title">THEME STUDIO</h1>
+                    <span class="skins-view-subtitle">CUSTOMIZE VISUALS & EFFECTS</span>
+                </div>
+
+                <div class="skins-header-dummy-spacer" aria-hidden="true"></div>
+            </header>
+
+            <!-- 2-Column Responsive Layout Body -->
+            <div class="skins-studio-body">
+                <!-- Left Column: Live Interactive Studio Preview Stage -->
+                <aside class="skins-studio-left">
+                    <section class="skins-preview-stage" id="skins-preview-stage">
+                        <div class="stage-glass-backdrop">
+                            <!-- 4x4 Sample Board Visualizer with Live Rolling Star Canvas Sweeper -->
+                            <div class="stage-mini-board-wrap">
+                                <div class="stage-sample-board-card" id="stage-sample-board-card" title="Click to test Clear FX animation!">
+                                    <canvas class="stage-sample-canvas" id="stage-sample-canvas" width="460" height="460"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Mini Dock Sample Piece with Click-to-Test Effect Interactivity -->
+                            <div class="stage-dock-preview-wrap">
+                                <div class="stage-dock-preview" id="stage-dock-preview" title="Tap to test particle burst effect!">
+                                    <div class="preview-dock-hint">✨ TAP TO TEST FX</div>
+                                    <div class="preview-dock-blocks" id="preview-dock-blocks">
+                                        <!-- Dynamic 3D sample blocks -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Active Loadout Tagline -->
+                        <div class="skins-loadout-bar">
+                            <div class="loadout-chip" id="loadout-chip-puzzle" title="Equipped Block Skin">
+                                <span class="loadout-icon-wrap" id="loadout-puzzle-icon-wrap"></span>
+                                <span class="loadout-text" id="loadout-puzzle-name">Amber Wood</span>
+                            </div>
+                            <div class="loadout-chip" id="loadout-chip-bg" title="Equipped Atmosphere Theme">
+                                <span class="loadout-icon-wrap" id="loadout-bg-icon-wrap"></span>
+                                <span class="loadout-text" id="loadout-bg-name">Classic Crimson</span>
+                            </div>
+                            <div class="loadout-chip" id="loadout-chip-effect" title="Equipped Clear FX">
+                                <span class="loadout-icon-wrap" id="loadout-effect-icon-wrap"></span>
+                                <span class="loadout-text" id="loadout-effect-name">Golden Sparks</span>
+                            </div>
+                        </div>
+                    </section>
+                </aside>
+
+                <!-- Right Column: Category Tabs & Scrollable Skins Gallery Grid -->
+                <main class="skins-studio-right">
+                    <!-- Category Tabs Navigation -->
+                    <nav class="skins-category-tabs">
+                        <button class="skins-category-tab active" data-tab="puzzle" id="cat-tab-puzzle">
+                            <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                <rect x="3" y="3" width="8" height="8" rx="2"></rect>
+                                <rect x="13" y="3" width="8" height="8" rx="2"></rect>
+                                <rect x="3" y="13" width="8" height="8" rx="2"></rect>
+                                <rect x="13" y="13" width="8" height="8" rx="2"></rect>
+                            </svg>
+                            <span>BLOCK SKINS</span>
+                        </button>
+                        <button class="skins-category-tab" data-tab="bg" id="cat-tab-bg">
+                            <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="3"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                            <span>ATMOSPHERE</span>
+                        </button>
+                        <button class="skins-category-tab" data-tab="effect" id="cat-tab-effect">
+                            <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                            <span>CLEAR FX</span>
+                        </button>
+                    </nav>
+
+                    <!-- Scrollable Skins Gallery Container -->
+                    <div class="skins-gallery-scroll-area">
+                        <!-- 1. Block Skins Panel -->
+                        <div class="skins-category-panel active" id="panel-category-puzzle">
+                            <div class="skins-modern-grid" id="grid-category-puzzle"></div>
+                        </div>
+
+                        <!-- 2. Atmosphere Panel -->
+                        <div class="skins-category-panel" id="panel-category-bg" style="display: none;">
+                            <div class="skins-modern-grid" id="grid-category-bg"></div>
+                        </div>
+
+                        <!-- 3. Clear FX Panel -->
+                        <div class="skins-category-panel" id="panel-category-effect" style="display: none;">
+                            <div class="skins-modern-grid" id="grid-category-effect"></div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+
+            <!-- Floating celebratory toast for unlock confirmation -->
+            <div class="skin-unlock-toast" id="skin-unlock-toast" style="display: none;">
+                <span class="toast-sparkle">✨</span>
+                <span class="toast-msg" id="skin-toast-msg">Unlocked Skin!</span>
+            </div>
+        </div>
     </div>
 
     <!-- Game Over Modal -->
@@ -450,74 +557,6 @@
             <button class="btn" id="btn-close-stats" style="width: 100%; padding: 12px; font-size: 14px; border-radius: var(--radius-sm);">
                 <span>Close</span>
             </button>
-        </div>
-    </div>
-
-    <!-- 3-Section Modular Skins & Visual Customizer Modal -->
-    <div class="modal-backdrop" id="skins-modal" style="display: none;">
-        <div class="modal-card skins-modal-card">
-            <div class="skins-modal-header">
-                <div>
-                    <h2 class="modal-title" style="margin-bottom: 2px;">CUSTOMIZE SKINS</h2>
-                    <p class="skins-modal-subtitle">Mix & match solid backgrounds, puzzle block colors, and animations</p>
-                </div>
-                <button class="btn-skins-close" id="btn-close-skins" title="Close Customizer">&times;</button>
-            </div>
-
-            <!-- 3 Category Navigation Tabs -->
-            <div class="skins-nav-tabs">
-                <button class="skins-tab-btn active" data-tab="bg" id="tab-skin-bg">
-                    <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                        <polyline points="21 15 16 10 5 21"></polyline>
-                    </svg>
-                    <span>Background</span>
-                </button>
-                <button class="skins-tab-btn" data-tab="puzzle" id="tab-skin-puzzle">
-                    <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M19.5 12h-2.5a2 2 0 0 1-2-2V7.5a2.5 2.5 0 0 0-5 0V10a2 2 0 0 1-2 2H5.5a2.5 2.5 0 0 0 0 5H8a2 2 0 0 1 2 2v2.5a2.5 2.5 0 0 0 5 0V19a2 2 0 0 1 2-2h2.5a2.5 2.5 0 0 0 0-5z"></path>
-                    </svg>
-                    <span>Puzzle Blocks</span>
-                </button>
-                <button class="skins-tab-btn" data-tab="effect" id="tab-skin-effect">
-                    <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z"></path>
-                    </svg>
-                    <span>Animation & FX</span>
-                </button>
-            </div>
-
-            <!-- Current Selection Summary Bar -->
-            <div class="skins-active-summary" id="skins-active-summary">
-                <div class="summary-pill"><span class="lbl">BG:</span> <span id="summary-bg-name">Classic Crimson</span></div>
-                <div class="summary-pill"><span class="lbl">Puzzle:</span> <span id="summary-puzzle-name">Amber Wood</span></div>
-                <div class="summary-pill"><span class="lbl">FX:</span> <span id="summary-effect-name">Golden Sparks</span></div>
-            </div>
-
-            <!-- Tab Panels Container -->
-            <div class="skins-tab-panels">
-                <!-- 1. Background Section Panel -->
-                <div class="skins-panel active" id="panel-skin-bg">
-                    <div class="skins-gallery-grid" id="grid-skin-bg">
-                        <!-- Populated with solid background cards -->
-                    </div>
-                </div>
-
-                <!-- 2. Puzzle Shape Colors Panel -->
-                <div class="skins-panel" id="panel-skin-puzzle" style="display: none;">
-                    <div class="skins-gallery-grid" id="grid-skin-puzzle">
-                        <!-- Populated with block palette cards -->
-                    </div>
-                </div>
-
-                <!-- 3. Animation & Particle FX Panel -->
-                <div class="skins-panel" id="panel-skin-effect" style="display: none;">
-                    <div class="skins-gallery-grid" id="grid-skin-effect">
-                        <!-- Populated with particle FX cards -->
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 

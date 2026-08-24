@@ -449,6 +449,34 @@ export class AudioManager {
             osc.stop(now + 0.03);
         } catch (e) {}
     }
+
+    playLevelUp() {
+        if (this.isMuted) return;
+        this.ensureContext();
+        if (!this.ctx) return;
+
+        try {
+            const now = this.ctx.currentTime;
+            const notes = [440, 554.37, 659.25, 880, 1108.73, 1318.51];
+            notes.forEach((freq, i) => {
+                const startTime = now + i * 0.05;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, startTime);
+
+                gain.gain.setValueAtTime(0.2, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + 0.35);
+            });
+        } catch (e) {}
+    }
 }
 
 export { AudioManager as SoundFX };

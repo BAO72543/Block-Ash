@@ -2,12 +2,12 @@
  * Block Blast - Particle, Sweeper and Visual FX System
  * High-performance canvas particle animations, sweeping laser line beams, shockwaves, floating text, and confetti.
  * Features:
- * - Ultra-Smooth Eased Sweeping Laser Beams & Domino Cascading Line Clears
- * - Dissolving Pre-Clear Cell Shimmer & Scale Bloom
- * - Multi-Line Cross-Intersection Supernova Detonations
- * - Skin-Tailored Comet Heads (5-Point Star, Laser Diamond, Crystal Square, Plasma Orb)
- * - Color-Matched Particle Explosions with Dynamic Velocity & Gravity
- * - Scaled Screen Shake & Bold Typography Pop-Ups
+ * - 3D Chiseled Rolling Star Comet Head with Faceted Origami Shading & Blazing Radial Bloom
+ * - Multi-Pass High-Intensity Core Laser Blades with Trailing Glow Channels & Sonic Shockwaves
+ * - Sequential Domino Block Slicing: blocks remain visible in energized charging state and vaporize into color-matched shards
+ * - Perpendicular High-Speed Micro-Spark Jets & Cosmic Stardust Ribbon Trails
+ * - Multi-Line Cross-Intersection Hypernova Detonations with Concentric Rings
+ * - Synchronized Ascending Musical Solfege Arpeggio Pops
  */
 
 export class ParticleSystem {
@@ -23,13 +23,14 @@ export class ParticleSystem {
         this.shakeIntensity = 0;
         this.onCellTriggerCallback = null;
 
+        // Default effects skin: Golden Rolling Star Laser
         this.currentEffects = {
-            particleShape: 'square',
-            headShape: 'square',
-            particleColors: ['#FDE68A', '#F59E0B', '#D97706', '#FFFFFF'],
+            particleShape: 'star',
+            headShape: 'star',
+            particleColors: ['#FDE68A', '#F59E0B', '#D97706', '#FFFFFF', '#FEF08A'],
             waveColor: 'rgba(254, 240, 138, 0.95)',
             floatingTextColor: '#FDE047',
-            glowColor: 'rgba(245, 158, 11, 0.85)'
+            glowColor: 'rgba(245, 158, 11, 0.90)'
         };
     }
 
@@ -40,12 +41,12 @@ export class ParticleSystem {
     setSkinEffects(effects) {
         if (effects) {
             this.currentEffects = {
-                particleShape: effects.particleShape || 'square',
-                headShape: effects.headShape || effects.particleShape || 'square',
-                particleColors: effects.particleColors || ['#FDE68A', '#F59E0B', '#D97706', '#FFFFFF'],
+                particleShape: effects.particleShape || 'star',
+                headShape: effects.headShape || effects.particleShape || 'star',
+                particleColors: effects.particleColors || ['#FDE68A', '#F59E0B', '#D97706', '#FFFFFF', '#FEF08A'],
                 waveColor: effects.waveColor || 'rgba(255, 255, 255, 0.95)',
                 floatingTextColor: effects.floatingTextColor || '#FDE047',
-                glowColor: effects.glowColor || 'rgba(245, 158, 11, 0.85)'
+                glowColor: effects.glowColor || 'rgba(245, 158, 11, 0.90)'
             };
         }
     }
@@ -69,13 +70,13 @@ export class ParticleSystem {
 
     /**
      * Start a sweeping laser beam across an entire row or column with smooth cubic easing,
-     * glowing comet head, cascading block pops, and lateral spark discharge
+     * glowing 3D rolling star comet head, sequential cascading block pops, and lateral spark discharge
      */
-    addLineClearSweep(type, index, gridX, gridY, cellSize, gap, shapeColor, comboCount = 0) {
-        const totalLength = 8 * (cellSize + gap) - gap;
+    addLineClearSweep(type, index, gridX, gridY, cellSize, gap, shapeColor, comboCount = 0, cellsData = null, lineLength = 8) {
+        const totalLength = lineLength * (cellSize + gap) - gap;
         const isRow = type === 'row';
         const eff = this.currentEffects;
-        const comboScale = 1.0 + Math.min(0.6, (comboCount || 0) * 0.12);
+        const comboScale = 1.0 + Math.min(0.65, (comboCount || 0) * 0.14);
 
         const startX = isRow ? gridX : (gridX + index * (cellSize + gap) + cellSize / 2);
         const startY = isRow ? (gridY + index * (cellSize + gap) + cellSize / 2) : gridY;
@@ -87,33 +88,41 @@ export class ParticleSystem {
             type,
             x: isRow ? gridX : startX,
             y: isRow ? startY : gridY,
-            width: isRow ? totalLength : cellSize * 1.8 * comboScale,
-            height: isRow ? cellSize * 1.8 * comboScale : totalLength,
+            width: isRow ? totalLength : cellSize * 2.0 * comboScale,
+            height: isRow ? cellSize * 2.0 * comboScale : totalLength,
             alpha: 1.0,
-            decay: 0.038,
+            decay: 0.034,
             color: eff.waveColor
         });
 
-        // Register clearing cells along the path for smooth pre-clear glow & scale bloom
-        for (let c = 0; c < 8; c++) {
+        // Register clearing cells along the path with full block snapshot colors
+        const sweepCells = [];
+        for (let c = 0; c < lineLength; c++) {
             const cellRow = isRow ? index : c;
             const cellCol = isRow ? c : index;
             const cx = gridX + cellCol * (cellSize + gap);
             const cy = gridY + cellRow * (cellSize + gap);
 
-            this.clearingCells.push({
+            const snapCell = (cellsData && cellsData[c]) ? cellsData[c] : null;
+            const specificColor = (snapCell && snapCell.color) ? snapCell.color : (shapeColor || { hex: '#3B82F6', light: '#93C5FD', dark: '#1D4ED8' });
+
+            const cellObj = {
                 row: cellRow,
                 col: cellCol,
                 x: cx,
                 y: cy,
                 size: cellSize,
-                color: shapeColor || { hex: '#3B82F6', light: '#93C5FD' },
-                state: 'blooming', // blooming -> popped -> fading
+                color: specificColor,
+                item: snapCell ? snapCell.item : null,
+                state: 'charging', // charging (energized on board) -> popping -> fading
                 scale: 1.0,
                 alpha: 1.0,
-                glowAlpha: 0.2,
-                decay: 0.06
-            });
+                glowAlpha: 0.3,
+                shimmer: c * 0.4,
+                decay: 0.09
+            };
+            sweepCells.push(cellObj);
+            this.clearingCells.push(cellObj);
         }
 
         this.sweepers.push({
@@ -129,21 +138,28 @@ export class ParticleSystem {
             endX,
             endY,
             totalLength,
+            lineLength,
             elapsedTime: 0,
-            duration: 260, // 260ms smooth cushioned travel time
+            duration: lineLength <= 4 ? 230 : 275, // Scaled cushioned travel time
             progress: 0,
             comboCount: comboCount || 0,
             comboScale,
-            triggeredCells: new Array(8).fill(false),
-            shapeColor: shapeColor || { hex: '#3B82F6', light: '#93C5FD' },
-            particleShape: eff.particleShape || 'square',
-            headShape: eff.headShape || eff.particleShape || 'square',
+            triggeredCells: new Array(lineLength).fill(false),
+            cells: sweepCells,
+            shapeColor: shapeColor || { hex: '#3B82F6', light: '#93C5FD', dark: '#1D4ED8' },
+            particleShape: eff.particleShape || 'star',
+            headShape: eff.headShape || eff.particleShape || 'star',
             waveColor: eff.waveColor || 'rgba(255, 255, 255, 0.95)',
-            glowColor: eff.glowColor || 'rgba(245, 158, 11, 0.85)',
+            glowColor: eff.glowColor || 'rgba(245, 158, 11, 0.90)',
             particleColors: eff.particleColors || ['#FDE68A', '#F59E0B', '#FFFFFF'],
             headRotation: 0,
-            alpha: 1.0
+            alpha: 1.0,
+            stardustTimer: 0
         });
+    }
+
+    addLineClearWave(type, index, gridX, gridY, cellSize, gap, shapeColor = null, comboCount = 0, lineLength = 8) {
+        this.addLineClearSweep(type, index, gridX, gridY, cellSize, gap, shapeColor, comboCount, null, lineLength);
     }
 
     /**
@@ -161,10 +177,10 @@ export class ParticleSystem {
                 this.supernovas.push({
                     x: cx,
                     y: cy,
-                    radius: 10,
-                    maxRadius: cellSize * 2.2,
+                    radius: 12,
+                    maxRadius: cellSize * 2.4,
                     alpha: 1.0,
-                    decay: 0.04,
+                    decay: 0.038,
                     color: eff.glowColor || 'rgba(251, 191, 36, 0.9)',
                     haloColor: '#FFFFFF',
                     sparksEmitted: false
@@ -174,14 +190,14 @@ export class ParticleSystem {
     }
 
     /**
-     * Lateral micro-sparks shooting perpendicularly away from the sweeping comet head
+     * Lateral micro-sparks shooting perpendicularly away from the sweeping cutting contact point
      */
     addSweepSparks(x, y, isRow, shape, colors, comboScale = 1.0) {
-        const count = Math.floor((5 + Math.random() * 4) * comboScale);
+        const count = Math.floor((6 + Math.random() * 5) * comboScale);
         for (let i = 0; i < count; i++) {
             const side = Math.random() > 0.5 ? 1 : -1;
-            const vx = isRow ? (Math.random() - 0.5) * 3 : side * (3.5 + Math.random() * 5.5);
-            const vy = isRow ? side * (3.5 + Math.random() * 5.5) : (Math.random() - 0.5) * 3;
+            const vx = isRow ? (Math.random() - 0.5) * 3.5 : side * (4.0 + Math.random() * 6.5);
+            const vy = isRow ? side * (4.0 + Math.random() * 6.5) : (Math.random() - 0.5) * 3.5;
             const color = colors[Math.floor(Math.random() * colors.length)] || '#FFFFFF';
 
             this.particles.push({
@@ -189,16 +205,45 @@ export class ParticleSystem {
                 y,
                 vx,
                 vy,
-                gravity: 0.10,
+                gravity: 0.12,
                 drag: 0.93,
-                size: (4 + Math.random() * 7) * comboScale,
-                baseSize: (4 + Math.random() * 7) * comboScale,
+                size: (4 + Math.random() * 8) * comboScale,
+                baseSize: (4 + Math.random() * 8) * comboScale,
                 color,
                 alpha: 1.0,
-                decay: 0.025 + Math.random() * 0.025,
+                decay: 0.024 + Math.random() * 0.026,
                 rotation: Math.random() * Math.PI * 2,
-                vRot: (Math.random() - 0.5) * 0.4,
+                vRot: (Math.random() - 0.5) * 0.45,
                 shape
+            });
+        }
+    }
+
+    /**
+     * Trailing stardust sparks drifting behind the rolling star comet head
+     */
+    addRollingStarTrailSparks(x, y, isRow, colors, comboScale = 1.0) {
+        for (let i = 0; i < 2; i++) {
+            const side = (Math.random() - 0.5) * 14;
+            const vx = isRow ? -1.8 - Math.random() * 2.8 : side * 0.35;
+            const vy = isRow ? side * 0.35 : -1.8 - Math.random() * 2.8;
+            const color = colors[Math.floor(Math.random() * colors.length)] || '#FFFFFF';
+
+            this.particles.push({
+                x: isRow ? x - 6 : x + side,
+                y: isRow ? y + side : y - 6,
+                vx,
+                vy,
+                gravity: 0.06,
+                drag: 0.94,
+                size: (3.5 + Math.random() * 5.5) * comboScale,
+                baseSize: (3.5 + Math.random() * 5.5) * comboScale,
+                color,
+                alpha: 0.95,
+                decay: 0.035 + Math.random() * 0.035,
+                rotation: Math.random() * Math.PI * 2,
+                vRot: (Math.random() - 0.5) * 0.35,
+                shape: Math.random() > 0.4 ? 'star' : 'sparkle'
             });
         }
     }
@@ -207,17 +252,17 @@ export class ParticleSystem {
      * Burst of jewel / neon block particles from a destroyed cell matching its exact color & skin effect
      */
     addBlockClearBurst(x, y, size, color, comboScale = 1.0) {
-        const count = Math.floor((14 + Math.random() * 8) * comboScale);
+        const count = Math.floor((16 + Math.random() * 9) * comboScale);
         const hex = (color && color.hex) ? color.hex : '#3B82F6';
         const light = (color && color.light) ? color.light : '#93C5FD';
-        const effectShape = this.currentEffects.particleShape || 'square';
+        const effectShape = this.currentEffects.particleShape || 'star';
         const pColors = this.currentEffects.particleColors || [hex, light, '#FFFFFF'];
 
         for (let i = 0; i < count; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = 3.0 + Math.random() * 7.5;
-            const pSize = ((size * 0.18) + Math.random() * (size * 0.24)) * comboScale;
-            const chosenColor = Math.random() > 0.35 
+            const speed = 3.2 + Math.random() * 8.0;
+            const pSize = ((size * 0.18) + Math.random() * (size * 0.25)) * comboScale;
+            const chosenColor = Math.random() > 0.30
                 ? (Math.random() > 0.5 ? hex : light)
                 : pColors[Math.floor(Math.random() * pColors.length)];
 
@@ -225,7 +270,7 @@ export class ParticleSystem {
                 x: x + size / 2,
                 y: y + size / 2,
                 vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed - 2.0,
+                vy: Math.sin(angle) * speed - 2.2,
                 gravity: 0.22,
                 drag: 0.94,
                 size: pSize,
@@ -235,7 +280,7 @@ export class ParticleSystem {
                 decay: 0.016 + Math.random() * 0.020,
                 rotation: Math.random() * Math.PI * 2,
                 vRot: (Math.random() - 0.5) * 0.35,
-                shape: Math.random() > 0.15 ? effectShape : 'circle'
+                shape: Math.random() > 0.15 ? effectShape : 'sparkle'
             });
         }
     }
@@ -248,7 +293,6 @@ export class ParticleSystem {
         const cy = y + size / 2;
 
         if (itemType === 'puzzle') {
-            // Cosmic Amethyst & Lilac Crystal Shards
             const pColors = ['#FDF4FF', '#F5D0FE', '#E879F9', '#C084FC', '#9333EA', '#FFFFFF'];
             for (let i = 0; i < 26; i++) {
                 const angle = Math.random() * Math.PI * 2;
@@ -272,7 +316,6 @@ export class ParticleSystem {
                 });
             }
         } else if (itemType === 'star') {
-            // Brilliant Golden Stardust Fanfare
             const pColors = ['#FFFBEB', '#FEF08A', '#FDE047', '#FACC15', '#EAB308', '#FFFFFF'];
             for (let i = 0; i < 30; i++) {
                 const angle = Math.random() * Math.PI * 2;
@@ -296,7 +339,6 @@ export class ParticleSystem {
                 });
             }
         } else {
-            // Crystalline Diamond / Gem Burst
             const baseHex = (cellColor && cellColor.hex) ? cellColor.hex : '#38BDF8';
             const baseLight = (cellColor && cellColor.light) ? cellColor.light : '#E0F2FE';
             const pColors = [baseLight, baseHex, '#FFFFFF', '#BAE6FD'];
@@ -431,36 +473,57 @@ export class ParticleSystem {
             }
         }
 
-        // 3. Update Sweeping Laser Waves with Non-Linear Eased Travel & Domino Pops
+        // 3. Update Sweeping Laser Waves with 3D Rolling Star Comet Heads & Domino Pops
         for (let i = this.sweepers.length - 1; i >= 0; i--) {
             const sw = this.sweepers[i];
             sw.elapsedTime += dt;
             const t = Math.min(1.0, sw.elapsedTime / sw.duration);
 
             // Smooth cubic-out easing curve: rapid energetic surge with cushioned completion
-            sw.progress = 1 - Math.pow(1 - t, 2.8);
-            sw.headRotation += 0.18;
+            sw.progress = 1 - Math.pow(1 - t, 2.7);
 
-            // Trigger cells sequentially as the beam passes each one
-            for (let c = 0; c < 8; c++) {
-                const threshold = (c + 0.15) / 8;
+            // True rolling rotation matching distance along the row/column
+            const rolledDistance = sw.progress * sw.totalLength;
+            sw.headRotation = (rolledDistance / (sw.cellSize * 0.36)) + (sw.elapsedTime * 0.006);
+
+            const clampedP = Math.min(1.0, sw.progress);
+            const headX = sw.isRow ? (sw.startX + clampedP * sw.totalLength) : sw.startX;
+            const headY = sw.isRow ? sw.startY : (sw.startY + clampedP * sw.totalLength);
+
+            // Trailing cosmic stardust emissions behind the rolling star
+            sw.stardustTimer = (sw.stardustTimer || 0) + dt;
+            if (sw.stardustTimer >= 22 && t < 0.95) {
+                sw.stardustTimer = 0;
+                this.addRollingStarTrailSparks(headX, headY, sw.isRow, sw.particleColors, sw.comboScale);
+            }
+
+            // Domino sequential vaporization as rolling star passes each cell
+            const count = sw.lineLength || 8;
+            for (let c = 0; c < count; c++) {
+                const threshold = (c + 0.32) / count;
                 if (sw.progress >= threshold && !sw.triggeredCells[c]) {
                     sw.triggeredCells[c] = true;
+
+                    const cell = sw.cells ? sw.cells[c] : null;
+                    if (cell) {
+                        cell.state = 'popping';
+                    }
 
                     const cellRow = sw.isRow ? sw.index : c;
                     const cellCol = sw.isRow ? c : sw.index;
                     const cellX = sw.gridX + cellCol * (sw.cellSize + sw.gap);
                     const cellY = sw.gridY + cellRow * (sw.cellSize + sw.gap);
+                    const cellColor = (cell && cell.color) ? cell.color : sw.shapeColor;
 
-                    // Notify audio callback for ascending musical note
+                    // Notify audio callback for ascending musical Solfege note
                     if (this.onCellTriggerCallback) {
                         this.onCellTriggerCallback(c, sw.comboCount);
                     }
 
-                    // Trigger block explosion burst
-                    this.addBlockClearBurst(cellX, cellY, sw.cellSize, sw.shapeColor, sw.comboScale);
+                    // Explode block into color-matched shards
+                    this.addBlockClearBurst(cellX, cellY, sw.cellSize, cellColor, sw.comboScale);
 
-                    // Trigger lateral beam discharge sparks
+                    // Lateral high-velocity cutting sparks
                     this.addSweepSparks(
                         cellX + sw.cellSize / 2,
                         cellY + sw.cellSize / 2,
@@ -477,14 +540,17 @@ export class ParticleSystem {
             }
         }
 
-        // 4. Update Dissolving Clearing Cells (smooth pre-clear scale bloom and fade)
+        // 4. Update Dissolving Clearing Cells (Smooth pre-clear charge, scale bloom and vaporization)
         for (let i = this.clearingCells.length - 1; i >= 0; i--) {
             const cc = this.clearingCells[i];
-            if (cc.state === 'blooming') {
-                cc.scale = Math.min(1.14, cc.scale + 0.025);
-                cc.glowAlpha = Math.min(0.85, cc.glowAlpha + 0.08);
+            if (cc.state === 'charging') {
+                cc.shimmer = (cc.shimmer || 0) + dt * 0.014;
+                cc.glowAlpha = 0.30 + Math.sin(cc.shimmer * 5) * 0.20;
+            } else if (cc.state === 'popping' || cc.state === 'blooming') {
+                cc.scale = Math.min(1.22, cc.scale + 0.038);
+                cc.glowAlpha = Math.min(1.0, cc.glowAlpha + 0.15);
                 cc.alpha -= cc.decay;
-                if (cc.alpha <= 0.1) {
+                if (cc.alpha <= 0.05) {
                     this.clearingCells.splice(i, 1);
                 }
             }
@@ -562,10 +628,185 @@ export class ParticleSystem {
         };
     }
 
+    roundRect(ctx, x, y, width, height, radius) {
+        radius = Math.min(radius, width / 2, height / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+    }
+
+    /**
+     * Master 3D Chiseled Rolling Star Head Renderer
+     * 10 alternating faceted triangles, diamond specular core, and golden rim
+     */
+    drawRollingStarHead(ctx, flareSize, glowColor, skinColors) {
+        const outerR = flareSize;
+        const innerR = flareSize * 0.46;
+        const points = 5;
+
+        const outerPts = [];
+        const innerPts = [];
+        for (let k = 0; k < points; k++) {
+            const outAngle = -Math.PI / 2 + (k * 2 * Math.PI) / points;
+            const inAngle = -Math.PI / 2 + ((k + 0.5) * 2 * Math.PI) / points;
+            outerPts.push({ x: Math.cos(outAngle) * outerR, y: Math.sin(outAngle) * outerR });
+            innerPts.push({ x: Math.cos(inAngle) * innerR, y: Math.sin(inAngle) * innerR });
+        }
+
+        // 1. Soft Ambient Drop Shadow
+        ctx.save();
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        for (let k = 0; k < points; k++) {
+            if (k === 0) ctx.moveTo(outerPts[k].x, outerPts[k].y);
+            else ctx.lineTo(outerPts[k].x, outerPts[k].y);
+            ctx.lineTo(innerPts[k].x, innerPts[k].y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#3B1A02';
+        ctx.fill();
+        ctx.restore();
+
+        // 2. 3D Faceted Origami Shading: Draw 10 Alternating Light & Shadow Triangles
+        const lightColor1 = (skinColors && skinColors[0]) ? skinColors[0] : '#FDE68A';
+        const lightColor2 = (skinColors && skinColors[1]) ? skinColors[1] : '#F59E0B';
+        const darkColor1 = (skinColors && skinColors[2]) ? skinColors[2] : '#D97706';
+
+        for (let k = 0; k < points; k++) {
+            const prevValley = innerPts[(k - 1 + points) % points];
+            const nextValley = innerPts[k];
+            const tip = outerPts[k];
+
+            // 2A. Light Facet (Tip -> Center -> NextValley)
+            const lightGrad = ctx.createLinearGradient(tip.x, tip.y, 0, 0);
+            lightGrad.addColorStop(0.0, '#FFFFFF'); // Specular tip
+            lightGrad.addColorStop(0.35, lightColor1);
+            lightGrad.addColorStop(1.0, lightColor2);
+            ctx.fillStyle = lightGrad;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(tip.x, tip.y);
+            ctx.lineTo(nextValley.x, nextValley.y);
+            ctx.closePath();
+            ctx.fill();
+
+            // 2B. Shadow Facet (Tip -> Center -> PrevValley)
+            const shadowGrad = ctx.createLinearGradient(tip.x, tip.y, 0, 0);
+            shadowGrad.addColorStop(0.0, lightColor2);
+            shadowGrad.addColorStop(0.6, darkColor1);
+            shadowGrad.addColorStop(1.0, '#451A03');
+            ctx.fillStyle = shadowGrad;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(tip.x, tip.y);
+            ctx.lineTo(prevValley.x, prevValley.y);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // 3. Facet Ridge Highlight Lines
+        for (let k = 0; k < points; k++) {
+            const tip = outerPts[k];
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.90)';
+            ctx.lineWidth = Math.max(1.0, flareSize * 0.05);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(tip.x, tip.y);
+            ctx.stroke();
+        }
+
+        // 4. Perimeter Bevel Stroke
+        ctx.beginPath();
+        for (let k = 0; k < points; k++) {
+            if (k === 0) ctx.moveTo(outerPts[k].x, outerPts[k].y);
+            else ctx.lineTo(outerPts[k].x, outerPts[k].y);
+            ctx.lineTo(innerPts[k].x, innerPts[k].y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.lineWidth = Math.max(1.2, flareSize * 0.06);
+        ctx.stroke();
+
+        // 5. Inset Center Specular Diamond Core
+        const coreR = outerR * 0.28;
+        ctx.save();
+        ctx.shadowColor = '#FFFFFF';
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.moveTo(0, -coreR);
+        ctx.lineTo(coreR, 0);
+        ctx.lineTo(0, coreR);
+        ctx.lineTo(-coreR, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    /**
+     * 3D Faceted Diamond Comet Head for Cyber skin
+     */
+    drawRollingDiamondHead(ctx, flareSize, glowColor, skinColors) {
+        const dw = flareSize * 0.85;
+        const dh = flareSize * 1.40;
+
+        ctx.save();
+        ctx.shadowColor = glowColor || '#00F0FF';
+        ctx.shadowBlur = 16;
+
+        // Top Light Facet
+        const gradTop = ctx.createLinearGradient(0, -dh, 0, 0);
+        gradTop.addColorStop(0, '#FFFFFF');
+        gradTop.addColorStop(1, (skinColors && skinColors[0]) || '#00F0FF');
+        ctx.fillStyle = gradTop;
+        ctx.beginPath();
+        ctx.moveTo(0, -dh);
+        ctx.lineTo(dw, 0);
+        ctx.lineTo(0, 0);
+        ctx.lineTo(-dw, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bottom Shadow Facet
+        const gradBot = ctx.createLinearGradient(0, 0, 0, dh);
+        gradBot.addColorStop(0, (skinColors && skinColors[1]) || '#0891B2');
+        gradBot.addColorStop(1, '#082F49');
+        ctx.fillStyle = gradBot;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(dw, 0);
+        ctx.lineTo(0, dh);
+        ctx.lineTo(-dw, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Outline & Core
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(0, -dh);
+        ctx.lineTo(dw, 0);
+        ctx.lineTo(0, dh);
+        ctx.lineTo(-dw, 0);
+        ctx.closePath();
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
     render(ctx) {
         ctx.save();
 
-        // 1. Draw Dissolving Clearing Cells (Smooth Pre-Clear Scale & Bloom)
+        // 1. Draw Dissolving Clearing Cells (Smooth Pre-Clear Electric Charge, Scale & Bloom)
         for (const cc of this.clearingCells) {
             ctx.save();
             ctx.globalAlpha = Math.max(0, cc.alpha);
@@ -574,15 +815,49 @@ export class ParticleSystem {
             ctx.translate(cx, cy);
             ctx.scale(cc.scale, cc.scale);
 
-            // Shimmering color block
-            ctx.fillStyle = cc.color.hex || '#3B82F6';
-            ctx.shadowColor = cc.color.light || '#FFFFFF';
-            ctx.shadowBlur = 14;
-            ctx.fillRect(-cc.size / 2, -cc.size / 2, cc.size, cc.size);
+            const s = cc.size;
+            const radius = Math.max(3, s * 0.15);
+            const hex = cc.color.hex || '#3B82F6';
+            const light = cc.color.light || '#93C5FD';
+            const dark = cc.color.dark || '#1D4ED8';
 
-            // White-hot inner bloom core
-            ctx.fillStyle = `rgba(255, 255, 255, ${cc.glowAlpha})`;
-            ctx.fillRect(-cc.size * 0.4, -cc.size * 0.4, cc.size * 0.8, cc.size * 0.8);
+            // 1A. Base 3D block fill
+            const bgGrad = ctx.createLinearGradient(-s / 2, -s / 2, -s / 2, s / 2);
+            bgGrad.addColorStop(0, light);
+            bgGrad.addColorStop(0.7, hex);
+            bgGrad.addColorStop(1, dark);
+            ctx.fillStyle = bgGrad;
+            this.roundRect(ctx, -s / 2, -s / 2, s, s, radius);
+            ctx.fill();
+
+            // 1B. Beveled top/left highlight
+            const bevelSize = Math.max(2, s * 0.12);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.40)';
+            ctx.beginPath();
+            ctx.moveTo(-s / 2 + radius, -s / 2);
+            ctx.lineTo(s / 2 - radius, -s / 2);
+            ctx.quadraticCurveTo(s / 2, -s / 2, s / 2 - bevelSize, -s / 2 + bevelSize);
+            ctx.lineTo(-s / 2 + bevelSize, -s / 2 + bevelSize);
+            ctx.lineTo(-s / 2 + bevelSize, s / 2 - radius);
+            ctx.quadraticCurveTo(-s / 2, s / 2, -s / 2, s / 2 - radius);
+            ctx.lineTo(-s / 2, -s / 2 + radius);
+            ctx.quadraticCurveTo(-s / 2, -s / 2, -s / 2 + radius, -s / 2);
+            ctx.fill();
+
+            // 1C. Pre-clear electric shimmer / white-hot aura
+            if (cc.glowAlpha > 0) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${cc.glowAlpha * 0.65})`;
+                ctx.shadowColor = light;
+                ctx.shadowBlur = 14;
+                ctx.fillRect(-s * 0.35, -s * 0.35, s * 0.7, s * 0.7);
+
+                // High-voltage rim
+                ctx.strokeStyle = `rgba(255, 255, 255, ${Math.min(1.0, cc.glowAlpha * 1.4)})`;
+                ctx.lineWidth = 2;
+                this.roundRect(ctx, -s / 2, -s / 2, s, s, radius);
+                ctx.stroke();
+            }
+
             ctx.restore();
         }
 
@@ -613,27 +888,44 @@ export class ParticleSystem {
             ctx.save();
             ctx.globalAlpha = Math.max(0, sn.alpha);
 
+            // Inner radial flash
             const radial = ctx.createRadialGradient(sn.x, sn.y, 0, sn.x, sn.y, sn.radius);
             radial.addColorStop(0, '#FFFFFF');
-            radial.addColorStop(0.4, sn.color || '#F59E0B');
+            radial.addColorStop(0.35, sn.color || '#F59E0B');
             radial.addColorStop(1, 'rgba(255, 255, 255, 0)');
-
             ctx.fillStyle = radial;
             ctx.beginPath();
             ctx.arc(sn.x, sn.y, sn.radius, 0, Math.PI * 2);
             ctx.fill();
 
-            // Expanding outer ring
+            // Concentric shockwave rings
             ctx.strokeStyle = '#FFFFFF';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 3.5;
             ctx.beginPath();
-            ctx.arc(sn.x, sn.y, sn.radius * 0.9, 0, Math.PI * 2);
+            ctx.arc(sn.x, sn.y, sn.radius * 0.92, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = sn.color || '#F59E0B';
+            ctx.lineWidth = 2.0;
+            ctx.beginPath();
+            ctx.arc(sn.x, sn.y, sn.radius * 0.65, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 4-point cross burst rays
+            const rayLen = sn.radius * 1.3;
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(sn.x - rayLen, sn.y);
+            ctx.lineTo(sn.x + rayLen, sn.y);
+            ctx.moveTo(sn.x, sn.y - rayLen);
+            ctx.lineTo(sn.x, sn.y + rayLen);
             ctx.stroke();
 
             ctx.restore();
         }
 
-        // 4. Draw Sweeping Laser Beams & Blazing Geometric Comet Heads
+        // 4. Draw Sweeping Multi-Pass Laser Beams & 3D Rolling Star Comet Heads
         for (const sw of this.sweepers) {
             ctx.save();
             const clampedP = Math.min(1.0, sw.progress);
@@ -644,48 +936,61 @@ export class ParticleSystem {
             ctx.globalAlpha = headAlpha;
 
             // 4A. Trailing Energy Laser Beam (Multi-Pass Composite)
-            const beamThickness = sw.cellSize * 0.85 * sw.comboScale;
+            const beamThickness = sw.cellSize * 0.90 * sw.comboScale;
             if (sw.isRow) {
-                // Soft Outer Glow
+                // Soft Outer Neon Glow
                 const beamGrad = ctx.createLinearGradient(sw.startX, headY, headX, headY);
                 beamGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                beamGrad.addColorStop(Math.max(0, clampedP - 0.5), sw.glowColor || 'rgba(255, 200, 0, 0.45)');
+                beamGrad.addColorStop(Math.max(0, clampedP - 0.55), sw.glowColor || 'rgba(255, 200, 0, 0.45)');
                 beamGrad.addColorStop(1, '#FFFFFF');
 
                 ctx.fillStyle = beamGrad;
                 ctx.fillRect(sw.startX, headY - beamThickness / 2, headX - sw.startX, beamThickness);
 
+                // Mid-Energy Core Ribbon
+                const midGrad = ctx.createLinearGradient(sw.startX, headY, headX, headY);
+                midGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                midGrad.addColorStop(Math.max(0, clampedP - 0.4), 'rgba(255, 255, 255, 0.7)');
+                midGrad.addColorStop(1, '#FFFFFF');
+                ctx.fillStyle = midGrad;
+                ctx.fillRect(sw.startX, headY - beamThickness * 0.25, headX - sw.startX, beamThickness * 0.5);
+
                 // High-Intensity White Core Laser Blade
-                const coreGrad = ctx.createLinearGradient(sw.startX, headY, headX, headY);
-                coreGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                coreGrad.addColorStop(Math.max(0, clampedP - 0.3), 'rgba(255, 255, 255, 0.8)');
-                coreGrad.addColorStop(1, '#FFFFFF');
-                ctx.fillStyle = coreGrad;
+                ctx.fillStyle = '#FFFFFF';
+                ctx.shadowColor = sw.glowColor || '#F59E0B';
+                ctx.shadowBlur = 10;
                 ctx.fillRect(sw.startX, headY - 3, headX - sw.startX, 6);
             } else {
-                // Soft Outer Glow
+                // Soft Outer Neon Glow
                 const beamGrad = ctx.createLinearGradient(headX, sw.startY, headX, headY);
                 beamGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                beamGrad.addColorStop(Math.max(0, clampedP - 0.5), sw.glowColor || 'rgba(255, 200, 0, 0.45)');
+                beamGrad.addColorStop(Math.max(0, clampedP - 0.55), sw.glowColor || 'rgba(255, 200, 0, 0.45)');
                 beamGrad.addColorStop(1, '#FFFFFF');
 
                 ctx.fillStyle = beamGrad;
                 ctx.fillRect(headX - beamThickness / 2, sw.startY, beamThickness, headY - sw.startY);
 
+                // Mid-Energy Core Ribbon
+                const midGrad = ctx.createLinearGradient(headX, sw.startY, headX, headY);
+                midGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+                midGrad.addColorStop(Math.max(0, clampedP - 0.4), 'rgba(255, 255, 255, 0.7)');
+                midGrad.addColorStop(1, '#FFFFFF');
+                ctx.fillStyle = midGrad;
+                ctx.fillRect(headX - beamThickness * 0.25, sw.startY, beamThickness * 0.5, headY - sw.startY);
+
                 // High-Intensity White Core Laser Blade
-                const coreGrad = ctx.createLinearGradient(headX, sw.startY, headX, headY);
-                coreGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-                coreGrad.addColorStop(Math.max(0, clampedP - 0.3), 'rgba(255, 255, 255, 0.8)');
-                coreGrad.addColorStop(1, '#FFFFFF');
-                ctx.fillStyle = coreGrad;
+                ctx.fillStyle = '#FFFFFF';
+                ctx.shadowColor = sw.glowColor || '#F59E0B';
+                ctx.shadowBlur = 10;
                 ctx.fillRect(headX - 3, sw.startY, 6, headY - sw.startY);
             }
 
-            // 4B. Blazing Radial Bloom Flare
-            const bloomRadius = sw.cellSize * 1.6 * sw.comboScale;
+            // 4B. Blazing Multi-Stop Radial Corona Bloom Flare
+            const bloomRadius = sw.cellSize * 1.8 * sw.comboScale;
             const radialGlow = ctx.createRadialGradient(headX, headY, 2, headX, headY, bloomRadius);
             radialGlow.addColorStop(0, '#FFFFFF');
-            radialGlow.addColorStop(0.35, sw.glowColor || 'rgba(245, 158, 11, 0.9)');
+            radialGlow.addColorStop(0.25, sw.waveColor || 'rgba(254, 240, 138, 0.95)');
+            radialGlow.addColorStop(0.55, sw.glowColor || 'rgba(245, 158, 11, 0.90)');
             radialGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
 
             ctx.fillStyle = radialGlow;
@@ -693,52 +998,60 @@ export class ParticleSystem {
             ctx.arc(headX, headY, bloomRadius, 0, Math.PI * 2);
             ctx.fill();
 
-            // 4C. Skin-Specific Geometric Comet Head Flare
+            // 4C. 4-Point Specular Cross Flare
+            const crossSpan = sw.cellSize * 1.3 * sw.comboScale;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(headX - crossSpan, headY);
+            ctx.lineTo(headX + crossSpan, headY);
+            ctx.moveTo(headX, headY - crossSpan);
+            ctx.lineTo(headX, headY + crossSpan);
+            ctx.stroke();
+
+            // 4D. 3D Faceted Rolling Star Comet Head
             ctx.save();
             ctx.translate(headX, headY);
             ctx.rotate(sw.headRotation);
-            ctx.fillStyle = '#FFFFFF';
-            ctx.shadowColor = sw.glowColor || '#FFFFFF';
-            ctx.shadowBlur = 16;
 
-            const flareSize = sw.cellSize * 0.60 * sw.comboScale;
-            if (sw.headShape === 'diamond') {
-                ctx.beginPath();
-                ctx.moveTo(0, -flareSize * 1.35);
-                ctx.lineTo(flareSize * 0.75, 0);
-                ctx.lineTo(0, flareSize * 1.35);
-                ctx.lineTo(-flareSize * 0.75, 0);
-                ctx.closePath();
-                ctx.fill();
-            } else if (sw.headShape === 'star') {
-                ctx.beginPath();
-                for (let s = 0; s < 5; s++) {
-                    ctx.lineTo(Math.cos((18 + s * 72) * Math.PI / 180) * flareSize, -Math.sin((18 + s * 72) * Math.PI / 180) * flareSize);
-                    ctx.lineTo(Math.cos((54 + s * 72) * Math.PI / 180) * (flareSize * 0.45), -Math.sin((54 + s * 72) * Math.PI / 180) * (flareSize * 0.45));
-                }
-                ctx.closePath();
-                ctx.fill();
+            const flareSize = sw.cellSize * 0.70 * sw.comboScale;
+            if (sw.headShape === 'star') {
+                this.drawRollingStarHead(ctx, flareSize, sw.glowColor, sw.particleColors);
+            } else if (sw.headShape === 'diamond') {
+                this.drawRollingDiamondHead(ctx, flareSize, sw.glowColor, sw.particleColors);
             } else if (sw.headShape === 'square') {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.shadowColor = sw.glowColor || '#FFFFFF';
+                ctx.shadowBlur = 14;
                 ctx.fillRect(-flareSize / 2, -flareSize / 2, flareSize, flareSize);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(-flareSize / 2, -flareSize / 2, flareSize, flareSize);
             } else {
+                // Circle / Plasma orb
+                ctx.fillStyle = '#FFFFFF';
+                ctx.shadowColor = sw.glowColor || '#FFFFFF';
+                ctx.shadowBlur = 16;
                 ctx.beginPath();
-                ctx.arc(0, 0, flareSize / 2, 0, Math.PI * 2);
+                ctx.arc(0, 0, flareSize * 0.6, 0, Math.PI * 2);
                 ctx.fill();
             }
             ctx.restore();
 
-            // 4D. Forward Shockwave Sonic Chevron
+            // 4E. Forward Sonic Shockwave Chevron Slicing Through Space
             ctx.strokeStyle = '#FFFFFF';
-            ctx.lineWidth = 3;
+            ctx.shadowColor = sw.glowColor || '#FFFFFF';
+            ctx.shadowBlur = 10;
+            ctx.lineWidth = 3.2;
             ctx.beginPath();
             if (sw.isRow) {
-                ctx.moveTo(headX - 12, headY - sw.cellSize * 0.6);
-                ctx.lineTo(headX + 8, headY);
-                ctx.lineTo(headX - 12, headY + sw.cellSize * 0.6);
+                ctx.moveTo(headX - 14, headY - sw.cellSize * 0.65);
+                ctx.lineTo(headX + 10, headY);
+                ctx.lineTo(headX - 14, headY + sw.cellSize * 0.65);
             } else {
-                ctx.moveTo(headX - sw.cellSize * 0.6, headY - 12);
-                ctx.lineTo(headX, headY + 8);
-                ctx.lineTo(headX + sw.cellSize * 0.6, headY - 12);
+                ctx.moveTo(headX - sw.cellSize * 0.65, headY - 14);
+                ctx.lineTo(headX, headY + 10);
+                ctx.lineTo(headX + sw.cellSize * 0.65, headY - 14);
             }
             ctx.stroke();
 

@@ -457,6 +457,8 @@ export class BlockGameState {
             linesCleared,
             rowsCleared: clearResult.rowsCleared,
             colsCleared: clearResult.colsCleared,
+            clearedRowData: clearResult.clearedRowData || {},
+            clearedColData: clearResult.clearedColData || {},
             allClear: clearResult.allClear,
             scoreGained: clearResult.totalTurnScore,
             bonusScore: clearResult.lineClearScore,
@@ -526,6 +528,20 @@ export class BlockGameState {
             }
         }
 
+        // Capture snapshot of cells before deleting for rich cascading visual effects
+        const clearedRowData = {};
+        for (const r of rowsToDelete) {
+            clearedRowData[r] = this.grid[r].map(cell => cell ? { ...cell } : null);
+        }
+
+        const clearedColData = {};
+        for (const c of colsToDelete) {
+            clearedColData[c] = [];
+            for (let r = 0; r < 8; r++) {
+                clearedColData[c].push(this.grid[r][c] ? { ...this.grid[r][c] } : null);
+            }
+        }
+
         // Clear rows
         for (const r of rowsToDelete) {
             for (let c = 0; c < 8; c++) {
@@ -584,6 +600,8 @@ export class BlockGameState {
             linesCleared: L,
             rowsCleared: rowsToDelete,
             colsCleared: colsToDelete,
+            clearedRowData,
+            clearedColData,
             allClear,
             lineClearScore,
             totalTurnScore,
