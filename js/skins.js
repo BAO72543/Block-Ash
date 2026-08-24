@@ -450,10 +450,19 @@ export class SkinManager {
 
     static getUnlockedSkins() {
         let stored = null;
-        try {
-            const raw = localStorage.getItem(this.KEY_UNLOCKED);
-            if (raw) stored = JSON.parse(raw);
-        } catch (e) {}
+        if (typeof window !== 'undefined' && window.bridgeStorageCache && window.bridgeStorageCache[this.KEY_UNLOCKED]) {
+            try {
+                stored = typeof window.bridgeStorageCache[this.KEY_UNLOCKED] === 'string'
+                    ? JSON.parse(window.bridgeStorageCache[this.KEY_UNLOCKED])
+                    : window.bridgeStorageCache[this.KEY_UNLOCKED];
+            } catch (e) {}
+        }
+        if (!stored) {
+            try {
+                const raw = localStorage.getItem(this.KEY_UNLOCKED);
+                if (raw) stored = JSON.parse(raw);
+            } catch (e) {}
+        }
 
         return {
             bg: Array.from(new Set([...this.DEFAULT_UNLOCKED.bg, ...(stored?.bg || [])])),
@@ -471,9 +480,17 @@ export class SkinManager {
         const unlocked = this.getUnlockedSkins();
         if (!unlocked[type].includes(id)) {
             unlocked[type].push(id);
+            const str = JSON.stringify(unlocked);
+            if (typeof window !== 'undefined' && window.bridgeStorageCache) {
+                window.bridgeStorageCache[this.KEY_UNLOCKED] = str;
+            }
             try {
-                localStorage.setItem(this.KEY_UNLOCKED, JSON.stringify(unlocked));
+                localStorage.setItem(this.KEY_UNLOCKED, str);
             } catch (e) {}
+
+            if (typeof bridge !== 'undefined' && bridge.storage) {
+                bridge.storage.set([this.KEY_UNLOCKED], [str]).catch(() => {});
+            }
         }
         return true;
     }
@@ -483,10 +500,16 @@ export class SkinManager {
         let puzzle = this.DEFAULT_PUZZLE;
         let effect = this.DEFAULT_EFFECT;
 
+        if (typeof window !== 'undefined' && window.bridgeStorageCache) {
+            if (window.bridgeStorageCache[this.KEY_BG]) bg = window.bridgeStorageCache[this.KEY_BG];
+            if (window.bridgeStorageCache[this.KEY_PUZZLE]) puzzle = window.bridgeStorageCache[this.KEY_PUZZLE];
+            if (window.bridgeStorageCache[this.KEY_EFFECT]) effect = window.bridgeStorageCache[this.KEY_EFFECT];
+        }
+
         try {
-            bg = localStorage.getItem(this.KEY_BG) || this.DEFAULT_BG;
-            puzzle = localStorage.getItem(this.KEY_PUZZLE) || this.DEFAULT_PUZZLE;
-            effect = localStorage.getItem(this.KEY_EFFECT) || this.DEFAULT_EFFECT;
+            bg = localStorage.getItem(this.KEY_BG) || bg;
+            puzzle = localStorage.getItem(this.KEY_PUZZLE) || puzzle;
+            effect = localStorage.getItem(this.KEY_EFFECT) || effect;
         } catch (e) {}
 
         if (!this.isUnlocked('bg', bg)) bg = this.DEFAULT_BG;
@@ -501,11 +524,23 @@ export class SkinManager {
     }
 
     static saveConfig(type, id) {
-        try {
-            if (type === 'bg') localStorage.setItem(this.KEY_BG, id);
-            if (type === 'puzzle') localStorage.setItem(this.KEY_PUZZLE, id);
-            if (type === 'effect') localStorage.setItem(this.KEY_EFFECT, id);
-        } catch (e) {}
+        let key = null;
+        if (type === 'bg') key = this.KEY_BG;
+        if (type === 'puzzle') key = this.KEY_PUZZLE;
+        if (type === 'effect') key = this.KEY_EFFECT;
+
+        if (key) {
+            if (typeof window !== 'undefined' && window.bridgeStorageCache) {
+                window.bridgeStorageCache[key] = id;
+            }
+            try {
+                localStorage.setItem(key, id);
+            } catch (e) {}
+
+            if (typeof bridge !== 'undefined' && bridge.storage) {
+                bridge.storage.set([key], [id]).catch(() => {});
+            }
+        }
     }
 
     static getBackground(id) {

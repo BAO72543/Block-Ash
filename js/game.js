@@ -277,6 +277,9 @@ export class BlockGameState {
     }
 
     loadHighScore() {
+        if (typeof window !== 'undefined' && window.bridgeStorageCache && window.bridgeStorageCache[this.STORAGE_KEY_HIGH_SCORE] !== undefined && window.bridgeStorageCache[this.STORAGE_KEY_HIGH_SCORE] !== null) {
+            return parseInt(window.bridgeStorageCache[this.STORAGE_KEY_HIGH_SCORE], 10) || 0;
+        }
         try {
             const val = localStorage.getItem(this.STORAGE_KEY_HIGH_SCORE);
             return val ? parseInt(val, 10) || 0 : 0;
@@ -287,12 +290,26 @@ export class BlockGameState {
 
     saveHighScore(score) {
         this.highestScore = Math.max(this.highestScore, score);
+        if (typeof window !== 'undefined' && window.bridgeStorageCache) {
+            window.bridgeStorageCache[this.STORAGE_KEY_HIGH_SCORE] = this.highestScore.toString();
+        }
         try {
             localStorage.setItem(this.STORAGE_KEY_HIGH_SCORE, this.highestScore.toString());
         } catch (e) {}
+
+        if (typeof bridge !== 'undefined' && bridge.storage) {
+            bridge.storage.set([this.STORAGE_KEY_HIGH_SCORE], [this.highestScore.toString()]).catch(() => {});
+        }
     }
 
     loadStats() {
+        if (typeof window !== 'undefined' && window.bridgeStorageCache && window.bridgeStorageCache[this.STORAGE_KEY_STATS]) {
+            try {
+                return typeof window.bridgeStorageCache[this.STORAGE_KEY_STATS] === 'string'
+                    ? JSON.parse(window.bridgeStorageCache[this.STORAGE_KEY_STATS])
+                    : window.bridgeStorageCache[this.STORAGE_KEY_STATS];
+            } catch (e) {}
+        }
         try {
             const val = localStorage.getItem(this.STORAGE_KEY_STATS);
             if (val) return JSON.parse(val);
@@ -307,10 +324,18 @@ export class BlockGameState {
     }
 
     saveStats() {
+        this.stats.highScore = Math.max(this.stats.highScore || 0, this.highestScore);
+        const statsStr = JSON.stringify(this.stats);
+        if (typeof window !== 'undefined' && window.bridgeStorageCache) {
+            window.bridgeStorageCache[this.STORAGE_KEY_STATS] = statsStr;
+        }
         try {
-            this.stats.highScore = Math.max(this.stats.highScore || 0, this.highestScore);
-            localStorage.setItem(this.STORAGE_KEY_STATS, JSON.stringify(this.stats));
+            localStorage.setItem(this.STORAGE_KEY_STATS, statsStr);
         } catch (e) {}
+
+        if (typeof bridge !== 'undefined' && bridge.storage) {
+            bridge.storage.set([this.STORAGE_KEY_STATS], [statsStr]).catch(() => {});
+        }
     }
 
     canPlaceShape(shape, row, col) {

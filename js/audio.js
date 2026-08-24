@@ -60,6 +60,9 @@ export class AudioManager {
     }
 
     loadMuteState() {
+        if (typeof window !== 'undefined' && window.bridgeStorageCache && window.bridgeStorageCache['blockblast_muted']) {
+            return window.bridgeStorageCache['blockblast_muted'] === 'true';
+        }
         try {
             return localStorage.getItem('blockblast_muted') === 'true';
         } catch (e) {
@@ -69,9 +72,16 @@ export class AudioManager {
 
     toggleMute() {
         this.isMuted = !this.isMuted;
+        if (typeof window !== 'undefined' && window.bridgeStorageCache) {
+            window.bridgeStorageCache['blockblast_muted'] = this.isMuted.toString();
+        }
         try {
             localStorage.setItem('blockblast_muted', this.isMuted.toString());
         } catch (e) {}
+
+        if (typeof bridge !== 'undefined' && bridge.storage) {
+            bridge.storage.set(['blockblast_muted'], [this.isMuted.toString()]).catch(() => {});
+        }
         return this.isMuted;
     }
 

@@ -197,6 +197,56 @@ export class BlockBlastApp {
             if (this.dom.appWrapper) ro.observe(this.dom.appWrapper);
         }
 
+        // Bridge SDK Platform & Ad State Management
+        this.isPaused = false;
+        this.wasAutoplayActive = false;
+
+        if (typeof bridge !== 'undefined') {
+            // 1. Apply Localization if platform specifies language
+            if (bridge.platform && bridge.platform.language) {
+                this.applyLocalization(bridge.platform.language);
+            }
+
+            // 2. Initial Audio State check
+            if (bridge.platform && bridge.platform.isAudioEnabled === false) {
+                this.audio.isMuted = true;
+                this.updateAudioButtonState();
+            }
+
+            if (bridge.platform) {
+                // 3. Universal Host Audio State change event
+                bridge.platform.on(bridge.EVENT_NAME.AUDIO_STATE_CHANGED, (isEnabled) => {
+                    this.audio.isMuted = !isEnabled;
+                    this.updateAudioButtonState();
+                });
+
+                // 4. Universal Host Pause State change event
+                bridge.platform.on(bridge.EVENT_NAME.PAUSE_STATE_CHANGED, (isPaused) => {
+                    this.isPaused = isPaused;
+                    if (isPaused) {
+                        if (this.isAutoplayActive) {
+                            this.stopAutoplay();
+                            this.wasAutoplayActive = true;
+                        }
+                    } else {
+                        if (this.wasAutoplayActive) {
+                            this.startAutoplay();
+                            this.wasAutoplayActive = false;
+                        }
+                    }
+                });
+
+                // 5. Send required game_ready lifecycle message
+                bridge.platform.sendMessage('game_ready');
+            }
+
+            // 6. Hide fallback DOM banner if platform Advanced Banners are supported
+            if (bridge.advertisement && bridge.advertisement.isAdvancedBannersSupported) {
+                const domBanner = document.getElementById('ad-bottom-banner');
+                if (domBanner) domBanner.style.display = 'none';
+            }
+        }
+
         // Start animation loop
         requestAnimationFrame((t) => this.gameLoop(t));
     }
@@ -235,12 +285,61 @@ export class BlockBlastApp {
         }
     }
 
+    applyLocalization(lang) {
+        const dictionary = {
+            en: {
+                gameOver: "GAME OVER",
+                playAgain: "Play Again (Space)",
+                revive: "Watch Ad to Revive (Clear 4×4 Center)",
+                newRecord: "NEW RECORD!"
+            },
+            ru: {
+                gameOver: "ИГРА ОКОНЧЕНА",
+                playAgain: "Играть снова (Пробел)",
+                revive: "Смотреть рекламу для возрождения (Очистить 4x4)",
+                newRecord: "НОВЫЙ РЕКОРД!"
+            },
+            tr: {
+                gameOver: "OYUN BİTTİ",
+                playAgain: "Tekrar Oyna (Space)",
+                revive: "Canlanmak İçin Reklam İzle (4x4 Merkez)",
+                newRecord: "YENİ REKOR!"
+            },
+            es: {
+                gameOver: "JUEGO TERMINADO",
+                playAgain: "Jugar de nuevo (Espacio)",
+                revive: "Ver anuncio para revivir (Limpiar 4×4)",
+                newRecord: "¡NUEVO RÉCORD!"
+            }
+        };
+
+        const loc = dictionary[lang] || dictionary.en;
+        const gameOverTitle = document.querySelector('#game-over-modal .modal-title');
+        if (gameOverTitle) gameOverTitle.textContent = loc.gameOver;
+
+        if (this.dom.modalRecordBadge) this.dom.modalRecordBadge.textContent = loc.newRecord;
+
+        if (this.dom.btnModalRestart) {
+            const span = this.dom.btnModalRestart.querySelector('span');
+            if (span) span.textContent = loc.playAgain;
+        }
+
+        if (this.dom.btnModalRevive) {
+            const span = this.dom.btnModalRevive.querySelector('span');
+            if (span && !this.gameState.hasUsedRevive) span.textContent = loc.revive;
+        }
+    }
+
     enterGameWithMode(mode) {
         this.audio.playPop();
         this.triggerHaptic('snap');
         if (this.dom.appWrapper) this.dom.appWrapper.classList.add('in-game');
         if (this.dom.homeScreen) this.dom.homeScreen.style.display = 'none';
         if (this.dom.gameplayView) this.dom.gameplayView.style.display = 'flex';
+
+        if (typeof bridge !== 'undefined' && bridge.platform) {
+            bridge.platform.sendMessage('level_started', { mode });
+        }
 
         this.handleResize();
         setTimeout(() => this.handleResize(), 60);
@@ -924,9 +1023,13 @@ export class BlockBlastApp {
         this.dom.stageClearModal.style.display = 'flex';
         this.dom.stageClearModal.classList.add('active');
 
+        if (typeof bridge !== 'undefined' && bridge.platform) {
+            bridge.platform.sendMessage('level_completed', { level: (this.gameState.stageId || 1).toString() });
+        }
+
         // Interstitial Ad trigger on stage clear
         this.gamesSinceLastInterstitial++;
-        if (this.gamesSinceLastInterstitial >= 2 && this.dom.interstitialAdModal) {
+        if (this.gamesSinceLastInterstitial >= 2) {
             this.gamesSinceLastInterstitial = 0;
             this.showInterstitialAd(() => {});
         }
@@ -947,6 +1050,9 @@ export class BlockBlastApp {
         }
         this.gameState.gameOver = true;
         this.audio.playGameOver();
+        if (typeof bridge !== 'undefined' && bridge.platform) {
+            bridge.platform.sendMessage('level_failed');
+        }
         this.showGameOverModal();
     }
 
@@ -956,10 +1062,14 @@ export class BlockBlastApp {
             this.stopAutoplay();
         }
 
+        if (typeof bridge !== 'undefined' && bridge.platform) {
+            bridge.platform.sendMessage('level_failed');
+        }
+
         this.gamesSinceLastInterstitial++;
 
-        // Trigger Interstitial Break Ad (35% Ad Revenue) periodically (e.g. every 2 game overs)
-        if (this.gamesSinceLastInterstitial >= 2 && this.dom.interstitialAdModal) {
+        // Trigger Interstitial Break Ad periodically (e.g. every 2 game overs)
+        if (this.gamesSinceLastInterstitial >= 2) {
             this.gamesSinceLastInterstitial = 0;
             this.showInterstitialAd(() => {
                 this.showGameOverModal();
@@ -989,6 +1099,9 @@ export class BlockBlastApp {
 
         if (isNewRecord) {
             this.particles.addConfettiBurst(this.renderer.width, this.renderer.height, 80);
+            if (typeof bridge !== 'undefined' && bridge.platform) {
+                bridge.platform.sendMessage('player_got_achievement');
+            }
         }
 
         if (this.dom.gameOverModal) {
@@ -1004,40 +1117,69 @@ export class BlockBlastApp {
     startRewardedReviveFlow() {
         if (this.gameState.hasUsedRevive) return;
 
-        // Close Game Over Modal and Open Rewarded Video Modal with active state
-        this.dom.gameOverModal.classList.remove('active');
-        this.dom.rewardedAdModal.style.display = 'flex';
-        this.dom.rewardedAdModal.classList.add('active');
-        this.dom.rewardedProgress.style.width = '0%';
-        this.dom.btnClaimReward.style.display = 'none';
+        if (typeof bridge !== 'undefined' && bridge.advertisement && bridge.advertisement.isRewardedSupported) {
+            if (this.dom.gameOverModal) this.dom.gameOverModal.classList.remove('active');
 
-        let secondsLeft = 3;
-        this.dom.rewardedTimerText.textContent = `Reward unlocking in ${secondsLeft}s...`;
+            let rewardGranted = false;
+            const stateHandler = (state) => {
+                if (state === 'rewarded') {
+                    rewardGranted = true;
+                    bridge.advertisement.off(bridge.EVENT_NAME.REWARDED_STATE_CHANGED, stateHandler);
+                    this.completeRewardedRevive();
+                } else if (state === 'closed' || state === 'failed') {
+                    bridge.advertisement.off(bridge.EVENT_NAME.REWARDED_STATE_CHANGED, stateHandler);
+                    if (!rewardGranted) {
+                        if (this.dom.gameOverModal) {
+                            this.dom.gameOverModal.style.display = 'flex';
+                            this.dom.gameOverModal.classList.add('active');
+                        }
+                    }
+                }
+            };
 
-        let progress = 0;
-        const totalDuration = 3000;
-        const interval = 60;
-        const step = 100 / (totalDuration / interval);
+            bridge.advertisement.on(bridge.EVENT_NAME.REWARDED_STATE_CHANGED, stateHandler);
+            bridge.advertisement.showRewarded('extra_life');
+            return;
+        }
 
-        const timer = setInterval(() => {
-            progress += step;
-            this.dom.rewardedProgress.style.width = `${Math.min(100, progress)}%`;
+        // Fallback mock video modal
+        if (this.dom.gameOverModal) this.dom.gameOverModal.classList.remove('active');
+        if (this.dom.rewardedAdModal) {
+            this.dom.rewardedAdModal.style.display = 'flex';
+            this.dom.rewardedAdModal.classList.add('active');
+            if (this.dom.rewardedProgress) this.dom.rewardedProgress.style.width = '0%';
+            if (this.dom.btnClaimReward) this.dom.btnClaimReward.style.display = 'none';
 
-            const currentSec = Math.max(0, Math.ceil((100 - progress) / (100 / 3)));
-            if (currentSec > 0) {
-                this.dom.rewardedTimerText.textContent = `Reward unlocking in ${currentSec}s...`;
-            } else {
-                clearInterval(timer);
-                this.dom.rewardedTimerText.textContent = 'Video Complete! Reward Ready.';
-                this.dom.btnClaimReward.style.display = 'inline-block';
-            }
-        }, interval);
+            let secondsLeft = 3;
+            if (this.dom.rewardedTimerText) this.dom.rewardedTimerText.textContent = `Reward unlocking in ${secondsLeft}s...`;
+
+            let progress = 0;
+            const totalDuration = 3000;
+            const interval = 60;
+            const step = 100 / (totalDuration / interval);
+
+            const timer = setInterval(() => {
+                progress += step;
+                if (this.dom.rewardedProgress) this.dom.rewardedProgress.style.width = `${Math.min(100, progress)}%`;
+
+                const currentSec = Math.max(0, Math.ceil((100 - progress) / (100 / 3)));
+                if (currentSec > 0) {
+                    if (this.dom.rewardedTimerText) this.dom.rewardedTimerText.textContent = `Reward unlocking in ${currentSec}s...`;
+                } else {
+                    clearInterval(timer);
+                    if (this.dom.rewardedTimerText) this.dom.rewardedTimerText.textContent = 'Video Complete! Reward Ready.';
+                    if (this.dom.btnClaimReward) this.dom.btnClaimReward.style.display = 'inline-block';
+                }
+            }, interval);
+        }
     }
 
     completeRewardedRevive() {
         // Dismiss rewarded modal
-        this.dom.rewardedAdModal.classList.remove('active');
-        this.dom.rewardedAdModal.style.display = 'none';
+        if (this.dom.rewardedAdModal) {
+            this.dom.rewardedAdModal.classList.remove('active');
+            this.dom.rewardedAdModal.style.display = 'none';
+        }
 
         // Perform 4x4 center sweep on matrix B[2..5][2..5]
         const sweepResult = this.gameState.reviveWithCenterSweep();
@@ -1078,29 +1220,61 @@ export class BlockBlastApp {
        ========================================================================== */
 
     showInterstitialAd(onCompleteCallback) {
+        if (typeof bridge !== 'undefined' && bridge.advertisement && bridge.advertisement.isInterstitialSupported) {
+            let callbackTriggered = false;
+            const onFinish = () => {
+                if (!callbackTriggered) {
+                    callbackTriggered = true;
+                    if (onCompleteCallback) onCompleteCallback();
+                }
+            };
+
+            const stateHandler = (state) => {
+                if (state === 'closed' || state === 'failed') {
+                    bridge.advertisement.off(bridge.EVENT_NAME.INTERSTITIAL_STATE_CHANGED, stateHandler);
+                    onFinish();
+                }
+            };
+
+            bridge.advertisement.on(bridge.EVENT_NAME.INTERSTITIAL_STATE_CHANGED, stateHandler);
+            bridge.advertisement.showInterstitial('level_completed');
+
+            // Safety timeout
+            setTimeout(onFinish, 12000);
+            return;
+        }
+
         this.interstitialCallback = onCompleteCallback;
-        this.dom.interstitialAdModal.style.display = 'flex';
-        this.dom.interstitialAdModal.classList.add('active');
-        this.dom.btnSkipInterstitial.disabled = true;
+        if (this.dom.interstitialAdModal) {
+            this.dom.interstitialAdModal.style.display = 'flex';
+            this.dom.interstitialAdModal.classList.add('active');
+            if (this.dom.btnSkipInterstitial) this.dom.btnSkipInterstitial.disabled = true;
 
-        let countdown = 3;
-        this.dom.btnSkipInterstitial.textContent = `Close in ${countdown}s`;
+            let countdown = 3;
+            if (this.dom.btnSkipInterstitial) this.dom.btnSkipInterstitial.textContent = `Close in ${countdown}s`;
 
-        const timer = setInterval(() => {
-            countdown--;
-            if (countdown > 0) {
-                this.dom.btnSkipInterstitial.textContent = `Close in ${countdown}s`;
-            } else {
-                clearInterval(timer);
-                this.dom.btnSkipInterstitial.disabled = false;
-                this.dom.btnSkipInterstitial.textContent = '✕ Close Ad';
-            }
-        }, 1000);
+            const timer = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    if (this.dom.btnSkipInterstitial) this.dom.btnSkipInterstitial.textContent = `Close in ${countdown}s`;
+                } else {
+                    clearInterval(timer);
+                    if (this.dom.btnSkipInterstitial) {
+                        this.dom.btnSkipInterstitial.disabled = false;
+                        this.dom.btnSkipInterstitial.textContent = '✕ Close Ad';
+                    }
+                }
+            }, 1000);
+        } else if (onCompleteCallback) {
+            onCompleteCallback();
+        }
     }
 
     closeInterstitialAd() {
-        this.dom.interstitialAdModal.classList.remove('active');
-        this.dom.interstitialAdModal.style.display = 'none';
+        if (this.dom.interstitialAdModal) {
+            this.dom.interstitialAdModal.classList.remove('active');
+            this.dom.interstitialAdModal.style.display = 'none';
+        }
         if (this.interstitialCallback) {
             this.interstitialCallback();
             this.interstitialCallback = null;
@@ -2086,7 +2260,41 @@ export class BlockBlastApp {
     }
 }
 
-// Instantiate on DOM load
+// Instantiate on DOM load after initializing Bridge SDK
 window.addEventListener('DOMContentLoaded', () => {
-    window.app = new BlockBlastApp();
+    const KEYS = [
+        'blockblast_high_score',
+        'blockblast_stats',
+        'blockblast_skin_bg',
+        'blockblast_skin_puzzle',
+        'blockblast_skin_effect',
+        'blockblast_unlocked_skins_v1',
+        'blockblast_adventure_progress',
+        'blockblast_daily_challenge',
+        'blockblast_muted'
+    ];
+
+    window.bridgeStorageCache = {};
+
+    if (typeof bridge !== 'undefined') {
+        bridge.initialize()
+            .then(() => {
+                console.log('Bridge SDK initialized successfully.');
+                return bridge.storage.get(KEYS);
+            })
+            .then((data) => {
+                if (Array.isArray(data)) {
+                    KEYS.forEach((key, index) => {
+                        window.bridgeStorageCache[key] = data[index];
+                    });
+                }
+                window.app = new BlockBlastApp();
+            })
+            .catch((err) => {
+                console.warn('Bridge init/storage error, booting with fallback:', err);
+                window.app = new BlockBlastApp();
+            });
+    } else {
+        window.app = new BlockBlastApp();
+    }
 });

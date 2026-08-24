@@ -1,0 +1,64 @@
+{
+  "advertisement": {
+    "minimumDelayBetweenInterstitial": 60,
+    "initialInterstitialDelay": 0,
+    "interstitial": {
+      "disable": false,
+      "preloadOnStart": "level_completed",
+      "placementFallback": "level_completed",
+      "placements": [
+        {
+          "id": "level_completed"
+        }
+      ]
+    },
+    "rewarded": {
+      "disable": false,
+      "preloadOnStart": "extra_life",
+      "placementFallback": "extra_life",
+      "placements": [
+        {
+          "id": "extra_life"
+        }
+      ]
+    },
+    "banner": {
+      "disable": false,
+      "placementFallback": "main_menu",
+      "placements": [
+        {
+          "id": "main_menu"
+        }
+      ]
+    },
+    "advancedBanners": {
+      "disable": false,
+      "placementFallback": "main_menu",
+      "main_menu": {
+        "action": "show",
+        "default": [
+          {
+            "width": "100%",
+            "height": "12%",
+            "bottom": "0%",
+            "left": "0%"
+          }
+        ]
+      },
+      "level_paused": {
+        "action": "show",
+        "default": [
+          {
+            "width": "100%",
+            "height": "12%",
+            "bottom": "0%",
+            "left": "0%"
+          }
+        ]
+      },
+      "level_resumed": {
+        "action": "hide"
+      }
+    }
+  }
+}

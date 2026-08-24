@@ -37,6 +37,7 @@ export class InputHandler {
     initMouseEvents() {
         if (typeof window === 'undefined' || !this.canvas) return;
         this.canvas.addEventListener('mousedown', (e) => {
+            if (window.app && window.app.isPaused) return;
             if (this.gameState.gameOver) return;
             const pos = this.getCanvasPos(e);
 
@@ -63,6 +64,7 @@ export class InputHandler {
         });
 
         window.addEventListener('mousemove', (e) => {
+            if (window.app && window.app.isPaused) return;
             const pos = this.getCanvasPos(e);
             if (this.isDragging && this.renderer.draggingShapeIdx !== -1) {
                 this.renderer.updateDrag(pos);
@@ -112,6 +114,7 @@ export class InputHandler {
     initTouchEvents() {
         if (typeof window === 'undefined' || !this.canvas) return;
         this.canvas.addEventListener('touchstart', (e) => {
+            if (window.app && window.app.isPaused) return;
             if (this.gameState.gameOver) return;
             const pos = this.getCanvasPos(e);
             const slotIdx = this.renderer.getShapeSlotAt(pos.x, pos.y);
@@ -142,6 +145,7 @@ export class InputHandler {
         }, { passive: false });
 
         window.addEventListener('touchmove', (e) => {
+            if (window.app && window.app.isPaused) return;
             if (!this.isDragging || this.renderer.draggingShapeIdx === -1) return;
             e.preventDefault();
             const pos = this.getCanvasPos(e);
@@ -198,6 +202,7 @@ export class InputHandler {
     initKeyboardEvents() {
         if (typeof window === 'undefined') return;
         window.addEventListener('keydown', (e) => {
+            if (window.app && window.app.isPaused) return;
             const key = e.key.toUpperCase();
 
             // Restart shortcut

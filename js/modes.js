@@ -111,6 +111,13 @@ export class ModeManager {
     static STORAGE_KEY_ADVENTURE = 'blockblast_adventure_progress';
 
     static loadAdventureProgress() {
+        if (typeof window !== 'undefined' && window.bridgeStorageCache && window.bridgeStorageCache[this.STORAGE_KEY_ADVENTURE]) {
+            try {
+                return typeof window.bridgeStorageCache[this.STORAGE_KEY_ADVENTURE] === 'string'
+                    ? JSON.parse(window.bridgeStorageCache[this.STORAGE_KEY_ADVENTURE])
+                    : window.bridgeStorageCache[this.STORAGE_KEY_ADVENTURE];
+            } catch (e) {}
+        }
         try {
             const raw = localStorage.getItem(this.STORAGE_KEY_ADVENTURE);
             if (raw) return JSON.parse(raw);
@@ -140,9 +147,18 @@ export class ModeManager {
         }
         progress.totalStars = total;
 
+        const progressStr = JSON.stringify(progress);
+        if (typeof window !== 'undefined' && window.bridgeStorageCache) {
+            window.bridgeStorageCache[this.STORAGE_KEY_ADVENTURE] = progressStr;
+        }
+
         try {
-            localStorage.setItem(this.STORAGE_KEY_ADVENTURE, JSON.stringify(progress));
+            localStorage.setItem(this.STORAGE_KEY_ADVENTURE, progressStr);
         } catch (e) {}
+
+        if (typeof bridge !== 'undefined' && bridge.storage) {
+            bridge.storage.set([this.STORAGE_KEY_ADVENTURE], [progressStr]).catch(() => {});
+        }
 
         return progress;
     }
@@ -177,6 +193,13 @@ export class DailyChallengeManager {
     }
 
     static loadDailyData() {
+        if (typeof window !== 'undefined' && window.bridgeStorageCache && window.bridgeStorageCache[this.STORAGE_KEY_DAILY]) {
+            try {
+                return typeof window.bridgeStorageCache[this.STORAGE_KEY_DAILY] === 'string'
+                    ? JSON.parse(window.bridgeStorageCache[this.STORAGE_KEY_DAILY])
+                    : window.bridgeStorageCache[this.STORAGE_KEY_DAILY];
+            } catch (e) {}
+        }
         try {
             const raw = localStorage.getItem(this.STORAGE_KEY_DAILY);
             if (raw) return JSON.parse(raw);
@@ -213,9 +236,18 @@ export class DailyChallengeManager {
 
         data.highestDailyScore = Math.max(data.highestDailyScore || 0, score);
 
+        const dataStr = JSON.stringify(data);
+        if (typeof window !== 'undefined' && window.bridgeStorageCache) {
+            window.bridgeStorageCache[this.STORAGE_KEY_DAILY] = dataStr;
+        }
+
         try {
-            localStorage.setItem(this.STORAGE_KEY_DAILY, JSON.stringify(data));
+            localStorage.setItem(this.STORAGE_KEY_DAILY, dataStr);
         } catch (e) {}
+
+        if (typeof bridge !== 'undefined' && bridge.storage) {
+            bridge.storage.set([this.STORAGE_KEY_DAILY], [dataStr]).catch(() => {});
+        }
 
         return data;
     }
