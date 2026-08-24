@@ -241,6 +241,90 @@ export class ParticleSystem {
     }
 
     /**
+     * Specialized particle burst and radiant FX for Adventure Collectibles (Gems, Puzzles, Stars)
+     */
+    addCollectiblePickupBurst(x, y, size, itemType, cellColor = null) {
+        const cx = x + size / 2;
+        const cy = y + size / 2;
+
+        if (itemType === 'puzzle') {
+            // Cosmic Amethyst & Lilac Crystal Shards
+            const pColors = ['#FDF4FF', '#F5D0FE', '#E879F9', '#C084FC', '#9333EA', '#FFFFFF'];
+            for (let i = 0; i < 26; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 3.5 + Math.random() * 8.5;
+                const pSize = (size * 0.16) + Math.random() * (size * 0.22);
+                this.particles.push({
+                    x: cx,
+                    y: cy,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 2.5,
+                    gravity: 0.20,
+                    drag: 0.94,
+                    size: pSize,
+                    baseSize: pSize,
+                    color: pColors[Math.floor(Math.random() * pColors.length)],
+                    alpha: 1.0,
+                    decay: 0.016 + Math.random() * 0.018,
+                    rotation: Math.random() * Math.PI * 2,
+                    vRot: (Math.random() - 0.5) * 0.4,
+                    shape: Math.random() > 0.4 ? 'diamond' : 'sparkle'
+                });
+            }
+        } else if (itemType === 'star') {
+            // Brilliant Golden Stardust Fanfare
+            const pColors = ['#FFFBEB', '#FEF08A', '#FDE047', '#FACC15', '#EAB308', '#FFFFFF'];
+            for (let i = 0; i < 30; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 4.0 + Math.random() * 9.5;
+                const pSize = (size * 0.18) + Math.random() * (size * 0.24);
+                this.particles.push({
+                    x: cx,
+                    y: cy,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 3.0,
+                    gravity: 0.22,
+                    drag: 0.94,
+                    size: pSize,
+                    baseSize: pSize,
+                    color: pColors[Math.floor(Math.random() * pColors.length)],
+                    alpha: 1.0,
+                    decay: 0.014 + Math.random() * 0.018,
+                    rotation: Math.random() * Math.PI * 2,
+                    vRot: (Math.random() - 0.5) * 0.4,
+                    shape: Math.random() > 0.35 ? 'star' : 'sparkle'
+                });
+            }
+        } else {
+            // Crystalline Diamond / Gem Burst
+            const baseHex = (cellColor && cellColor.hex) ? cellColor.hex : '#38BDF8';
+            const baseLight = (cellColor && cellColor.light) ? cellColor.light : '#E0F2FE';
+            const pColors = [baseLight, baseHex, '#FFFFFF', '#BAE6FD'];
+            for (let i = 0; i < 24; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 3.5 + Math.random() * 8.0;
+                const pSize = (size * 0.16) + Math.random() * (size * 0.22);
+                this.particles.push({
+                    x: cx,
+                    y: cy,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 2.5,
+                    gravity: 0.20,
+                    drag: 0.94,
+                    size: pSize,
+                    baseSize: pSize,
+                    color: pColors[Math.floor(Math.random() * pColors.length)],
+                    alpha: 1.0,
+                    decay: 0.016 + Math.random() * 0.018,
+                    rotation: Math.random() * Math.PI * 2,
+                    vRot: (Math.random() - 0.5) * 0.4,
+                    shape: Math.random() > 0.4 ? 'diamond' : 'sparkle'
+                });
+            }
+        }
+    }
+
+    /**
      * Score Pop-Ups with Bold Gold Typography ("Great!", "Perfect!", "COMBO x4!")
      */
     addFloatingText(text, x, y, options = {}) {
@@ -686,6 +770,19 @@ export class ParticleSystem {
                     ctx.lineTo(Math.cos((18 + s * 72) * Math.PI / 180) * r, -Math.sin((18 + s * 72) * Math.PI / 180) * r);
                     ctx.lineTo(Math.cos((54 + s * 72) * Math.PI / 180) * (r * 0.45), -Math.sin((54 + s * 72) * Math.PI / 180) * (r * 0.45));
                 }
+                ctx.closePath();
+                ctx.fill();
+            } else if (p.shape === 'sparkle') {
+                const r = p.size / 2;
+                ctx.beginPath();
+                ctx.moveTo(0, -r);
+                ctx.quadraticCurveTo(0, 0, r * 0.22, 0);
+                ctx.lineTo(r, 0);
+                ctx.quadraticCurveTo(0, 0, 0, r * 0.22);
+                ctx.lineTo(0, r);
+                ctx.quadraticCurveTo(0, 0, -r * 0.22, 0);
+                ctx.lineTo(-r, 0);
+                ctx.quadraticCurveTo(0, 0, 0, -r * 0.22);
                 ctx.closePath();
                 ctx.fill();
             } else {

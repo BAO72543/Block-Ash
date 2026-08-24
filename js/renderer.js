@@ -373,252 +373,467 @@ export class GameRenderer {
                 const cell = this.gameState.grid[r][c];
                 if (cell && cell.color) {
                     const rect = this.getCellRect(r, c);
-                    this.drawBeveledBlock(rect.x, rect.y, rect.size, cell.color);
+                    this.drawBeveledBlock(rect.x, rect.y, rect.size, cell.color, false, cell.item);
                     if (cell.item) {
-                        this.drawCollectibleItem(rect.x, rect.y, rect.size, cell.item);
+                        this.drawCollectibleItem(rect.x, rect.y, rect.size, cell.item, cell.color);
                     }
                 }
             }
         }
     }
 
-    drawCollectibleItem(x, y, size, itemType) {
+    /**
+     * Master Collectible Item Renderer (Gems, Puzzles, Stars)
+     */
+    drawCollectibleItem(x, y, size, itemType, cellColor = null) {
         const ctx = this.ctx;
         const cx = x + size / 2;
         const cy = y + size / 2;
-        const r = size * 0.32;
-        const pulse = 0.85 + Math.sin(this.pulsePhase * 3) * 0.15;
+
+        if (itemType === 'puzzle') {
+            const pulse = 0.88 + Math.sin(this.pulsePhase * 1.5) * 0.12;
+            this.drawPuzzleCollectible(ctx, cx, cy, size, pulse);
+        } else if (itemType === 'star') {
+            const pulse = 0.88 + Math.sin(this.pulsePhase * 1.4) * 0.12;
+            this.drawStarCollectible(ctx, cx, cy, size, pulse);
+        } else {
+            const pulse = 0.88 + Math.sin(this.pulsePhase * 1.3) * 0.12;
+            this.drawGemCollectible(ctx, cx, cy, size, pulse, cellColor);
+        }
+    }
+
+    /**
+     * Ultra-Polished Jigsaw Puzzle Relic with Smooth Mathematical Tangent Tabs & 3D Glass Sheen
+     * Scaled compactly to fit perfectly inside the block shape without overflowing
+     */
+    drawPuzzleCollectible(ctx, cx, cy, size, pulse) {
+        const r = size * 0.25;
+        const bw = r * 1.05; // body half width
+        const bh = r * 1.05; // body half height
+        const x0 = cx - bw;
+        const x1 = cx + bw;
+        const y0 = cy - bh;
+        const y1 = cy + bh;
+        const cr = bw * 0.24; // corner radius
+        const tw = bw * 0.30; // tab neck width
+        const th = bh * 0.38; // tab depth
+        const tbw = bw * 0.44; // tab bulb width
 
         ctx.save();
 
-        if (itemType === 'gem') {
-            // -- Premium Multi-Facet Diamond Gem --
-
-            // Outer glow aura
-            ctx.shadowColor = 'rgba(56, 189, 248, 0.8)';
-            ctx.shadowBlur = 14 * pulse;
-
-            // Main diamond silhouette (rotated square)
-            const outerR = r * 1.05;
+        // Helper path function for the jigsaw puzzle piece
+        const tracePuzzlePath = () => {
             ctx.beginPath();
-            ctx.moveTo(cx, cy - outerR);
-            ctx.lineTo(cx + outerR, cy);
-            ctx.lineTo(cx, cy + outerR);
-            ctx.lineTo(cx - outerR, cy);
+            // 1. Top Edge with outward connector tab
+            ctx.moveTo(x0 + cr, y0);
+            ctx.lineTo(cx - tw, y0);
+            ctx.bezierCurveTo(cx - tw, y0 - th * 0.35, cx - tbw, y0 - th, cx, y0 - th);
+            ctx.bezierCurveTo(cx + tbw, y0 - th, cx + tw, y0 - th * 0.35, cx + tw, y0);
+            ctx.lineTo(x1 - cr, y0);
+            ctx.quadraticCurveTo(x1, y0, x1, y0 + cr);
+
+            // 2. Right Edge with outward connector tab
+            ctx.lineTo(x1, cy - tw);
+            ctx.bezierCurveTo(x1 + th * 0.35, cy - tw, x1 + th, cy - tbw, x1 + th, cy);
+            ctx.bezierCurveTo(x1 + th, cy + tbw, x1 + th * 0.35, cy + tw, x1, cy + tw);
+            ctx.lineTo(x1, y1 - cr);
+            ctx.quadraticCurveTo(x1, y1, x1 - cr, y1);
+
+            // 3. Bottom Edge with inward connector socket (notch)
+            ctx.lineTo(cx + tw, y1);
+            ctx.bezierCurveTo(cx + tw, y1 - th * 0.35, cx + tbw, y1 - th, cx, y1 - th);
+            ctx.bezierCurveTo(cx - tbw, y1 - th, cx - tw, y1 - th * 0.35, cx - tw, y1);
+            ctx.lineTo(x0 + cr, y1);
+            ctx.quadraticCurveTo(x0, y1, x0, y1 - cr);
+
+            // 4. Left Edge with inward connector socket (notch)
+            ctx.lineTo(x0, cy + tw);
+            ctx.bezierCurveTo(x0 + th * 0.35, cy + tw, x0 + th, cy + tbw, x0 + th, cy);
+            ctx.bezierCurveTo(x0 + th, cy - tbw, x0 + th * 0.35, cy - tw, x0, cy - tw);
+            ctx.lineTo(x0, y0 + cr);
+            ctx.quadraticCurveTo(x0, y0, x0 + cr, y0);
             ctx.closePath();
+        };
 
-            // Gradient fill: deep sapphire to sky
-            const gemGrad = ctx.createLinearGradient(cx - outerR, cy - outerR, cx + outerR, cy + outerR);
-            gemGrad.addColorStop(0, '#E0F2FE');
-            gemGrad.addColorStop(0.3, '#7DD3FC');
-            gemGrad.addColorStop(0.6, '#38BDF8');
-            gemGrad.addColorStop(1, '#0284C7');
-            ctx.fillStyle = gemGrad;
-            ctx.fill();
+        // 1. Ambient Drop Shadow
+        ctx.save();
+        ctx.shadowColor = 'rgba(15, 3, 30, 0.7)';
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetY = 3;
+        tracePuzzlePath();
+        ctx.fillStyle = '#2E0854';
+        ctx.fill();
+        ctx.restore();
 
-            // Crisp diamond border
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-            ctx.lineWidth = Math.max(1, size * 0.025);
-            ctx.stroke();
+        // 2. Glowing Mystic Amethyst Aura
+        ctx.save();
+        ctx.shadowColor = 'rgba(216, 70, 239, 0.85)';
+        ctx.shadowBlur = 14 * pulse;
+        tracePuzzlePath();
 
-            // Inner facets: top-left bright triangle
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - outerR);
-            ctx.lineTo(cx - outerR, cy);
-            ctx.lineTo(cx, cy);
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.30)';
-            ctx.fill();
+        // 3. Multi-Stop Radiant Crystal Amethyst Gradient Fill
+        const puzzleGrad = ctx.createLinearGradient(x0 - th, y0 - th, x1 + th, y1 + th);
+        puzzleGrad.addColorStop(0.0, '#FDF4FF'); // Luminous crystal highlight
+        puzzleGrad.addColorStop(0.2, '#F0ABFC'); // Soft lilac
+        puzzleGrad.addColorStop(0.5, '#C084FC'); // Amethyst purple
+        puzzleGrad.addColorStop(0.8, '#9333EA'); // Royal violet
+        puzzleGrad.addColorStop(1.0, '#581C87'); // Deep cosmic violet
+        ctx.fillStyle = puzzleGrad;
+        ctx.fill();
+        ctx.restore();
 
-            // Inner facets: top-right subtle highlight
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - outerR);
-            ctx.lineTo(cx + outerR, cy);
-            ctx.lineTo(cx, cy);
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-            ctx.fill();
+        // 4. Beveled Edge Rim Light & Chiseled Border
+        tracePuzzlePath();
+        const rimGrad = ctx.createLinearGradient(x0, y0 - th, x1 + th, y1);
+        rimGrad.addColorStop(0.0, 'rgba(255, 255, 255, 0.95)');
+        rimGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.65)');
+        rimGrad.addColorStop(0.7, 'rgba(168, 85, 247, 0.50)');
+        rimGrad.addColorStop(1.0, 'rgba(88, 28, 135, 0.80)');
+        ctx.strokeStyle = rimGrad;
+        ctx.lineWidth = Math.max(1.2, size * 0.028);
+        ctx.stroke();
 
-            // Bottom-right shadow facet for depth
-            ctx.beginPath();
-            ctx.moveTo(cx + outerR, cy);
-            ctx.lineTo(cx, cy + outerR);
-            ctx.lineTo(cx, cy);
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(0, 40, 80, 0.18)';
-            ctx.fill();
+        // 5. Curved Glass Sheen Reflection
+        ctx.save();
+        tracePuzzlePath();
+        ctx.clip();
+        const glassGrad = ctx.createLinearGradient(x0, y0 - th, x0 + bw * 1.6, y0 + bh * 1.6);
+        glassGrad.addColorStop(0.0, 'rgba(255, 255, 255, 0.65)');
+        glassGrad.addColorStop(0.35, 'rgba(255, 255, 255, 0.18)');
+        glassGrad.addColorStop(0.50, 'rgba(255, 255, 255, 0.0)');
+        ctx.fillStyle = glassGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx - bw * 0.25, y0 + bh * 0.25, bw * 1.35, bh * 0.85, -Math.PI / 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
 
-            // Center cross-line facet edges
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-            ctx.lineWidth = Math.max(0.5, size * 0.015);
-            ctx.beginPath();
-            ctx.moveTo(cx, cy - outerR);
-            ctx.lineTo(cx, cy + outerR);
-            ctx.moveTo(cx - outerR, cy);
-            ctx.lineTo(cx + outerR, cy);
-            ctx.stroke();
+        // 6. Inset Center Rune Core Jewel
+        const coreR = bw * 0.30;
+        ctx.save();
+        ctx.shadowColor = 'rgba(240, 171, 252, 0.9)';
+        ctx.shadowBlur = 5;
+        const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
+        coreGrad.addColorStop(0.0, '#FFFFFF');
+        coreGrad.addColorStop(0.4, '#F5D0FE');
+        coreGrad.addColorStop(0.8, '#D946EF');
+        coreGrad.addColorStop(1.0, '#7C3AED');
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - coreR);
+        ctx.lineTo(cx + coreR, cy);
+        ctx.lineTo(cx, cy + coreR);
+        ctx.lineTo(cx - coreR, cy);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = Math.max(0.8, size * 0.014);
+        ctx.stroke();
+        ctx.restore();
 
-            // Top-left specular highlight dot
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-            ctx.beginPath();
-            ctx.arc(cx - r * 0.28, cy - r * 0.32, r * 0.15, 0, Math.PI * 2);
-            ctx.fill();
+        // 7. Dynamic Top-Left Specular Sparkle Glint (Gentle pulse)
+        const glintX = cx - bw * 0.45;
+        const glintY = y0 + bh * 0.18;
+        const glintSize = 3.6 + Math.sin(this.pulsePhase * 1.6) * 1.4;
+        this.drawSparkleFlare(ctx, glintX, glintY, glintSize, '#FFFFFF', 'rgba(240, 171, 252, 0.9)');
 
-        } else if (itemType === 'puzzle') {
-            // -- Premium Puzzle Piece with Connector Tabs --
+        ctx.restore();
+    }
 
-            ctx.shadowColor = 'rgba(192, 132, 252, 0.75)';
-            ctx.shadowBlur = 12 * pulse;
+    /**
+     * Super-Polished 3D Chiseled Gold Medal Star with Dual-Tone Diamond Facets
+     * Slow, majestic rotation and gentle glimmer
+     */
+    drawStarCollectible(ctx, cx, cy, size, pulse) {
+        const outerR = size * 0.35;
+        const innerR = outerR * 0.45;
+        const points = 5;
 
-            const bodyW = r * 1.2;
-            const bodyH = r * 1.2;
-            const tabR = r * 0.28;
-            const notchR = r * 0.24;
-            const cornerR = Math.max(2, r * 0.18);
-
-            // Draw body + tab (top) + tab (right) - notch (bottom) - notch (left)
-            ctx.beginPath();
-
-            // Start top-left, going clockwise
-            // Top edge with outward tab
-            ctx.moveTo(cx - bodyW / 2 + cornerR, cy - bodyH / 2);
-            ctx.lineTo(cx - tabR, cy - bodyH / 2);
-            ctx.arc(cx, cy - bodyH / 2 - tabR * 0.6, tabR, Math.PI * 0.85, Math.PI * 0.15, false);
-            ctx.lineTo(cx + bodyW / 2 - cornerR, cy - bodyH / 2);
-
-            // Top-right corner
-            ctx.quadraticCurveTo(cx + bodyW / 2, cy - bodyH / 2, cx + bodyW / 2, cy - bodyH / 2 + cornerR);
-
-            // Right edge with outward tab
-            ctx.lineTo(cx + bodyW / 2, cy - tabR);
-            ctx.arc(cx + bodyW / 2 + tabR * 0.6, cy, tabR, -Math.PI * 0.35, Math.PI * 0.35, false);
-            ctx.lineTo(cx + bodyW / 2, cy + bodyH / 2 - cornerR);
-
-            // Bottom-right corner
-            ctx.quadraticCurveTo(cx + bodyW / 2, cy + bodyH / 2, cx + bodyW / 2 - cornerR, cy + bodyH / 2);
-
-            // Bottom edge with inward notch
-            ctx.lineTo(cx + notchR, cy + bodyH / 2);
-            ctx.arc(cx, cy + bodyH / 2 - notchR * 0.3, notchR, Math.PI * 0.15, Math.PI * 0.85, false);
-            ctx.lineTo(cx - bodyW / 2 + cornerR, cy + bodyH / 2);
-
-            // Bottom-left corner
-            ctx.quadraticCurveTo(cx - bodyW / 2, cy + bodyH / 2, cx - bodyW / 2, cy + bodyH / 2 - cornerR);
-
-            // Left edge with inward notch
-            ctx.lineTo(cx - bodyW / 2, cy + notchR);
-            ctx.arc(cx - bodyW / 2 + notchR * 0.3, cy, notchR, Math.PI * 0.35, -Math.PI * 0.35, false);
-            ctx.lineTo(cx - bodyW / 2, cy - bodyH / 2 + cornerR);
-
-            // Top-left corner
-            ctx.quadraticCurveTo(cx - bodyW / 2, cy - bodyH / 2, cx - bodyW / 2 + cornerR, cy - bodyH / 2);
-
-            ctx.closePath();
-
-            // Fill with rich purple gradient
-            const puzzleGrad = ctx.createLinearGradient(cx - bodyW, cy - bodyH, cx + bodyW, cy + bodyH);
-            puzzleGrad.addColorStop(0, '#E9D5FF');
-            puzzleGrad.addColorStop(0.35, '#C084FC');
-            puzzleGrad.addColorStop(0.7, '#A855F7');
-            puzzleGrad.addColorStop(1, '#7C3AED');
-            ctx.fillStyle = puzzleGrad;
-            ctx.fill();
-
-            // Crisp border
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
-            ctx.lineWidth = Math.max(1, size * 0.022);
-            ctx.stroke();
-
-            // Inner body highlight
-            ctx.shadowBlur = 0;
-            const innerGrad = ctx.createLinearGradient(cx, cy - bodyH / 2, cx, cy + bodyH / 2);
-            innerGrad.addColorStop(0, 'rgba(255, 255, 255, 0.30)');
-            innerGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
-            innerGrad.addColorStop(1, 'rgba(0, 0, 0, 0.10)');
-            ctx.fillStyle = innerGrad;
-            ctx.fill();
-
-            // Specular highlight
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-            ctx.beginPath();
-            ctx.arc(cx - r * 0.18, cy - r * 0.22, r * 0.12, 0, Math.PI * 2);
-            ctx.fill();
-
-        } else if (itemType === 'star') {
-            // -- Premium 5-Point Golden Star --
-
-            ctx.shadowColor = 'rgba(234, 179, 8, 0.85)';
-            ctx.shadowBlur = 14 * pulse;
-
-            const outerR = r * 1.08;
-            const innerR = outerR * 0.42;
-            const points = 5;
-            const angleOffset = -Math.PI / 2; // Point upward
-
-            // Main star path
-            ctx.beginPath();
-            for (let i = 0; i < points * 2; i++) {
-                const isOuter = i % 2 === 0;
-                const currentR = isOuter ? outerR : innerR;
-                const angle = angleOffset + (i * Math.PI) / points;
-                const px = cx + Math.cos(angle) * currentR;
-                const py = cy + Math.sin(angle) * currentR;
-                if (i === 0) ctx.moveTo(px, py);
-                else ctx.lineTo(px, py);
-            }
-            ctx.closePath();
-
-            // Rich golden gradient
-            const starGrad = ctx.createRadialGradient(cx - outerR * 0.2, cy - outerR * 0.2, 0, cx, cy, outerR * 1.1);
-            starGrad.addColorStop(0, '#FEF9C3');
-            starGrad.addColorStop(0.3, '#FDE047');
-            starGrad.addColorStop(0.65, '#FACC15');
-            starGrad.addColorStop(1, '#CA8A04');
-            ctx.fillStyle = starGrad;
-            ctx.fill();
-
-            // Crisp golden border
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.lineWidth = Math.max(1, size * 0.02);
-            ctx.stroke();
-
-            // Top-left directional highlight for 3D illusion
-            ctx.shadowBlur = 0;
-            ctx.beginPath();
-            for (let i = 0; i < points * 2; i++) {
-                const isOuter = i % 2 === 0;
-                const currentR = isOuter ? outerR : innerR;
-                const angle = angleOffset + (i * Math.PI) / points;
-                const px = cx + Math.cos(angle) * currentR;
-                const py = cy + Math.sin(angle) * currentR;
-                if (i === 0) ctx.moveTo(px, py);
-                else ctx.lineTo(px, py);
-            }
-            ctx.closePath();
-            const highlightGrad = ctx.createLinearGradient(cx - outerR, cy - outerR, cx + outerR * 0.5, cy + outerR * 0.5);
-            highlightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.40)');
-            highlightGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.08)');
-            highlightGrad.addColorStop(1, 'rgba(0, 0, 0, 0.12)');
-            ctx.fillStyle = highlightGrad;
-            ctx.fill();
-
-            // Bright center core glow
-            const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, innerR * 0.9);
-            coreGrad.addColorStop(0, 'rgba(255, 255, 240, 0.65)');
-            coreGrad.addColorStop(1, 'rgba(255, 255, 240, 0)');
-            ctx.fillStyle = coreGrad;
-            ctx.beginPath();
-            ctx.arc(cx, cy, innerR * 0.9, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Specular highlight dot
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-            ctx.beginPath();
-            ctx.arc(cx - r * 0.15, cy - r * 0.28, r * 0.11, 0, Math.PI * 2);
-            ctx.fill();
+        // Calculate all 5 outer tips and 5 inner valleys
+        const outerPts = [];
+        const innerPts = [];
+        for (let k = 0; k < points; k++) {
+            const outAngle = -Math.PI / 2 + (k * 2 * Math.PI) / points;
+            const inAngle = -Math.PI / 2 + ((k + 0.5) * 2 * Math.PI) / points;
+            outerPts.push({ x: cx + Math.cos(outAngle) * outerR, y: cy + Math.sin(outAngle) * outerR });
+            innerPts.push({ x: cx + Math.cos(inAngle) * innerR, y: cy + Math.sin(inAngle) * innerR });
         }
 
+        ctx.save();
+
+        // 1. Soft Ambient Drop Shadow
+        ctx.save();
+        ctx.shadowColor = 'rgba(40, 20, 0, 0.65)';
+        ctx.shadowBlur = 9;
+        ctx.shadowOffsetY = 3;
+        ctx.beginPath();
+        for (let k = 0; k < points; k++) {
+            if (k === 0) ctx.moveTo(outerPts[k].x, outerPts[k].y);
+            else ctx.lineTo(outerPts[k].x, outerPts[k].y);
+            ctx.lineTo(innerPts[k].x, innerPts[k].y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#5A2A04';
+        ctx.fill();
+        ctx.restore();
+
+        // 2. Radiant Golden Corona Aura (Calm pulse)
+        ctx.save();
+        ctx.shadowColor = 'rgba(250, 204, 21, 0.9)';
+        ctx.shadowBlur = 16 * pulse;
+
+        // 3. 3D Faceted Origami Shading: Draw 10 Alternating Light & Shadow Triangles
+        for (let k = 0; k < points; k++) {
+            const prevValley = innerPts[(k - 1 + points) % points];
+            const nextValley = innerPts[k];
+            const tip = outerPts[k];
+
+            // 3A. Light Facet (Clockwise half-triangle: Center -> Tip -> NextValley)
+            const lightGrad = ctx.createLinearGradient(tip.x, tip.y, cx, cy);
+            lightGrad.addColorStop(0.0, '#FFFFFF'); // Diamond tip specular
+            lightGrad.addColorStop(0.22, '#FFFBEB'); // Champagne gold
+            lightGrad.addColorStop(0.55, '#FDE047'); // Brilliant sunny gold
+            lightGrad.addColorStop(1.0, '#EAB308'); // Warm amber gold
+            ctx.fillStyle = lightGrad;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(tip.x, tip.y);
+            ctx.lineTo(nextValley.x, nextValley.y);
+            ctx.closePath();
+            ctx.fill();
+
+            // 3B. Shadow Facet (Counter-clockwise half-triangle: Center -> Tip -> PrevValley)
+            const shadowGrad = ctx.createLinearGradient(tip.x, tip.y, cx, cy);
+            shadowGrad.addColorStop(0.0, '#FACC15'); // Bright golden tip
+            shadowGrad.addColorStop(0.35, '#CA8A04'); // Rich burnished gold
+            shadowGrad.addColorStop(0.75, '#A16207'); // Deep golden bronze
+            shadowGrad.addColorStop(1.0, '#78350F'); // Dark topaz shadow
+            ctx.fillStyle = shadowGrad;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(tip.x, tip.y);
+            ctx.lineTo(prevValley.x, prevValley.y);
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.restore();
+
+        // 4. Facet Ridge Highlight Lines
+        for (let k = 0; k < points; k++) {
+            const tip = outerPts[k];
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.lineWidth = Math.max(0.8, size * 0.016);
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(tip.x, tip.y);
+            ctx.stroke();
+
+            const valley = innerPts[k];
+            ctx.strokeStyle = 'rgba(120, 53, 15, 0.45)';
+            ctx.lineWidth = Math.max(0.8, size * 0.016);
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(valley.x, valley.y);
+            ctx.stroke();
+        }
+
+        // 5. Crisp Perimeter Bevel Stroke
+        ctx.beginPath();
+        for (let k = 0; k < points; k++) {
+            if (k === 0) ctx.moveTo(outerPts[k].x, outerPts[k].y);
+            else ctx.lineTo(outerPts[k].x, outerPts[k].y);
+            ctx.lineTo(innerPts[k].x, innerPts[k].y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = Math.max(1.2, size * 0.024);
+        ctx.stroke();
+
+        // 6. Center Solar Core Crown
+        const coreR = innerR * 0.58;
+        const coreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
+        coreGrad.addColorStop(0.0, '#FFFFFF');
+        coreGrad.addColorStop(0.4, '#FEF9C3');
+        coreGrad.addColorStop(0.8, '#FACC15');
+        coreGrad.addColorStop(1.0, 'rgba(234, 179, 8, 0)');
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 7. Dynamic 4-Point Diamond Sparkle Flare at Top Star Tip (Slow, majestic glint)
+        const topTip = outerPts[0];
+        const flareSize = 4.6 + Math.sin(this.pulsePhase * 1.6) * 1.8;
+        this.drawSparkleFlare(ctx, topTip.x, topTip.y, flareSize, '#FFFFFF', 'rgba(254, 240, 138, 0.95)');
+
+        // 8. Orbiting Golden Micro-Stardust Sparkles (Slow, graceful cosmic orbit)
+        const orbitAngle = this.pulsePhase * 0.65;
+        const orbDist1 = outerR * 1.15;
+        const orbDist2 = outerR * 0.95;
+        this.drawMiniSparkleDot(ctx, cx + Math.cos(orbitAngle) * orbDist1, cy + Math.sin(orbitAngle) * orbDist1, 2.0, '#FEF08A');
+        this.drawMiniSparkleDot(ctx, cx + Math.cos(orbitAngle + Math.PI) * orbDist2, cy + Math.sin(orbitAngle + Math.PI) * orbDist2, 1.6, '#FFFFFF');
+
+        ctx.restore();
+    }
+
+    /**
+     * Multi-Faceted Gemstone Renderer (Emerald, Ruby, Sapphire, Topaz, Diamond)
+     * Slow, calm breathing radiance
+     */
+    drawGemCollectible(ctx, cx, cy, size, pulse, cellColor = null) {
+        const r = size * 0.32;
+        const outerR = r * 1.06;
+
+        ctx.save();
+
+        // Determine jewel color palette
+        let glowColor = 'rgba(56, 189, 248, 0.85)';
+        let cLight = '#E0F2FE';
+        let cMid = '#38BDF8';
+        let cDark = '#0284C7';
+
+        if (cellColor && cellColor.hex) {
+            const hex = cellColor.hex.toLowerCase();
+            if (hex.includes('10b981') || hex.includes('10b') || hex.includes('emerald') || hex.includes('059669')) {
+                // Emerald
+                glowColor = 'rgba(16, 185, 129, 0.85)';
+                cLight = '#D1FAE5';
+                cMid = '#34D399';
+                cDark = '#059669';
+            } else if (hex.includes('ef4444') || hex.includes('dc2626') || hex.includes('ruby')) {
+                // Ruby
+                glowColor = 'rgba(239, 68, 68, 0.85)';
+                cLight = '#FEE2E2';
+                cMid = '#F87171';
+                cDark = '#DC2626';
+            } else if (hex.includes('f97316') || hex.includes('fbbf24') || hex.includes('topaz')) {
+                // Topaz / Amber
+                glowColor = 'rgba(249, 115, 22, 0.85)';
+                cLight = '#FFEDD5';
+                cMid = '#FB923C';
+                cDark = '#C2410C';
+            } else if (hex.includes('8b5cf6') || hex.includes('purple')) {
+                // Amethyst
+                glowColor = 'rgba(139, 92, 246, 0.85)';
+                cLight = '#EDE9FE';
+                cMid = '#A78BFA';
+                cDark = '#6D28D9';
+            }
+        }
+
+        // 1. Outer Glow Aura (Slow, gentle pulsation)
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = 14 * pulse;
+
+        // 2. Main Diamond Silhouette (Rotated 45-degree Square)
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - outerR);
+        ctx.lineTo(cx + outerR, cy);
+        ctx.lineTo(cx, cy + outerR);
+        ctx.lineTo(cx - outerR, cy);
+        ctx.closePath();
+
+        // 3. Jewel Gradient Fill
+        const gemGrad = ctx.createLinearGradient(cx - outerR, cy - outerR, cx + outerR, cy + outerR);
+        gemGrad.addColorStop(0, cLight);
+        gemGrad.addColorStop(0.4, cMid);
+        gemGrad.addColorStop(1, cDark);
+        ctx.fillStyle = gemGrad;
+        ctx.fill();
+
+        // 4. Crisp Diamond Border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.lineWidth = Math.max(1, size * 0.026);
+        ctx.stroke();
+
+        // 5. Facet Highlight: Top-Left Triangle
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - outerR);
+        ctx.lineTo(cx - outerR, cy);
+        ctx.lineTo(cx, cy);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.fill();
+
+        // 6. Facet Highlight: Top-Right Triangle
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - outerR);
+        ctx.lineTo(cx + outerR, cy);
+        ctx.lineTo(cx, cy);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+        ctx.fill();
+
+        // 7. Facet Shadow: Bottom-Right Triangle
+        ctx.beginPath();
+        ctx.moveTo(cx + outerR, cy);
+        ctx.lineTo(cx, cy + outerR);
+        ctx.lineTo(cx, cy);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+        ctx.fill();
+
+        // 8. Cross-line Facet Edges
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.lineWidth = Math.max(0.5, size * 0.015);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - outerR);
+        ctx.lineTo(cx, cy + outerR);
+        ctx.moveTo(cx - outerR, cy);
+        ctx.lineTo(cx + outerR, cy);
+        ctx.stroke();
+
+        // 9. Diamond Glint Flare (Slow, calm shimmer)
+        const flareSize = 3.8 + Math.sin(this.pulsePhase * 1.5) * 1.5;
+        this.drawSparkleFlare(ctx, cx - r * 0.28, cy - r * 0.32, flareSize, '#FFFFFF', glowColor);
+
+        ctx.restore();
+    }
+
+    /**
+     * High-Precision 4-Point Diamond Sparkle Flare / Specular Glint
+     */
+    drawSparkleFlare(ctx, x, y, size, coreColor = '#FFFFFF', glowColor = 'rgba(255, 255, 255, 0.8)') {
+        ctx.save();
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = size * 2.2;
+
+        ctx.fillStyle = coreColor;
+        ctx.beginPath();
+        // Top ray
+        ctx.moveTo(x, y - size);
+        ctx.quadraticCurveTo(x, y, x + size * 0.22, y);
+        // Right ray
+        ctx.lineTo(x + size, y);
+        ctx.quadraticCurveTo(x, y, x, y + size * 0.22);
+        // Bottom ray
+        ctx.lineTo(x, y + size);
+        ctx.quadraticCurveTo(x, y, x - size * 0.22, y);
+        // Left ray
+        ctx.lineTo(x - size, y);
+        ctx.quadraticCurveTo(x, y, x, y - size * 0.22);
+        ctx.closePath();
+        ctx.fill();
+
+        // Crisp central specular dot
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(x, y, Math.max(1, size * 0.25), 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    /**
+     * Orbiting Micro Twinkle Dot
+     */
+    drawMiniSparkleDot(ctx, x, y, radius, color = '#FFFFFF') {
+        ctx.save();
+        ctx.shadowColor = color;
+        ctx.shadowBlur = radius * 3.5;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
     }
 
@@ -935,13 +1150,25 @@ export class GameRenderer {
     /**
      * Classic 3D Beveled Glossy Block Tile (Guaranteed 1:1 True Square)
      */
-    drawBeveledBlock(x, y, size, color, isGhost = false) {
+    drawBeveledBlock(x, y, size, color, isGhost = false, itemType = null) {
         const ctx = this.ctx;
         const squareSize = Math.round(size);
         const radius = Math.max(3, Math.round(squareSize * 0.14));
-        const hex = color.hex || '#3B82F6';
-        const light = color.light || '#93C5FD';
-        const dark = color.dark || '#1D4ED8';
+
+        let hex = color.hex || '#3B82F6';
+        let light = color.light || '#93C5FD';
+        let dark = color.dark || '#1D4ED8';
+
+        // Thematic base pedestals for Adventure mode collectibles
+        if (itemType === 'puzzle') {
+            hex = '#2E0854';
+            light = '#4C1D95';
+            dark = '#17032B';
+        } else if (itemType === 'star') {
+            hex = '#451A03';
+            light = '#78350F';
+            dark = '#240B02';
+        }
 
         ctx.save();
 
@@ -958,7 +1185,7 @@ export class GameRenderer {
         // 2. Beveled top/left highlight
         const bevelSize = Math.max(2, Math.round(squareSize * 0.12));
         ctx.save();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.fillStyle = itemType === 'puzzle' ? 'rgba(232, 121, 249, 0.40)' : (itemType === 'star' ? 'rgba(253, 224, 71, 0.40)' : 'rgba(255, 255, 255, 0.35)');
         ctx.beginPath();
         ctx.moveTo(x + radius, y);
         ctx.lineTo(x + squareSize - radius, y);
@@ -971,18 +1198,43 @@ export class GameRenderer {
         ctx.fill();
         ctx.restore();
 
-        // 3. Inner glossy center sheen
+        // 3. Inner glossy center sheen or recessed relic cavity
         const innerRadius = Math.max(2, Math.round(radius * 0.6));
         const innerMargin = bevelSize * 0.8;
         const innerSize = Math.max(2, squareSize - innerMargin * 2);
-        const innerGrad = ctx.createLinearGradient(x + innerMargin, y + innerMargin, x + innerMargin, y + innerMargin + innerSize);
-        innerGrad.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
-        innerGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
-        innerGrad.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
 
-        ctx.fillStyle = innerGrad;
-        this.roundRect(x + innerMargin, y + innerMargin, innerSize, innerSize, innerRadius);
-        ctx.fill();
+        if (itemType) {
+            // Recessed glowing relic bed
+            const bedGrad = ctx.createRadialGradient(x + squareSize / 2, y + squareSize / 2, 0, x + squareSize / 2, y + squareSize / 2, innerSize * 0.7);
+            if (itemType === 'puzzle') {
+                bedGrad.addColorStop(0, 'rgba(88, 28, 135, 0.6)');
+                bedGrad.addColorStop(1, 'rgba(18, 2, 36, 0.9)');
+            } else if (itemType === 'star') {
+                bedGrad.addColorStop(0, 'rgba(120, 53, 15, 0.6)');
+                bedGrad.addColorStop(1, 'rgba(28, 8, 2, 0.9)');
+            } else {
+                bedGrad.addColorStop(0, 'rgba(3, 105, 161, 0.5)');
+                bedGrad.addColorStop(1, 'rgba(2, 44, 75, 0.8)');
+            }
+            ctx.fillStyle = bedGrad;
+            this.roundRect(x + innerMargin, y + innerMargin, innerSize, innerSize, innerRadius);
+            ctx.fill();
+
+            // Inlaid rim line
+            ctx.strokeStyle = itemType === 'puzzle' ? 'rgba(192, 132, 252, 0.45)' : (itemType === 'star' ? 'rgba(250, 204, 21, 0.45)' : 'rgba(125, 211, 252, 0.45)');
+            ctx.lineWidth = 1;
+            this.roundRect(x + innerMargin, y + innerMargin, innerSize, innerSize, innerRadius);
+            ctx.stroke();
+        } else {
+            const innerGrad = ctx.createLinearGradient(x + innerMargin, y + innerMargin, x + innerMargin, y + innerMargin + innerSize);
+            innerGrad.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+            innerGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
+            innerGrad.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
+
+            ctx.fillStyle = innerGrad;
+            this.roundRect(x + innerMargin, y + innerMargin, innerSize, innerSize, innerRadius);
+            ctx.fill();
+        }
 
         ctx.restore();
     }

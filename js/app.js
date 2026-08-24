@@ -565,12 +565,30 @@ export class BlockBlastApp {
             this.audio.playClear(result.comboCount + 2);
             for (const it of result.collectedItems) {
                 const rect = this.renderer.getCellRect(it.row, it.col);
-                this.particles.addBlockClearBurst(rect.x, rect.y, rect.size, { hex: '#FDE047', light: '#FEF08A' });
-                this.particles.addFloatingText('COLLECTED!', rect.x + cellSize / 2, rect.y + cellSize / 2, {
-                    isGold: true,
-                    fontSize: 24,
-                    color: '#FBBF24'
-                });
+                this.particles.addCollectiblePickupBurst(rect.x, rect.y, rect.size, it.item);
+
+                if (it.item === 'puzzle') {
+                    this.particles.addFloatingText('+1 PUZZLE PIECE!', rect.x + cellSize / 2, rect.y + cellSize / 2, {
+                        isGold: false,
+                        fontSize: 26,
+                        color: '#F0ABFC',
+                        shadow: '#581C87'
+                    });
+                } else if (it.item === 'star') {
+                    this.particles.addFloatingText('+1 GOLDEN STAR!', rect.x + cellSize / 2, rect.y + cellSize / 2, {
+                        isGold: true,
+                        fontSize: 28,
+                        color: '#FDE047',
+                        shadow: '#78350F'
+                    });
+                } else {
+                    this.particles.addFloatingText('+1 GEM!', rect.x + cellSize / 2, rect.y + cellSize / 2, {
+                        isGold: false,
+                        fontSize: 26,
+                        color: '#38BDF8',
+                        shadow: '#0369A1'
+                    });
+                }
             }
         }
 
